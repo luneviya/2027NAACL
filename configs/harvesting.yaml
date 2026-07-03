@@ -1,0 +1,9 @@
+lang: javascript
+seed: 123456
+base_model: DeepSoftwareAnalytics/CoCoSoDa
+nl_length: 128
+code_length: 256
+encode_batch_size: 128
+topk: 32
+chunk_size: 8192
+exclude_same_url: true

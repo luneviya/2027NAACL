@@ -10,15 +10,21 @@ __pycache__/
 logs/
 *.log
 nohup.out
+wandb/
 
 # Data
 dataset/
 dataset
 data/
+*.jsonl
+*.json
 
 # Model checkpoints and large outputs
 saved_models/
 pretrained_backbones/
+outputs/
+output/
+runs/
 checkpoint-*/
 *.bin
 *.pt
@@ -34,10 +40,20 @@ checkpoint-*/
 *.tar.gz
 *.zip
 
+# Local environments
+.env
+.venv/
+venv/
+env/
+*.egg-info/
+
 # Experiment analysis outputs
 param_sensitivity/
 rq4_rank_movement/
 rq4_case_study/
+
+# Tree-sitter sources downloaded by refcode/utils/parser/build.sh
+refcode/utils/parser/tree-sitter-*/
 
 # OS / editor
 .DS_Store

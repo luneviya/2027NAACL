@@ -1,109 +1,104 @@
 # ReFCode
 
-This repository contains the compact main-experiment implementation for ReFCode on CodeSearchNet-style code search.
+ReFCode is a compact research artifact for code search. The runnable pipeline is organized around the actual experiment flow: train an initial retriever, harvest retrieval failures, then run refinement with reranking and evaluation.
 
-The released pipeline keeps only the core paper workflow:
+Large assets are intentionally excluded. Datasets, checkpoints, logs, caches, and generated indices should be prepared or produced locally.
 
-1. Build global hard negatives.
-2. Run Stage-1 ReFCode training with relevance refinement.
-3. Build self-mined retrieval-failure negatives from the Stage-1 checkpoint.
-4. Run Stage-2 refinement with self-mined failures and lightweight late interaction.
-5. Run final late-interaction reranking.
+## Repository Structure
 
-Large assets are intentionally excluded, including datasets, checkpoints, pretrained backbones, logs, caches, and intermediate index files.
-
-## Files
-
-Core Python files:
-
-- `model.py`: ReFCode encoder, uncertainty heads, and relevance head.
-- `run.py`: unified Stage-1/Stage-2 training and evaluation entry point.
-- `build_global_hard_negatives.py`: constructs Stage-1 global hard negatives.
-- `harvest_retrieval_failures.py`: constructs Stage-2 self-mined retrieval failures.
-- `run_dual_granularity_rerank.py`: final dual-granularity late-interaction reranking.
-- `utils.py`: minimal JSON/pickle persistence helpers.
-- `parser/`: tree-sitter data-flow parser utilities.
-
-Main scripts:
-
-- `train_initial_retriever.sh`
-- `train_failure_calibrated_refinement.sh`
-- `run_stage1_experiment.sh`
-- `run_stage2_experiment.sh`
-- `run_rerank.sh`
-
-## Expected Local Assets
-
-Place runtime assets locally when running experiments:
-
-- `dataset/<lang>/{train,valid,test,codebase}.jsonl`
-- a compatible encoder checkpoint such as `DeepSoftwareAnalytics/CoCoSoDa`, or a local path supplied through `BASE_MODEL`
-- generated hard-negative files under `dataset/<lang>/`
-- checkpoints under `saved_models/`
-
-These paths are ignored by `.gitignore` and should not be committed.
-
-## Workflow
-
-Default Ruby two-stage experiments:
-
-```bash
-bash run_stage1_experiment.sh
+```text
+configs/                 Default experiment settings for reference
+refcode/retriever/       Initial retriever training and top-K retrieval support
+refcode/harvesting/      Retrieval-failure mining and data construction
+refcode/refinement/      ReFCode refinement, reranking, and evaluation
+refcode/utils/           Shared I/O, parser, config, and seed helpers
+scripts/                 Main runnable entry scripts
 ```
 
-```bash
-bash run_stage2_experiment.sh
-```
+## Environment Setup
 
-Use another language by passing language and seed:
+Create an environment with either:
 
 ```bash
-bash run_stage1_experiment.sh python 123456
-bash run_stage2_experiment.sh python 123456
+conda env create -f environment.yml
+conda activate refcode
 ```
 
-Build global hard negatives:
+or:
 
 ```bash
-python build_global_hard_negatives.py \
-  --train_data_file dataset/java/train.jsonl \
-  --output_file dataset/java/refcode_hard_idx_top500_rank50.pkl \
-  --model_name_or_path DeepSoftwareAnalytics/CoCoSoDa \
-  --config_name DeepSoftwareAnalytics/CoCoSoDa \
-  --tokenizer_name DeepSoftwareAnalytics/CoCoSoDa
+pip install -r requirements.txt
 ```
 
-Run Stage-1:
+The default encoder is loaded from Hugging Face:
+
+```text
+DeepSoftwareAnalytics/CoCoSoDa
+```
+
+## Data Preparation
+
+Prepare CodeSearchNet-style files under:
+
+```text
+dataset/<lang>/train.jsonl
+dataset/<lang>/valid.jsonl
+dataset/<lang>/test.jsonl
+dataset/<lang>/codebase.jsonl
+```
+
+Each example should contain code tokens or code text, natural-language tokens or text, and a stable `url` or retrieval identifier. The repository does not include raw datasets.
+
+If the tree-sitter shared library is missing, rebuild it from the parser directory:
 
 ```bash
-HARD_IDX_FILE=dataset/java/refcode_hard_idx_top500_rank50.pkl \
-bash train_initial_retriever.sh java 123456
+cd refcode/utils/parser
+bash build.sh
+cd -
 ```
 
-Build self-mined retrieval failures:
+## Running The Pipeline
+
+Run commands from the repository root.
+
+1. Train the initial retriever:
 
 ```bash
-python harvest_retrieval_failures.py \
-  --train_data_file dataset/java/train.jsonl \
-  --output_file dataset/java/self_mined_top32_from_stage1.pkl \
-  --model_name_or_path DeepSoftwareAnalytics/CoCoSoDa \
-  --config_name DeepSoftwareAnalytics/CoCoSoDa \
-  --tokenizer_name DeepSoftwareAnalytics/CoCoSoDa \
-  --loaded_model_filename saved_models/refcode/stage1/<run>/checkpoint-best-mrr/model.bin
+bash scripts/run_retriever.sh --lang javascript
 ```
 
-Run Stage-2:
+2. Harvest failure candidates:
 
 ```bash
-STAGE1_OUT=saved_models/refcode/stage1/<run> \
-SELF_MINED_IDX_FILE=dataset/java/self_mined_top32_from_stage1.pkl \
-bash train_failure_calibrated_refinement.sh java 123456
+bash scripts/run_harvesting.sh --lang javascript
 ```
 
-Run final reranking:
+3. Run ReFCode refinement, reranking, and evaluation:
 
 ```bash
-bash run_rerank.sh \
-  java \
-  saved_models/refcode/stage2/<run>/checkpoint-best-mrr/model.bin
+bash scripts/run_refcode.sh --lang javascript
 ```
+
+Use `--seed 123456` to override the default seed. Runtime settings can also be overridden with environment variables documented in `REPRODUCIBILITY.md`.
+
+## Expected Outputs
+
+The pipeline writes generated artifacts locally:
+
+```text
+dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
+dataset/<lang>/self_mined_top32_from_stage1.pkl
+saved_models/refcode/stage1/
+saved_models/refcode/stage2/
+saved_models/refcode/rerank/
+```
+
+These files are ignored by git and should not be committed.
+
+## Reproducibility Notes
+
+Detailed commands, paths, hardware notes, and expected ruby metrics from the local verification run are in `REPRODUCIBILITY.md`.
+
+## Anonymous Review Notes
+
+This artifact omits author names, affiliations, acknowledgements, personal links, raw datasets, and trained checkpoints. Local paths in examples use relative paths or placeholders.

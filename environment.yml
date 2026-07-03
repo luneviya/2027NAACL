@@ -1,0 +1,17 @@
+name: refcode
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - numpy
+  - tqdm
+  - pyyaml
+  - pip:
+      - torch>=2.0
+      - transformers>=4.30
+      - prettytable>=3.0
+      - tree_sitter>=0.20

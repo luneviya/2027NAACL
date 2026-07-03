@@ -1,0 +1,7 @@
+torch>=2.0
+transformers>=4.30
+numpy>=1.23
+tqdm>=4.60
+prettytable>=3.0
+tree_sitter>=0.20
+PyYAML>=6.0

@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Stage-2 ReFCode refinement with self-mined failures, lightweight late interaction,
-# and validation-fusion checkpoint selection.
-# Usage:
-#   STAGE1_OUT=saved_models/refcode/stage1/<run> SELF_MINED_IDX_FILE=dataset/java/self_mined_top32_from_stage1.pkl bash train_failure_calibrated_refinement.sh java 123456
+lang=javascript
+seed=123456
 
-lang=${1:-java}
-seed=${2:-123456}
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --lang)
+      lang="$2"
+      shift 2
+      ;;
+    --seed)
+      seed="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      exit 1
+      ;;
+  esac
+done
+
 current_time=$(date "+%Y%m%d%H%M%S")
 
 export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-max_split_size_mb:32}
@@ -57,13 +70,11 @@ valid_rerank_batch_size=${VALID_RERANK_BATCH_SIZE:-64}
 valid_fusion_fp16=${VALID_FUSION_FP16:-1}
 
 if [[ -z "${STAGE1_OUT:-}" ]]; then
-  STAGE1_OUT=$(ls -td ./saved_models/refcode/stage1/${lang}_seed${seed}_* 2>/dev/null | head -n 1 || true)
+  STAGE1_OUT=$(ls -td "./saved_models/refcode/stage1/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
 fi
 
 if [[ -z "${STAGE1_OUT}" ]]; then
-  echo "[ERROR] STAGE1_OUT is empty and no matching Stage-1 directory was found."
-  echo "Set STAGE1_OUT to a Stage-1 output directory, for example:"
-  echo "STAGE1_OUT=./saved_models/refcode/stage1/java_seed123456_lr8e-6_tau0.03_relW0.25_top16_xxx"
+  echo "[ERROR] No Stage-1 output directory found. Set STAGE1_OUT explicitly."
   exit 1
 fi
 
@@ -78,24 +89,19 @@ fi
 
 if [[ ! -f "${self_mined_idx_file}" ]]; then
   echo "[ERROR] Self-mined failure file not found: ${self_mined_idx_file}"
-  echo "Build it first with harvest_retrieval_failures.py."
+  echo "Run: bash scripts/run_harvesting.sh --lang ${lang}"
   exit 1
 fi
 
 mkdir -p "${output_dir}"
 
-echo "[ReFCode-Stage2] lang=${lang}, seed=${seed}"
-echo "[ReFCode-Stage2] base_model=${base_model}"
-echo "[ReFCode-Stage2] STAGE1_OUT=${STAGE1_OUT}"
-echo "[ReFCode-Stage2] load_model_file=${load_model_file}"
-echo "[ReFCode-Stage2] self_mined_idx_file=${self_mined_idx_file}"
-echo "[ReFCode-Stage2] output_dir=${output_dir}"
-echo "[ReFCode-Stage2] lr=${lr}, epoch=${epoch}, batch_size=${batch_size}, samples=${refcode_samples}"
-echo "[ReFCode-Stage2] self_mine_w=${self_mine_w}, topk=${self_mine_topk}, train_k=${self_mine_train_k}"
-echo "[ReFCode-Stage2] late_interaction=${use_lite_late_interaction_train}, li_w=${li_weight}, li_temp=${li_temperature}, li_train_k=${li_train_k}"
-echo "[ReFCode-Stage2] valid_fusion_select=${use_valid_fusion_select}, topk=${valid_fusion_topk}, alpha=${valid_fusion_alpha}"
+echo "[ReFCode-Refinement] lang=${lang}, seed=${seed}"
+echo "[ReFCode-Refinement] base_model=${base_model}"
+echo "[ReFCode-Refinement] load_model_file=${load_model_file}"
+echo "[ReFCode-Refinement] self_mined_idx_file=${self_mined_idx_file}"
+echo "[ReFCode-Refinement] output_dir=${output_dir}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python run.py \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.refinement.train \
   --eval_frequency 100 \
   --moco_m ${moco_m} \
   --moco_t ${moco_t} \
@@ -149,3 +155,23 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python run.py \
   --valid_rerank_batch_size ${valid_rerank_batch_size} \
   --valid_fusion_fp16 ${valid_fusion_fp16} \
   2>&1 | tee ${output_dir}/running.log
+
+checkpoint_file=${output_dir}/checkpoint-best-mrr/model.bin
+if [[ -f "${checkpoint_file}" ]]; then
+  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.refinement.rerank \
+    --lang "${lang}" \
+    --model_name_or_path "${base_model}" \
+    --config_name "${base_model}" \
+    --tokenizer_name "${tokenizer_name}" \
+    --loaded_model_filename "${checkpoint_file}" \
+    --eval_data_file "dataset/${lang}/test.jsonl" \
+    --codebase_file "dataset/${lang}/codebase.jsonl" \
+    --output_dir "./saved_models/refcode/rerank/${lang}_top${RERANK_TOP_K:-50}_alpha${RERANK_ALPHA:-0.5}" \
+    --code_length "${code_length}" \
+    --nl_length "${nl_length}" \
+    --eval_batch_size "${RERANK_EVAL_BATCH_SIZE:-128}" \
+    --rerank_batch_size "${RERANK_BATCH_SIZE:-64}" \
+    --top_k "${RERANK_TOP_K:-50}" \
+    --fusion_alpha "${RERANK_ALPHA:-0.5}" \
+    --fp16 "${RERANK_FP16:-1}"
+fi

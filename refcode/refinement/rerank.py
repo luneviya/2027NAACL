@@ -1,4 +1,4 @@
-# run_dual_granularity_rerank.py
+# ReFCode inference-only token-level late-interaction reranker for code search.
 # ReFCode inference-only token-level late-interaction reranker for code search.
 # It loads your best bi-encoder checkpoint, retrieves topK candidates,
 # then reranks topK using ColBERT-style MaxSim token-level interaction.
@@ -15,7 +15,7 @@ from torch.utils.data import Dataset, DataLoader, SequentialSampler
 from tqdm import tqdm
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
-from model import Model
+from refcode.refinement.model import Model
 
 
 def _as_token_list(value):
