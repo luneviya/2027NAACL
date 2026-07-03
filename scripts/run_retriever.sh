@@ -56,7 +56,7 @@ ctrd_margin=${CTRD_MARGIN:-0.2}
 train_file=${TRAIN_FILE:-dataset/${lang}/train.jsonl}
 hard_idx_file=${HARD_IDX_FILE:-dataset/${lang}/refcode_hard_idx_top500_rank50.pkl}
 embeddings_cache=${EMBEDDINGS_CACHE:-dataset/${lang}/train_query_cocosoda_emb.pt}
-output_dir=${OUTPUT_DIR:-./saved_models/refcode/stage1/${lang}_seed${seed}_lr${lr}_tau${refcode_tau}_relW${ctrd_w}_top${ctrd_topk}_${current_time}}
+output_dir=${OUTPUT_DIR:-./saved_models/refcode/retriever/${lang}_seed${seed}_lr${lr}_tau${refcode_tau}_relW${ctrd_w}_top${ctrd_topk}_${current_time}}
 
 mkdir -p "$(dirname "${hard_idx_file}")" "${output_dir}"
 

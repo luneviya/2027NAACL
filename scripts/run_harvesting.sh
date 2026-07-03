@@ -25,20 +25,20 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
 base_model=${BASE_MODEL:-DeepSoftwareAnalytics/CoCoSoDa}
 tokenizer_name=${TOKENIZER_NAME:-${base_model}}
 
-if [[ -z "${STAGE1_OUT:-}" ]]; then
-  STAGE1_OUT=$(ls -td "./saved_models/refcode/stage1/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
+if [[ -z "${RETRIEVER_OUT:-}" ]]; then
+  RETRIEVER_OUT=$(ls -td "./saved_models/refcode/retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
 fi
 
-if [[ -z "${STAGE1_OUT}" ]]; then
-  echo "[ERROR] No Stage-1 output directory found. Set STAGE1_OUT explicitly."
+if [[ -z "${RETRIEVER_OUT}" ]]; then
+  echo "[ERROR] No retriever output directory found. Set RETRIEVER_OUT explicitly."
   exit 1
 fi
 
-checkpoint_file=${LOAD_MODEL_FILE:-${STAGE1_OUT}/checkpoint-best-mrr/model.bin}
-self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_stage1.pkl}
+checkpoint_file=${LOAD_MODEL_FILE:-${RETRIEVER_OUT}/checkpoint-best-mrr/model.bin}
+self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_retriever.pkl}
 
 if [[ ! -f "${checkpoint_file}" ]]; then
-  echo "[ERROR] Stage-1 checkpoint not found: ${checkpoint_file}"
+  echo "[ERROR] Retriever checkpoint not found: ${checkpoint_file}"
   exit 1
 fi
 

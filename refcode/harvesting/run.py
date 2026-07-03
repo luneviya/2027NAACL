@@ -9,7 +9,7 @@ For each training query q_i:
   4) exclude the gold code itself and, optionally, examples with the same URL;
   5) save a list-of-lists self_mined_idx[i] = [j1, j2, ...].
 
-The output is consumed by run.py during Stage-2 refinement.
+The output is consumed by the refinement runner.
 """
 
 import argparse

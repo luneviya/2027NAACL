@@ -31,9 +31,9 @@ Generated files are written to:
 ```text
 dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
 dataset/<lang>/train_query_cocosoda_emb.pt
-dataset/<lang>/self_mined_top32_from_stage1.pkl
-saved_models/refcode/stage1/
-saved_models/refcode/stage2/
+dataset/<lang>/self_mined_top32_from_retriever.pkl
+saved_models/refcode/retriever/
+saved_models/refcode/refinement/
 saved_models/refcode/rerank/
 ```
 
@@ -87,7 +87,7 @@ bash scripts/run_refcode.sh --lang ruby --seed 123456
 
 ## Main Commands
 
-Stage 1 trains the initial retriever. It first builds the global hard-negative index, then trains with the same default hyperparameters used by the local verification run.
+The retriever step trains the initial retriever. It first builds the global hard-negative index, then trains with the same default hyperparameters used by the local verification run.
 
 ```bash
 bash scripts/run_retriever.sh --lang ruby
@@ -105,13 +105,13 @@ Override this cache path with:
 EMBEDDINGS_CACHE=/path/to/train_query_embeddings.pt bash scripts/run_retriever.sh --lang ruby
 ```
 
-Stage 2 data construction harvests retrieval failures from the best Stage-1 checkpoint.
+The harvesting step constructs retrieval failures from the best retriever checkpoint.
 
 ```bash
 bash scripts/run_harvesting.sh --lang ruby
 ```
 
-Stage 2 refinement trains from the Stage-1 checkpoint with harvested failures, then runs final reranking.
+The refinement step trains from the retriever checkpoint with harvested failures, then runs final reranking.
 
 ```bash
 bash scripts/run_refcode.sh --lang ruby
@@ -153,7 +153,7 @@ valid_fusion_alpha=0.5
 
 The following values were observed locally for ruby with seed `123456` and the default Hugging Face encoder. They are reported as verification context, not as a newly rerun claim after this packaging change.
 
-Stage 1 test:
+Retriever test:
 
 ```text
 R@1 = 0.730
@@ -162,7 +162,7 @@ R@10 = 0.971
 MRR = 0.8239225133545454
 ```
 
-Stage 2 test:
+Refinement test:
 
 ```text
 R@1 = 0.745

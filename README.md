@@ -88,9 +88,9 @@ The pipeline writes generated artifacts locally:
 ```text
 dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
 dataset/<lang>/train_query_cocosoda_emb.pt
-dataset/<lang>/self_mined_top32_from_stage1.pkl
-saved_models/refcode/stage1/
-saved_models/refcode/stage2/
+dataset/<lang>/self_mined_top32_from_retriever.pkl
+saved_models/refcode/retriever/
+saved_models/refcode/refinement/
 saved_models/refcode/rerank/
 ```
 

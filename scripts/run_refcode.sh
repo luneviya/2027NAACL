@@ -69,21 +69,21 @@ valid_fusion_alpha=${VALID_FUSION_ALPHA:-0.5}
 valid_rerank_batch_size=${VALID_RERANK_BATCH_SIZE:-64}
 valid_fusion_fp16=${VALID_FUSION_FP16:-1}
 
-if [[ -z "${STAGE1_OUT:-}" ]]; then
-  STAGE1_OUT=$(ls -td "./saved_models/refcode/stage1/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
+if [[ -z "${RETRIEVER_OUT:-}" ]]; then
+  RETRIEVER_OUT=$(ls -td "./saved_models/refcode/retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
 fi
 
-if [[ -z "${STAGE1_OUT}" ]]; then
-  echo "[ERROR] No Stage-1 output directory found. Set STAGE1_OUT explicitly."
+if [[ -z "${RETRIEVER_OUT}" ]]; then
+  echo "[ERROR] No retriever output directory found. Set RETRIEVER_OUT explicitly."
   exit 1
 fi
 
-load_model_file=${LOAD_MODEL_FILE:-${STAGE1_OUT}/checkpoint-best-mrr/model.bin}
-self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_stage1.pkl}
-output_dir=${OUTPUT_DIR:-./saved_models/refcode/stage2/${lang}_seed${seed}_K${self_mine_train_k}_W${self_mine_w}_LI${li_weight}_${current_time}}
+load_model_file=${LOAD_MODEL_FILE:-${RETRIEVER_OUT}/checkpoint-best-mrr/model.bin}
+self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_retriever.pkl}
+output_dir=${OUTPUT_DIR:-./saved_models/refcode/refinement/${lang}_seed${seed}_K${self_mine_train_k}_W${self_mine_w}_LI${li_weight}_${current_time}}
 
 if [[ ! -f "${load_model_file}" ]]; then
-  echo "[ERROR] Stage-1 checkpoint not found: ${load_model_file}"
+  echo "[ERROR] Retriever checkpoint not found: ${load_model_file}"
   exit 1
 fi
 
