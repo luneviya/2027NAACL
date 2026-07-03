@@ -30,6 +30,7 @@ Generated files are written to:
 
 ```text
 dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
+dataset/<lang>/train_query_cocosoda_emb.pt
 dataset/<lang>/self_mined_top32_from_stage1.pkl
 saved_models/refcode/stage1/
 saved_models/refcode/stage2/
@@ -90,6 +91,18 @@ Stage 1 trains the initial retriever. It first builds the global hard-negative i
 
 ```bash
 bash scripts/run_retriever.sh --lang ruby
+```
+
+During hard-negative construction, the script now writes or reuses:
+
+```text
+dataset/<lang>/train_query_cocosoda_emb.pt
+```
+
+Override this cache path with:
+
+```bash
+EMBEDDINGS_CACHE=/path/to/train_query_embeddings.pt bash scripts/run_retriever.sh --lang ruby
 ```
 
 Stage 2 data construction harvests retrieval failures from the best Stage-1 checkpoint.

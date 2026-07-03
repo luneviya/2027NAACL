@@ -12,6 +12,7 @@ moco_m: 0.999
 moco_t: 0.07
 global_hard_topk: 500
 bm25_rank: 50
+embeddings_cache: dataset/${lang}/train_query_cocosoda_emb.pt
 refcode_temperature: 0.03
 refcode_uncertainty_samples: 4
 refcode_intra_weight: 1.0

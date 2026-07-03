@@ -55,6 +55,7 @@ ctrd_margin=${CTRD_MARGIN:-0.2}
 
 train_file=${TRAIN_FILE:-dataset/${lang}/train.jsonl}
 hard_idx_file=${HARD_IDX_FILE:-dataset/${lang}/refcode_hard_idx_top500_rank50.pkl}
+embeddings_cache=${EMBEDDINGS_CACHE:-dataset/${lang}/train_query_cocosoda_emb.pt}
 output_dir=${OUTPUT_DIR:-./saved_models/refcode/stage1/${lang}_seed${seed}_lr${lr}_tau${refcode_tau}_relW${ctrd_w}_top${ctrd_topk}_${current_time}}
 
 mkdir -p "$(dirname "${hard_idx_file}")" "${output_dir}"
@@ -72,16 +73,14 @@ retrieve_args=(
   --chunk_size "${RETRIEVAL_CHUNK_SIZE:-512}"
   --seed "${seed}"
   --device "${DEVICE:-cuda}"
+  --embeddings_cache "${embeddings_cache}"
 )
-
-if [[ -n "${EMBEDDINGS_CACHE:-}" ]]; then
-  retrieve_args+=(--embeddings_cache "${EMBEDDINGS_CACHE}")
-fi
 
 echo "[ReFCode-Retriever] lang=${lang}, seed=${seed}"
 echo "[ReFCode-Retriever] base_model=${base_model}"
 echo "[ReFCode-Retriever] train_file=${train_file}"
 echo "[ReFCode-Retriever] hard_idx_file=${hard_idx_file}"
+echo "[ReFCode-Retriever] embeddings_cache=${embeddings_cache}"
 echo "[ReFCode-Retriever] output_dir=${output_dir}"
 
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/retriever/run.py "${retrieve_args[@]}"
