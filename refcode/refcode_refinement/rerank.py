@@ -18,7 +18,7 @@ from torch.utils.data import Dataset, DataLoader, SequentialSampler
 from tqdm import tqdm
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
-from refcode.refinement.model import Model
+from refcode.refcode_refinement.model import Model
 
 
 def _as_token_list(value):

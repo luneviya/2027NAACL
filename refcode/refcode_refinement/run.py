@@ -39,7 +39,7 @@ from collections import Counter
 from random import choice
 import numpy as np
 from itertools import cycle
-from refcode.refinement.model import Model
+from refcode.refcode_refinement.model import Model
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, Dataset, SequentialSampler, RandomSampler
 from transformers import (WEIGHTS_NAME, AdamW, get_linear_schedule_with_warmup,
@@ -2035,7 +2035,7 @@ def parse_args():
     # Self-mined hard negatives: mine true model failures using a previous best checkpoint,
     # then train a listwise loss that directly optimizes gold-vs-failure cosine ranking.
     parser.add_argument('--use_self_mined_hard_negative', action='store_true', help='enable listwise loss on self-mined hard negatives')
-    parser.add_argument('--self_mined_idx_file', type=str, default='', help='pickle from refcode/harvesting/run.py; contains self_mined_idx list-of-lists')
+    parser.add_argument('--self_mined_idx_file', type=str, default='', help='pickle from refcode/failure_harvesting/run.py; contains self_mined_idx list-of-lists')
     parser.add_argument('--self_mined_weight', type=float, default=0.35, help='overall weight for self-mined listwise hard-negative loss')
     parser.add_argument('--self_mined_topk', type=int, default=16, help='keep top-K mined negatives per query in dataset')
     parser.add_argument('--self_mined_train_k', type=int, default=4, help='randomly use this many mined negatives per batch step; reduce if OOM')

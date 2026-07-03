@@ -31,7 +31,7 @@ from torch.utils.data import DataLoader, Dataset, SequentialSampler
 from tqdm import tqdm
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
-from refcode.retriever.model import Model
+from refcode.initial_retriever.model import Model
 
 logger = logging.getLogger(__name__)
 

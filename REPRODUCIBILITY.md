@@ -31,9 +31,9 @@ Generated files are written to:
 ```text
 dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
 dataset/<lang>/train_query_cocosoda_emb.pt
-dataset/<lang>/self_mined_top32_from_retriever.pkl
-saved_models/refcode/retriever/
-saved_models/refcode/refinement/
+dataset/<lang>/self_mined_top32_from_initial_retriever.pkl
+saved_models/refcode/initial_retriever/
+saved_models/refcode/refcode_refinement/
 saved_models/refcode/rerank/
 ```
 
@@ -80,17 +80,17 @@ The default seed is:
 Use:
 
 ```bash
-bash scripts/run_retriever.sh --lang ruby --seed 123456
-bash scripts/run_harvesting.sh --lang ruby --seed 123456
+bash scripts/run_initial_retriever.sh --lang ruby --seed 123456
+bash scripts/run_failure_harvesting.sh --lang ruby --seed 123456
 bash scripts/run_refcode.sh --lang ruby --seed 123456
 ```
 
 ## Main Commands
 
-The retriever step trains the initial retriever. It first builds the global hard-negative index, then trains with the same default hyperparameters used by the local verification run.
+The Initial Retriever step trains the initial retriever. It first builds the global hard-negative index, then trains with the same default hyperparameters used by the local verification run.
 
 ```bash
-bash scripts/run_retriever.sh --lang ruby
+bash scripts/run_initial_retriever.sh --lang ruby
 ```
 
 During hard-negative construction, the script now writes or reuses:
@@ -102,16 +102,16 @@ dataset/<lang>/train_query_cocosoda_emb.pt
 Override this cache path with:
 
 ```bash
-EMBEDDINGS_CACHE=/path/to/train_query_embeddings.pt bash scripts/run_retriever.sh --lang ruby
+EMBEDDINGS_CACHE=/path/to/train_query_embeddings.pt bash scripts/run_initial_retriever.sh --lang ruby
 ```
 
-The harvesting step constructs retrieval failures from the best retriever checkpoint.
+The Failure Harvesting step constructs retrieval failures from the best initial retriever checkpoint.
 
 ```bash
-bash scripts/run_harvesting.sh --lang ruby
+bash scripts/run_failure_harvesting.sh --lang ruby
 ```
 
-The refinement step trains from the retriever checkpoint with harvested failures, then runs final reranking.
+The ReFCode Refinement step trains from the initial retriever checkpoint with harvested failures, then runs final reranking.
 
 ```bash
 bash scripts/run_refcode.sh --lang ruby
@@ -119,7 +119,7 @@ bash scripts/run_refcode.sh --lang ruby
 
 ## Important Defaults
 
-Retriever stage:
+Initial Retriever:
 
 ```text
 learning_rate=8e-6
@@ -135,7 +135,7 @@ ctrd_weight=0.25
 ctrd_batch_topk=16
 ```
 
-Refinement stage:
+ReFCode Refinement:
 
 ```text
 learning_rate=5e-6
@@ -153,7 +153,7 @@ valid_fusion_alpha=0.5
 
 The following values were observed locally for ruby with seed `123456` and the default Hugging Face encoder. They are reported as verification context, not as a newly rerun claim after this packaging change.
 
-Retriever test:
+Initial Retriever test:
 
 ```text
 R@1 = 0.730
@@ -162,7 +162,7 @@ R@10 = 0.971
 MRR = 0.8239225133545454
 ```
 
-Refinement test:
+ReFCode Refinement test:
 
 ```text
 R@1 = 0.745
@@ -176,16 +176,16 @@ MRR = 0.8321392022782704
 The lightest repository check does not run training. It verifies shell syntax and Python import/compile paths:
 
 ```bash
-bash -n scripts/run_retriever.sh scripts/run_harvesting.sh scripts/run_refcode.sh refcode/utils/parser/build.sh
+bash -n scripts/run_initial_retriever.sh scripts/run_failure_harvesting.sh scripts/run_refcode.sh refcode/utils/parser/build.sh
 ```
 
 ```bash
 python -m py_compile \
-  refcode/refinement/model.py \
-  refcode/refinement/run.py \
-  refcode/refinement/rerank.py \
-  refcode/retriever/run.py \
-  refcode/harvesting/run.py \
+  refcode/refcode_refinement/model.py \
+  refcode/refcode_refinement/run.py \
+  refcode/refcode_refinement/rerank.py \
+  refcode/initial_retriever/run.py \
+  refcode/failure_harvesting/run.py \
   refcode/utils/utils.py \
   refcode/utils/data_utils.py \
   refcode/utils/metrics.py \
@@ -197,8 +197,8 @@ python -m py_compile \
 For a functional small-data smoke test, prepare a tiny CodeSearchNet-style dataset and run the three main scripts with small environment overrides, for example:
 
 ```bash
-RETRIEVAL_TOPK=8 BM25_RANK=2 BATCH_SIZE=4 EPOCH=1 bash scripts/run_retriever.sh --lang ruby
-bash scripts/run_harvesting.sh --lang ruby
+RETRIEVAL_TOPK=8 BM25_RANK=2 BATCH_SIZE=4 EPOCH=1 bash scripts/run_initial_retriever.sh --lang ruby
+bash scripts/run_failure_harvesting.sh --lang ruby
 BATCH_SIZE=4 EPOCH=1 bash scripts/run_refcode.sh --lang ruby
 ```
 

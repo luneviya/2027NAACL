@@ -69,18 +69,18 @@ valid_fusion_alpha=${VALID_FUSION_ALPHA:-0.5}
 valid_rerank_batch_size=${VALID_RERANK_BATCH_SIZE:-64}
 valid_fusion_fp16=${VALID_FUSION_FP16:-1}
 
-if [[ -z "${RETRIEVER_OUT:-}" ]]; then
-  RETRIEVER_OUT=$(ls -td "./saved_models/refcode/retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
+if [[ -z "${INITIAL_RETRIEVER_OUT:-}" ]]; then
+  INITIAL_RETRIEVER_OUT=$(ls -td "./saved_models/refcode/initial_retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
 fi
 
-if [[ -z "${RETRIEVER_OUT}" ]]; then
-  echo "[ERROR] No retriever output directory found. Set RETRIEVER_OUT explicitly."
+if [[ -z "${INITIAL_RETRIEVER_OUT}" ]]; then
+  echo "[ERROR] No retriever output directory found. Set INITIAL_RETRIEVER_OUT explicitly."
   exit 1
 fi
 
-load_model_file=${LOAD_MODEL_FILE:-${RETRIEVER_OUT}/checkpoint-best-mrr/model.bin}
-self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_retriever.pkl}
-output_dir=${OUTPUT_DIR:-./saved_models/refcode/refinement/${lang}_seed${seed}_K${self_mine_train_k}_W${self_mine_w}_LI${li_weight}_${current_time}}
+load_model_file=${LOAD_MODEL_FILE:-${INITIAL_RETRIEVER_OUT}/checkpoint-best-mrr/model.bin}
+self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_initial_retriever.pkl}
+output_dir=${OUTPUT_DIR:-./saved_models/refcode/refcode_refinement/${lang}_seed${seed}_K${self_mine_train_k}_W${self_mine_w}_LI${li_weight}_${current_time}}
 
 if [[ ! -f "${load_model_file}" ]]; then
   echo "[ERROR] Retriever checkpoint not found: ${load_model_file}"
@@ -89,7 +89,7 @@ fi
 
 if [[ ! -f "${self_mined_idx_file}" ]]; then
   echo "[ERROR] Self-mined failure file not found: ${self_mined_idx_file}"
-  echo "Run: bash scripts/run_harvesting.sh --lang ${lang}"
+  echo "Run: bash scripts/run_failure_harvesting.sh --lang ${lang}"
   exit 1
 fi
 
@@ -101,7 +101,7 @@ echo "[ReFCode-Refinement] load_model_file=${load_model_file}"
 echo "[ReFCode-Refinement] self_mined_idx_file=${self_mined_idx_file}"
 echo "[ReFCode-Refinement] output_dir=${output_dir}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refinement/run.py \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refcode_refinement/run.py \
   --eval_frequency 100 \
   --moco_m ${moco_m} \
   --moco_t ${moco_t} \
@@ -158,7 +158,7 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refinement/run.py \
 
 checkpoint_file=${output_dir}/checkpoint-best-mrr/model.bin
 if [[ -f "${checkpoint_file}" ]]; then
-  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refinement/rerank.py \
+  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refcode_refinement/rerank.py \
     --lang "${lang}" \
     --model_name_or_path "${base_model}" \
     --config_name "${base_model}" \

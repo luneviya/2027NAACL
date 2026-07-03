@@ -63,7 +63,7 @@ Do not submit the raw working directory or `.git/` folder. Use a clean anonymous
   - `configs/*.yaml`
   - `scripts/*.sh`
   - `refcode/**/run.py`
-  - `refcode/refinement/rerank.py`
+  - `refcode/refcode_refinement/rerank.py`
 - Risk level: **low**
 - Why it may violate double-anonymous review: `DeepSoftwareAnalytics/CoCoSoDa` is a public pretrained model dependency. It does not identify this submission's authors, but it may reveal experimental lineage.
 - Recommended fix: keep for reproducibility, or replace README examples with `BASE_MODEL=/path/to/model` if the venue requests stronger anonymization.

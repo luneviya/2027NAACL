@@ -25,17 +25,17 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
 base_model=${BASE_MODEL:-DeepSoftwareAnalytics/CoCoSoDa}
 tokenizer_name=${TOKENIZER_NAME:-${base_model}}
 
-if [[ -z "${RETRIEVER_OUT:-}" ]]; then
-  RETRIEVER_OUT=$(ls -td "./saved_models/refcode/retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
+if [[ -z "${INITIAL_RETRIEVER_OUT:-}" ]]; then
+  INITIAL_RETRIEVER_OUT=$(ls -td "./saved_models/refcode/initial_retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
 fi
 
-if [[ -z "${RETRIEVER_OUT}" ]]; then
-  echo "[ERROR] No retriever output directory found. Set RETRIEVER_OUT explicitly."
+if [[ -z "${INITIAL_RETRIEVER_OUT}" ]]; then
+  echo "[ERROR] No retriever output directory found. Set INITIAL_RETRIEVER_OUT explicitly."
   exit 1
 fi
 
-checkpoint_file=${LOAD_MODEL_FILE:-${RETRIEVER_OUT}/checkpoint-best-mrr/model.bin}
-self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_retriever.pkl}
+checkpoint_file=${LOAD_MODEL_FILE:-${INITIAL_RETRIEVER_OUT}/checkpoint-best-mrr/model.bin}
+self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_initial_retriever.pkl}
 
 if [[ ! -f "${checkpoint_file}" ]]; then
   echo "[ERROR] Retriever checkpoint not found: ${checkpoint_file}"
@@ -47,7 +47,7 @@ echo "[ReFCode-Harvesting] base_model=${base_model}"
 echo "[ReFCode-Harvesting] checkpoint_file=${checkpoint_file}"
 echo "[ReFCode-Harvesting] self_mined_idx_file=${self_mined_idx_file}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/harvesting/run.py \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/failure_harvesting/run.py \
   --train_data_file "dataset/${lang}/train.jsonl" \
   --output_file "${self_mined_idx_file}" \
   --model_name_or_path "${base_model}" \

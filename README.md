@@ -8,9 +8,9 @@ Large assets are intentionally excluded. Datasets, checkpoints, logs, caches, an
 
 ```text
 configs/                 Default experiment settings for reference
-refcode/retriever/       Initial retriever training and top-K retrieval support
-refcode/harvesting/      Retrieval-failure mining and data construction
-refcode/refinement/      ReFCode refinement, reranking, and evaluation
+refcode/initial_retriever/       Initial retriever training and top-K retrieval support
+refcode/failure_harvesting/      Retrieval-failure mining and data construction
+refcode/refcode_refinement/      ReFCode refinement, reranking, and evaluation
 refcode/utils/           Shared data, metric, parser, and I/O helpers
 scripts/                 Main runnable entry scripts
 ```
@@ -61,19 +61,19 @@ cd -
 
 Run commands from the repository root.
 
-1. Train the initial retriever:
+1. Initial Retriever:
 
 ```bash
-bash scripts/run_retriever.sh --lang javascript
+bash scripts/run_initial_retriever.sh --lang javascript
 ```
 
-2. Harvest failure candidates:
+2. Failure Harvesting:
 
 ```bash
-bash scripts/run_harvesting.sh --lang javascript
+bash scripts/run_failure_harvesting.sh --lang javascript
 ```
 
-3. Run ReFCode refinement, reranking, and evaluation:
+3. ReFCode Refinement:
 
 ```bash
 bash scripts/run_refcode.sh --lang javascript
@@ -88,9 +88,9 @@ The pipeline writes generated artifacts locally:
 ```text
 dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
 dataset/<lang>/train_query_cocosoda_emb.pt
-dataset/<lang>/self_mined_top32_from_retriever.pkl
-saved_models/refcode/retriever/
-saved_models/refcode/refinement/
+dataset/<lang>/self_mined_top32_from_initial_retriever.pkl
+saved_models/refcode/initial_retriever/
+saved_models/refcode/refcode_refinement/
 saved_models/refcode/rerank/
 ```
 
