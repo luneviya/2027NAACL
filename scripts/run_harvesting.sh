@@ -47,7 +47,7 @@ echo "[ReFCode-Harvesting] base_model=${base_model}"
 echo "[ReFCode-Harvesting] checkpoint_file=${checkpoint_file}"
 echo "[ReFCode-Harvesting] self_mined_idx_file=${self_mined_idx_file}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.harvesting.mine \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/harvesting/run.py \
   --train_data_file "dataset/${lang}/train.jsonl" \
   --output_file "${self_mined_idx_file}" \
   --model_name_or_path "${base_model}" \

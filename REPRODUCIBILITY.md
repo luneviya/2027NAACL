@@ -169,13 +169,13 @@ bash -n scripts/run_retriever.sh scripts/run_harvesting.sh scripts/run_refcode.s
 ```bash
 python -m py_compile \
   refcode/refinement/model.py \
-  refcode/refinement/train.py \
+  refcode/refinement/run.py \
   refcode/refinement/rerank.py \
-  refcode/retriever/retrieve.py \
-  refcode/harvesting/mine.py \
-  refcode/utils/io.py \
-  refcode/utils/config.py \
-  refcode/utils/seed.py \
+  refcode/retriever/run.py \
+  refcode/harvesting/run.py \
+  refcode/utils/utils.py \
+  refcode/utils/data_utils.py \
+  refcode/utils/metrics.py \
   refcode/utils/parser/DFG.py \
   refcode/utils/parser/build.py \
   refcode/utils/parser/utils.py

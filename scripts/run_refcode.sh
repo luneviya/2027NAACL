@@ -101,7 +101,7 @@ echo "[ReFCode-Refinement] load_model_file=${load_model_file}"
 echo "[ReFCode-Refinement] self_mined_idx_file=${self_mined_idx_file}"
 echo "[ReFCode-Refinement] output_dir=${output_dir}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.refinement.train \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refinement/run.py \
   --eval_frequency 100 \
   --moco_m ${moco_m} \
   --moco_t ${moco_t} \
@@ -158,7 +158,7 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.refinement.train 
 
 checkpoint_file=${output_dir}/checkpoint-best-mrr/model.bin
 if [[ -f "${checkpoint_file}" ]]; then
-  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.refinement.rerank \
+  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refinement/rerank.py \
     --lang "${lang}" \
     --model_name_or_path "${base_model}" \
     --config_name "${base_model}" \

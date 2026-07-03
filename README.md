@@ -11,7 +11,7 @@ configs/                 Default experiment settings for reference
 refcode/retriever/       Initial retriever training and top-K retrieval support
 refcode/harvesting/      Retrieval-failure mining and data construction
 refcode/refinement/      ReFCode refinement, reranking, and evaluation
-refcode/utils/           Shared I/O, parser, config, and seed helpers
+refcode/utils/           Shared data, metric, parser, and I/O helpers
 scripts/                 Main runnable entry scripts
 ```
 

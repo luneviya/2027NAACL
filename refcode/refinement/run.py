@@ -26,6 +26,11 @@ import logging
 import os
 import pickle
 import random
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 import torch
 import json
 import math
@@ -51,9 +56,8 @@ from refcode.utils.parser import (remove_comments_and_docstrings,
                    index_to_code_token,
                    tree_to_variable_index)
 from tree_sitter import Language, Parser
-import sys
 sys.path.append("dataset")
-from refcode.utils.io import save_json_data, save_pickle_data
+from refcode.utils.utils import save_json_data, save_pickle_data
 dfg_function={
     'python':DFG_python,
     'java':DFG_java,
@@ -2031,7 +2035,7 @@ def parse_args():
     # Self-mined hard negatives: mine true model failures using a previous best checkpoint,
     # then train a listwise loss that directly optimizes gold-vs-failure cosine ranking.
     parser.add_argument('--use_self_mined_hard_negative', action='store_true', help='enable listwise loss on self-mined hard negatives')
-    parser.add_argument('--self_mined_idx_file', type=str, default='', help='pickle from refcode.harvesting.mine; contains self_mined_idx list-of-lists')
+    parser.add_argument('--self_mined_idx_file', type=str, default='', help='pickle from refcode/harvesting/run.py; contains self_mined_idx list-of-lists')
     parser.add_argument('--self_mined_weight', type=float, default=0.35, help='overall weight for self-mined listwise hard-negative loss')
     parser.add_argument('--self_mined_topk', type=int, default=16, help='keep top-K mined negatives per query in dataset')
     parser.add_argument('--self_mined_train_k', type=int, default=4, help='randomly use this many mined negatives per batch step; reduce if OOM')

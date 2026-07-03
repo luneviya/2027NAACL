@@ -84,9 +84,9 @@ echo "[ReFCode-Retriever] train_file=${train_file}"
 echo "[ReFCode-Retriever] hard_idx_file=${hard_idx_file}"
 echo "[ReFCode-Retriever] output_dir=${output_dir}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.retriever.retrieve "${retrieve_args[@]}"
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/retriever/run.py "${retrieve_args[@]}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.refinement.train \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refinement/run.py \
   --eval_frequency 100 \
   --moco_m ${moco_m} \
   --moco_t ${moco_t} \
