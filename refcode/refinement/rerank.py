@@ -1,5 +1,4 @@
 # ReFCode inference-only token-level late-interaction reranker for code search.
-# ReFCode inference-only token-level late-interaction reranker for code search.
 # It loads your best bi-encoder checkpoint, retrieves topK candidates,
 # then reranks topK using ColBERT-style MaxSim token-level interaction.
 

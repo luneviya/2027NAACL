@@ -11,6 +11,11 @@ logs/
 *.log
 nohup.out
 wandb/
+.cache/
+cache/
+tmp/
+temp/
+*.tmp
 
 # Data
 dataset/
@@ -42,9 +47,11 @@ checkpoint-*/
 
 # Local environments
 .env
+.env.*
 .venv/
 venv/
 env/
+conda-meta/
 *.egg-info/
 
 # Experiment analysis outputs

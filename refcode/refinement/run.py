@@ -1445,7 +1445,7 @@ def  multi_lang_continue_pre_train(args, model, tokenizer,pool):
         try:
             from apex import amp
         except ImportError:
-            raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
+            raise ImportError("Please install NVIDIA Apex to use fp16 training.")
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     # multi-gpu training (should be after apex fp16 initialization)
@@ -1910,7 +1910,7 @@ def parse_args():
     #                     help="The input training data files (some json files).")
     parser.add_argument('--do_continue_pre_trained', action='store_true', help='debug mode', required=False)
     parser.add_argument('--do_fine_tune', action='store_true', help='debug mode', required=False)
-    parser.add_argument('--do_whitening', action='store_true', help='do_whitening https://github.com/Jun-jie-Huang/WhiteningBERT', required=False)
+    parser.add_argument('--do_whitening', action='store_true', help='do_whitening', required=False)
     parser.add_argument("--time_score", default=1, type=int,help="cosine value * time_score")   
     parser.add_argument("--max_steps", default=100, type=int, help="If > 0: set total number of training steps to perform. Override num_train_epochs.")
     parser.add_argument("--num_warmup_steps", default=0, type=int, help="num_warmup_steps")
