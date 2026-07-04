@@ -23,7 +23,7 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 import torch
@@ -31,7 +31,7 @@ from torch.utils.data import DataLoader, Dataset, SequentialSampler
 from tqdm import tqdm
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
-from refcode.initial_retriever.model import Model
+from refcode.model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,7 @@ def as_tokens(value):
 
 
 def get_nl_tokens(js):
+    """Extract query tokens from common CodeSearchNet-style JSONL fields."""
     for key in ["docstring_tokens", "nl_tokens", "query_tokens"]:
         if key in js and js[key]:
             return as_tokens(js[key])
@@ -72,6 +73,7 @@ def get_url(js, idx):
 
 
 def build_unixcoder_ids(tokens, tokenizer, max_length):
+    """Convert query tokens to the UniXcoder encoder-only input format."""
     text = " ".join(tokens)
     toks = tokenizer.tokenize(text)[: max_length - 4]
     toks = [tokenizer.cls_token, "<encoder-only>", tokenizer.sep_token] + toks + [tokenizer.sep_token]
@@ -92,6 +94,11 @@ class QueryDataset(Dataset):
 
 
 def load_train_queries(path, tokenizer, nl_length, debug_limit=-1):
+    """Load training queries from JSONL and retain URL ids for leakage-safe filtering.
+
+    Expected rows follow the CodeSearchNet convention and include natural-language
+    tokens/text plus a stable `url` or `retrieval_idx` identifier.
+    """
     items = []
     with open(path, encoding="utf-8") as f:
         for idx, line in enumerate(f):
@@ -113,6 +120,7 @@ def load_train_queries(path, tokenizer, nl_length, debug_limit=-1):
 
 @torch.no_grad()
 def encode_queries(model, dataset, batch_size, device):
+    """Encode all training queries into normalized vectors for global retrieval."""
     loader = DataLoader(dataset, sampler=SequentialSampler(dataset), batch_size=batch_size, num_workers=4)
     vecs = []
     model.eval()
@@ -124,7 +132,7 @@ def encode_queries(model, dataset, batch_size, device):
 
 
 def bm25_choose(anchor_tokens, candidate_indices, all_tokens, bm25_rank=50, k1=1.5, b=0.75):
-    """Return selected candidate index by BM25 rank; bm25_rank is 1-based."""
+    """Select one hard negative by BM25 rank among cosine-nearest query candidates."""
     if not candidate_indices:
         return -1
     docs = [all_tokens[j] for j in candidate_indices]
@@ -163,6 +171,12 @@ def bm25_choose(anchor_tokens, candidate_indices, all_tokens, bm25_rank=50, k1=1
 
 
 def build_hard_idx(embeddings, tokens, urls, topk, bm25_rank, chunk_size, device, filter_same_url=True):
+    """Build `hard_idx`: one train-set hard negative code index per train query.
+
+    The candidate pool is cosine top-K over training queries only. The final
+    negative is chosen by BM25 rank, excluding the same example and, by default,
+    examples with the same URL.
+    """
     n = embeddings.size(0)
     topk = min(topk, max(1, n - 1))
     emb = embeddings.to(device)
@@ -260,6 +274,8 @@ def main():
         "filter_same_url": not args.no_filter_same_url,
         "num_examples": len(items),
     }
+    # Output format consumed by refinement: pickle(dict), with hard_idx aligned
+    # to the row order of args.train_data_file.
     Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output_file, "wb") as f:
         pickle.dump(meta, f)

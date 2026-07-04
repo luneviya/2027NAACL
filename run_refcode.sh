@@ -21,8 +21,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-current_time=$(date "+%Y%m%d%H%M%S")
-
 export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-max_split_size_mb:32}
 
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -70,7 +68,7 @@ valid_rerank_batch_size=${VALID_RERANK_BATCH_SIZE:-64}
 valid_fusion_fp16=${VALID_FUSION_FP16:-1}
 
 if [[ -z "${INITIAL_RETRIEVER_OUT:-}" ]]; then
-  INITIAL_RETRIEVER_OUT=$(ls -td "./saved_models/initial_retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
+  INITIAL_RETRIEVER_OUT="./saved_models/initial_retriever/${lang}"
 fi
 
 if [[ -z "${INITIAL_RETRIEVER_OUT}" ]]; then
@@ -80,7 +78,7 @@ fi
 
 load_model_file=${LOAD_MODEL_FILE:-${INITIAL_RETRIEVER_OUT}/checkpoint-best-mrr/model.bin}
 self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_initial_retriever.pkl}
-output_dir=${OUTPUT_DIR:-./saved_models/refcode/${lang}_seed${seed}_K${self_mine_train_k}_W${self_mine_w}_LI${li_weight}_${current_time}}
+output_dir=${OUTPUT_DIR:-./saved_models/refcode/${lang}}
 
 if [[ ! -f "${load_model_file}" ]]; then
   echo "[ERROR] Retriever checkpoint not found: ${load_model_file}"
@@ -89,7 +87,7 @@ fi
 
 if [[ ! -f "${self_mined_idx_file}" ]]; then
   echo "[ERROR] Self-mined failure file not found: ${self_mined_idx_file}"
-  echo "Run: bash scripts/run_failure_harvesting.sh --lang ${lang}"
+  echo "Run: bash run_failure_harvesting.sh --lang ${lang}"
   exit 1
 fi
 
@@ -101,7 +99,7 @@ echo "[ReFCode-Refinement] load_model_file=${load_model_file}"
 echo "[ReFCode-Refinement] self_mined_idx_file=${self_mined_idx_file}"
 echo "[ReFCode-Refinement] output_dir=${output_dir}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refcode_refinement/run.py \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_refcode_refinement \
   --eval_frequency 100 \
   --moco_m ${moco_m} \
   --moco_t ${moco_t} \
@@ -157,7 +155,8 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refcode_refinement/r
 
 checkpoint_file=${output_dir}/checkpoint-best-mrr/model.bin
 if [[ -f "${checkpoint_file}" ]]; then
-  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refcode_refinement/rerank.py \
+  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_refcode_refinement \
+    --run_rerank_only \
     --lang "${lang}" \
     --model_name_or_path "${base_model}" \
     --config_name "${base_model}" \
@@ -172,5 +171,5 @@ if [[ -f "${checkpoint_file}" ]]; then
     --rerank_batch_size "${RERANK_BATCH_SIZE:-64}" \
     --top_k "${RERANK_TOP_K:-50}" \
     --fusion_alpha "${RERANK_ALPHA:-0.5}" \
-    --fp16 "${RERANK_FP16:-1}"
+    --rerank_fp16 "${RERANK_FP16:-1}"
 fi

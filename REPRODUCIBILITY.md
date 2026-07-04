@@ -32,8 +32,8 @@ Generated files are written to:
 dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
 dataset/<lang>/train_query_cocosoda_emb.pt
 dataset/<lang>/self_mined_top32_from_initial_retriever.pkl
-saved_models/initial_retriever/
-saved_models/refcode/
+saved_models/initial_retriever/<lang>/
+saved_models/refcode/<lang>/
 ```
 
 Override output locations with:
@@ -79,9 +79,9 @@ The default seed is:
 Use:
 
 ```bash
-bash scripts/run_initial_retriever.sh --lang ruby --seed 123456
-bash scripts/run_failure_harvesting.sh --lang ruby --seed 123456
-bash scripts/run_refcode.sh --lang ruby --seed 123456
+bash run_initial_retriever.sh --lang ruby --seed 123456
+bash run_failure_harvesting.sh --lang ruby --seed 123456
+bash run_refcode.sh --lang ruby --seed 123456
 ```
 
 ## Main Commands
@@ -89,7 +89,7 @@ bash scripts/run_refcode.sh --lang ruby --seed 123456
 The Initial Retriever step trains the initial retriever. It first builds the global hard-negative index, then trains with the same default hyperparameters used by the local verification run.
 
 ```bash
-bash scripts/run_initial_retriever.sh --lang ruby
+bash run_initial_retriever.sh --lang ruby
 ```
 
 During hard-negative construction, the script now writes or reuses:
@@ -101,19 +101,19 @@ dataset/<lang>/train_query_cocosoda_emb.pt
 Override this cache path with:
 
 ```bash
-EMBEDDINGS_CACHE=/path/to/train_query_embeddings.pt bash scripts/run_initial_retriever.sh --lang ruby
+EMBEDDINGS_CACHE=/path/to/train_query_embeddings.pt bash run_initial_retriever.sh --lang ruby
 ```
 
 The Failure Harvesting step constructs retrieval failures from the best initial retriever checkpoint.
 
 ```bash
-bash scripts/run_failure_harvesting.sh --lang ruby
+bash run_failure_harvesting.sh --lang ruby
 ```
 
 The ReFCode Refinement step trains from the initial retriever checkpoint with harvested failures, then runs final reranking.
 
 ```bash
-bash scripts/run_refcode.sh --lang ruby
+bash run_refcode.sh --lang ruby
 ```
 
 ## Important Defaults
@@ -175,16 +175,15 @@ MRR = 0.8321392022782704
 The lightest repository check does not run training. It verifies shell syntax and Python import/compile paths:
 
 ```bash
-bash -n scripts/run_initial_retriever.sh scripts/run_failure_harvesting.sh scripts/run_refcode.sh refcode/utils/parser/build.sh
+bash -n run_initial_retriever.sh run_failure_harvesting.sh run_refcode.sh refcode/utils/parser/build.sh
 ```
 
 ```bash
 python -m py_compile \
-  refcode/refcode_refinement/model.py \
-  refcode/refcode_refinement/run.py \
-  refcode/refcode_refinement/rerank.py \
-  refcode/initial_retriever/run.py \
-  refcode/failure_harvesting/run.py \
+  refcode/model.py \
+  refcode/run_initial_retriever.py \
+  refcode/run_failure_harvesting.py \
+  refcode/run_refcode_refinement.py \
   refcode/utils/utils.py \
   refcode/utils/data_utils.py \
   refcode/utils/metrics.py \
@@ -196,9 +195,9 @@ python -m py_compile \
 For a functional small-data smoke test, prepare a tiny CodeSearchNet-style dataset and run the three main scripts with small environment overrides, for example:
 
 ```bash
-RETRIEVAL_TOPK=8 BM25_RANK=2 BATCH_SIZE=4 EPOCH=1 bash scripts/run_initial_retriever.sh --lang ruby
-bash scripts/run_failure_harvesting.sh --lang ruby
-BATCH_SIZE=4 EPOCH=1 bash scripts/run_refcode.sh --lang ruby
+RETRIEVAL_TOPK=8 BM25_RANK=2 BATCH_SIZE=4 EPOCH=1 bash run_initial_retriever.sh --lang ruby
+bash run_failure_harvesting.sh --lang ruby
+BATCH_SIZE=4 EPOCH=1 bash run_refcode.sh --lang ruby
 ```
 
 The tiny-data smoke test requires a valid dataset and encoder checkpoint.

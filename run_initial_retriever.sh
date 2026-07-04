@@ -21,8 +21,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-current_time=$(date "+%Y%m%d%H%M%S")
-
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
 base_model=${BASE_MODEL:-DeepSoftwareAnalytics/CoCoSoDa}
 tokenizer_name=${TOKENIZER_NAME:-${base_model}}
@@ -56,7 +54,7 @@ ctrd_margin=${CTRD_MARGIN:-0.2}
 train_file=${TRAIN_FILE:-dataset/${lang}/train.jsonl}
 hard_idx_file=${HARD_IDX_FILE:-dataset/${lang}/refcode_hard_idx_top500_rank50.pkl}
 embeddings_cache=${EMBEDDINGS_CACHE:-dataset/${lang}/train_query_cocosoda_emb.pt}
-output_dir=${OUTPUT_DIR:-./saved_models/initial_retriever/${lang}_seed${seed}_lr${lr}_tau${refcode_tau}_relW${ctrd_w}_top${ctrd_topk}_${current_time}}
+output_dir=${OUTPUT_DIR:-./saved_models/initial_retriever/${lang}}
 
 mkdir -p "$(dirname "${hard_idx_file}")" "${output_dir}"
 
@@ -83,9 +81,9 @@ echo "[ReFCode-Retriever] hard_idx_file=${hard_idx_file}"
 echo "[ReFCode-Retriever] embeddings_cache=${embeddings_cache}"
 echo "[ReFCode-Retriever] output_dir=${output_dir}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/initial_retriever/run.py "${retrieve_args[@]}"
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_initial_retriever "${retrieve_args[@]}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refcode_refinement/run.py \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_refcode_refinement \
   --eval_frequency 100 \
   --moco_m ${moco_m} \
   --moco_t ${moco_t} \

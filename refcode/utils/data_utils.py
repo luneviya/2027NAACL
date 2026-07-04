@@ -1,7 +1,10 @@
+"""Small data helpers for reviewer smoke checks and lightweight scripts."""
+
 import json
 
 
 def read_jsonl(path):
+    """Read a JSONL file into a list of dictionaries."""
     rows = []
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
@@ -12,6 +15,7 @@ def read_jsonl(path):
 
 
 def as_token_list(value):
+    """Normalize a string or token list into a flat token list."""
     if value is None:
         return []
     if isinstance(value, list):

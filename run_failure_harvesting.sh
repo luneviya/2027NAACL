@@ -26,7 +26,7 @@ base_model=${BASE_MODEL:-DeepSoftwareAnalytics/CoCoSoDa}
 tokenizer_name=${TOKENIZER_NAME:-${base_model}}
 
 if [[ -z "${INITIAL_RETRIEVER_OUT:-}" ]]; then
-  INITIAL_RETRIEVER_OUT=$(ls -td "./saved_models/initial_retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
+  INITIAL_RETRIEVER_OUT="./saved_models/initial_retriever/${lang}"
 fi
 
 if [[ -z "${INITIAL_RETRIEVER_OUT}" ]]; then
@@ -47,7 +47,7 @@ echo "[ReFCode-Harvesting] base_model=${base_model}"
 echo "[ReFCode-Harvesting] checkpoint_file=${checkpoint_file}"
 echo "[ReFCode-Harvesting] self_mined_idx_file=${self_mined_idx_file}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/failure_harvesting/run.py \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_failure_harvesting \
   --train_data_file "dataset/${lang}/train.jsonl" \
   --output_file "${self_mined_idx_file}" \
   --model_name_or_path "${base_model}" \

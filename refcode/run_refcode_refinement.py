@@ -13,10 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Fine-tuning the library models for language modeling on a text file (GPT, GPT-2, BERT, RoBERTa).
-GPT and GPT-2 are fine-tuned using a causal language modeling (CLM) loss while BERT and RoBERTa are fine-tuned
-using a masked language modeling (MLM) loss.
+"""Train ReFCode refinement and run final dual-granularity reranking.
+
+The training path consumes CodeSearchNet-style train/valid/test JSONL files and
+optional pickle files from initial retrieval and failure harvesting. The
+`--run_rerank_only` path loads a saved refinement checkpoint and writes the
+final reviewer-facing JSONL metrics.
 """
 
 from unittest import removeResult
@@ -28,8 +30,9 @@ import pickle
 import random
 import sys
 from pathlib import Path
+from typing import Any, Dict, List
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import torch
 import json
@@ -39,7 +42,7 @@ from collections import Counter
 from random import choice
 import numpy as np
 from itertools import cycle
-from refcode.refcode_refinement.model import Model
+from refcode.model import Model
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, Dataset, SequentialSampler, RandomSampler
 from transformers import (WEIGHTS_NAME, AdamW, get_linear_schedule_with_warmup,
@@ -69,7 +72,7 @@ dfg_function={
 
 parsers={}        
 for lang in dfg_function:
-    language_library = os.path.join(os.path.dirname(__file__), '..', 'utils', 'parser', 'my-languages.so')
+    language_library = os.path.join(os.path.dirname(__file__), 'utils', 'parser', 'my-languages.so')
     LANGUAGE = Language(language_library, lang)
     parser = Parser()
     parser.set_language(LANGUAGE) 
@@ -129,6 +132,7 @@ def lunif(x, t=2):
 
 
 def cal_r1_r5_r10(ranks):
+    """Compute Recall@1/5/10 from reciprocal-rank values."""
     r1,r5,r10= 0,0,0
     data_len= len(ranks)
     for item in ranks:
@@ -504,6 +508,11 @@ def convert_examples_to_features_unixcoder(js,tokenizer,args):
     )
 
 class TextDataset_unixcoder(Dataset):
+    """Dataset for UniXcoder/CoCoSoDa-style ReFCode training and evaluation.
+
+    Train rows may include optional augmented views. Offline hard-negative and
+    self-mined failure indices are loaded only for the train split.
+    """
     def __init__(self, tokenizer, args, file_path=None, pooler=None):
         self.args = args
         self.file_path = file_path
@@ -757,7 +766,7 @@ def _bm25_scores_for_anchor(anchor_tokens, docs_tokens, k1=1.5, b=0.75):
 
 
 def select_bm25_hard_negative_indices(nl_vec, raw_nl_tokens, urls=None, ratio=0.1, candidate_topk=-1):
-    """ReFCode-style hard negative mining inside a batch."""
+    """Select in-batch hard negatives with cosine retrieval followed by BM25."""
     with torch.no_grad():
         bs = nl_vec.size(0)
         if bs <= 1:
@@ -841,6 +850,7 @@ def weighted_inter_modal_loss(
     return F.cross_entropy(logits_all, targets)
 
 def contrastive_pair_loss(anchor_vec, positive_vec, temperature=0.03, symmetric=True, valid_mask=None):
+    """Contrast paired views for optional NL/code augmentation consistency."""
     logits = torch.matmul(anchor_vec, positive_vec.t()) / temperature
     targets = torch.arange(anchor_vec.size(0), device=anchor_vec.device)
     if valid_mask is None:
@@ -861,6 +871,7 @@ def contrastive_pair_loss(anchor_vec, positive_vec, temperature=0.03, symmetric=
 
 
 def gaussian_kl_loss(*encoded):
+    """KL regularization for uncertainty-head Gaussian parameters."""
     losses = []
     for enc in encoded:
         mu, logvar = enc['mu'], enc['logvar']
@@ -926,7 +937,7 @@ def li_encode_tokens(model, input_ids, tokenizer=None):
 
 
 def li_maxsim_score(q_hidden, q_mask, c_hidden, c_mask):
-    """ColBERT-style MaxSim score."""
+    """ColBERT-style MaxSim score over token representations."""
     q_hidden = F.normalize(q_hidden, p=2, dim=-1)
     c_hidden = F.normalize(c_hidden, p=2, dim=-1)
 
@@ -1047,6 +1058,7 @@ def compute_lite_late_interaction_self_mined_loss(model, tokenizer, nl_inputs, c
 
     return total_loss / max(total_count, 1)
 def refcode_encode(model, input_ids, args):
+    """Encode inputs with uncertainty sampling enabled for ReFCode losses."""
     base_model = model.module if hasattr(model, 'module') else model
     return base_model.encode_inputs(input_ids, return_uncertainty=True, num_samples=args.refcode_uncertainty_samples)
 
@@ -1172,7 +1184,7 @@ def compute_self_mined_hard_loss(model, nl_vec, code_vec, mined_code_inputs, arg
 
 def train(args, model, tokenizer,pool):
 
-    """Train the model. With --use_refcode_uncertainty, use ReFCode-style loss."""
+    """Run refinement training and select checkpoints using validation metrics."""
     if args.data_aug_type ==  "replace_type" :
         train_dataset=TextDataset(tokenizer, args, args.train_data_file, pool)
     else:
@@ -1767,6 +1779,11 @@ def evaluate_late_fusion(args, model, tokenizer, file_name, pool, eval_when_trai
 
 
 def evaluate(args, model, tokenizer,file_name,pool, eval_when_training=False):
+    """Evaluate bi-encoder retrieval with MRR and Recall@K.
+
+    Query/code matches are identified by URL, following the standard code-search
+    JSONL protocol used by the artifact.
+    """
     # if "unixcoder" in args.model_name_or_path or "coco" in args.model_name_or_path :
     dataset_class = TextDataset_unixcoder
     # else:
@@ -2035,7 +2052,7 @@ def parse_args():
     # Self-mined hard negatives: mine true model failures using a previous best checkpoint,
     # then train a listwise loss that directly optimizes gold-vs-failure cosine ranking.
     parser.add_argument('--use_self_mined_hard_negative', action='store_true', help='enable listwise loss on self-mined hard negatives')
-    parser.add_argument('--self_mined_idx_file', type=str, default='', help='pickle from refcode/failure_harvesting/run.py; contains self_mined_idx list-of-lists')
+    parser.add_argument('--self_mined_idx_file', type=str, default='', help='pickle from refcode/run_failure_harvesting.py; contains self_mined_idx list-of-lists')
     parser.add_argument('--self_mined_weight', type=float, default=0.35, help='overall weight for self-mined listwise hard-negative loss')
     parser.add_argument('--self_mined_topk', type=int, default=16, help='keep top-K mined negatives per query in dataset')
     parser.add_argument('--self_mined_train_k', type=int, default=4, help='randomly use this many mined negatives per batch step; reduce if OOM')
@@ -2077,6 +2094,16 @@ def parse_args():
                         help='batch size for validation late-interaction reranking')
     parser.add_argument('--valid_fusion_fp16', type=int, default=1,
                         help='use fp16 autocast for validation late-interaction reranking')
+    parser.add_argument('--run_rerank_only', action='store_true',
+                        help='run final late-interaction reranking with a saved checkpoint')
+    parser.add_argument('--rerank_batch_size', type=int, default=64,
+                        help='batch size for final late-interaction reranking')
+    parser.add_argument('--top_k', type=int, default=50,
+                        help='topK candidates reranked by final late interaction')
+    parser.add_argument('--fusion_alpha', type=float, default=0.5,
+                        help='fixed fusion alpha for final reranking')
+    parser.add_argument('--rerank_fp16', type=int, default=1,
+                        help='use fp16 autocast for final late-interaction reranking')
 
     #print arguments
     args = parser.parse_args()
@@ -2109,9 +2136,336 @@ def create_model(args,model,tokenizer, config=None):
 
     return model
 
+
+# Final reranking helpers merged from the former standalone rerank entry.
+def _rerank_as_token_list(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        out = []
+        for item in value:
+            if isinstance(item, str):
+                out.extend(item.split())
+            else:
+                out.append(str(item))
+        return out
+    if isinstance(value, str):
+        return value.split()
+    return str(value).split()
+
+
+def _rerank_extract_code_tokens(js: Dict[str, Any]) -> List[str]:
+    """Extract code tokens for final reranking from CodeSearchNet-style rows."""
+    for key in ["function_tokens", "code_tokens"]:
+        if key in js and js[key]:
+            return _rerank_as_token_list(js[key])
+    for key in ["original_string", "code"]:
+        if key in js and js[key]:
+            return str(js[key]).split()
+    return []
+
+
+def _rerank_extract_nl_tokens(js: Dict[str, Any]) -> List[str]:
+    """Extract query tokens for final reranking from CodeSearchNet-style rows."""
+    if "docstring_tokens" in js and js["docstring_tokens"]:
+        return _rerank_as_token_list(js["docstring_tokens"])
+    for key in ["doc", "nl"]:
+        if key in js and js[key]:
+            return str(js[key]).split()
+    return []
+
+
+def _rerank_build_unixcoder_ids(tokens, tokenizer, max_length: int):
+    text = " ".join(tokens) if isinstance(tokens, list) else " ".join(str(tokens).split())
+    toks = tokenizer.tokenize(text)[: max_length - 4]
+    toks = [tokenizer.cls_token, "<encoder-only>", tokenizer.sep_token] + toks + [tokenizer.sep_token]
+    ids = tokenizer.convert_tokens_to_ids(toks)
+    ids += [tokenizer.pad_token_id] * (max_length - len(ids))
+    return ids[:max_length]
+
+
+def read_rerank_jsonl(path: str):
+    """Read JSONL rows used by the final reranking evaluator."""
+    data = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                data.append(json.loads(line))
+    return data
+
+
+class RerankCodeSearchDataset(Dataset):
+    """Minimal query/code dataset for final late-interaction reranking."""
+    def __init__(self, file_path: str, tokenizer, code_length: int, nl_length: int, mode: str):
+        self.examples = []
+        data = read_rerank_jsonl(file_path)
+        for js in data:
+            url = js.get("url", js.get("retrieval_idx", ""))
+            code_ids = _rerank_build_unixcoder_ids(_rerank_extract_code_tokens(js), tokenizer, code_length)
+            nl_ids = _rerank_build_unixcoder_ids(_rerank_extract_nl_tokens(js), tokenizer, nl_length)
+            self.examples.append({"url": url, "code_ids": code_ids, "nl_ids": nl_ids})
+        self.mode = mode
+
+    def __len__(self):
+        return len(self.examples)
+
+    def __getitem__(self, idx):
+        ex = self.examples[idx]
+        if self.mode == "query":
+            return torch.tensor(ex["nl_ids"], dtype=torch.long), idx
+        return torch.tensor(ex["code_ids"], dtype=torch.long), idx
+
+
+def rerank_collate_ids(batch):
+    ids = torch.stack([x[0] for x in batch], dim=0)
+    idx = torch.tensor([x[1] for x in batch], dtype=torch.long)
+    return ids, idx
+
+
+def load_rerank_model(args):
+    """Load the refinement checkpoint used for final reranking."""
+    RobertaConfig.from_pretrained(args.config_name or args.model_name_or_path)
+    tokenizer = RobertaTokenizer.from_pretrained(args.tokenizer_name or args.model_name_or_path)
+    encoder = RobertaModel.from_pretrained(args.model_name_or_path)
+    model = Model(encoder)
+
+    state = torch.load(args.loaded_model_filename, map_location="cpu")
+    missing, unexpected = model.load_state_dict(state, strict=False)
+    print(f"[Load] checkpoint={args.loaded_model_filename}")
+    print(f"[Load] missing={len(missing)}, unexpected={len(unexpected)}")
+
+    model.to(args.device)
+    model.eval()
+    return model, tokenizer
+
+
+def rerank_encode_pooled(model, dataloader, device, is_code: bool, fp16: bool = True):
+    """Encode pooled query/code vectors before top-K candidate selection."""
+    vecs, indices = [], []
+    desc = "Encoding pooled code" if is_code else "Encoding pooled query"
+    model.eval()
+    with torch.no_grad():
+        for ids, idx in tqdm(dataloader, desc=desc):
+            ids = ids.to(device)
+            with torch.cuda.amp.autocast(enabled=fp16 and device.type == "cuda"):
+                out = model(code_inputs=ids) if is_code else model(nl_inputs=ids)
+            vecs.append(out.detach().float().cpu())
+            indices.append(idx)
+    vecs = torch.cat(vecs, dim=0)
+    indices = torch.cat(indices, dim=0)
+    order = torch.argsort(indices)
+    return vecs[order].contiguous()
+
+
+def rerank_get_last_hidden(model, input_ids):
+    base = model.module if hasattr(model, "module") else model
+    attention_mask = input_ids.ne(1)
+    try:
+        outputs = base.encoder(input_ids, attention_mask=attention_mask, return_dict=True)
+        return outputs.last_hidden_state
+    except TypeError:
+        outputs = base.encoder(input_ids, attention_mask=attention_mask)
+        return outputs[0]
+
+
+def rerank_token_mask(input_ids, tokenizer):
+    mask = input_ids.ne(tokenizer.pad_token_id)
+    special_ids = [
+        tokenizer.cls_token_id,
+        tokenizer.sep_token_id,
+        tokenizer.pad_token_id,
+        tokenizer.convert_tokens_to_ids("<encoder-only>"),
+    ]
+    for sid in special_ids:
+        if sid is not None and sid >= 0:
+            mask = mask & input_ids.ne(sid)
+    return mask
+
+
+def rerank_late_interaction_score(q_tok, q_mask, c_tok, c_mask):
+    """Compute token-level MaxSim scores for top-K rerank candidates."""
+    q_tok = F.normalize(q_tok, p=2, dim=-1)
+    c_tok = F.normalize(c_tok, p=2, dim=-1)
+    sim = torch.bmm(q_tok, c_tok.transpose(1, 2))
+    sim = sim.masked_fill(~c_mask.unsqueeze(1), -1e4)
+    max_sim = sim.max(dim=2).values
+    q_mask_f = q_mask.float()
+    return (max_sim * q_mask_f).sum(dim=1) / q_mask_f.sum(dim=1).clamp_min(1.0)
+
+
+def rerank_zscore(x):
+    x = np.asarray(x, dtype=np.float32)
+    return (x - x.mean()) / (x.std() + 1e-6)
+
+
+def rerank_mrr_from_ranks(ranks):
+    """Compute mean reciprocal rank from integer rank positions."""
+    return float(np.mean([1.0 / r if r > 0 else 0.0 for r in ranks]))
+
+
+def rerank_recall_from_ranks(ranks, k):
+    """Compute Recall@K from integer rank positions."""
+    return float(np.mean([1.0 if r > 0 and r <= k else 0.0 for r in ranks]))
+
+
+def run_late_interaction_rerank(args, model, tokenizer, query_dataset, code_dataset, query_vecs, code_vecs):
+    """Rerank global top-K candidates and write final JSONL metrics."""
+    device = args.device
+    code_urls = [ex["url"] for ex in code_dataset.examples]
+    query_urls = [ex["url"] for ex in query_dataset.examples]
+    url_to_code_idx = {}
+    for i, u in enumerate(code_urls):
+        if u not in url_to_code_idx:
+            url_to_code_idx[u] = i
+
+    top_k = int(args.top_k)
+    alpha = float(args.fusion_alpha)
+
+    bi_ranks, li_ranks, fusion_ranks = [], [], []
+    code_vecs_t = code_vecs.to(device)
+    query_vecs_t = query_vecs.to(device)
+
+    for qi in tqdm(range(len(query_dataset)), desc=f"Late interaction rerank top{top_k}"):
+        qv = query_vecs_t[qi: qi + 1]
+        scores = torch.matmul(qv, code_vecs_t.t()).squeeze(0)
+
+        gold_idx = url_to_code_idx.get(query_urls[qi], None)
+        if gold_idx is None:
+            bi_ranks.append(0)
+            li_ranks.append(0)
+            fusion_ranks.append(0)
+            continue
+
+        gold_score = scores[gold_idx]
+        bi_rank = int((scores > gold_score).sum().item()) + 1
+        bi_ranks.append(bi_rank)
+
+        k = min(top_k, scores.size(0))
+        top_scores, top_idx = torch.topk(scores, k=k, dim=0)
+        top_idx_np = top_idx.detach().cpu().numpy()
+        bi_scores_np = top_scores.detach().float().cpu().numpy()
+
+        if gold_idx not in set(top_idx_np.tolist()):
+            li_ranks.append(bi_rank)
+            fusion_ranks.append(bi_rank)
+            continue
+
+        q_ids = torch.tensor(query_dataset.examples[qi]["nl_ids"], dtype=torch.long, device=device).unsqueeze(0)
+        with torch.no_grad():
+            with torch.cuda.amp.autocast(enabled=args.fp16 and device.type == "cuda"):
+                q_hidden = rerank_get_last_hidden(model, q_ids)
+            q_mask = rerank_token_mask(q_ids, tokenizer)
+            q_hidden = q_hidden.repeat(k, 1, 1)
+            q_mask = q_mask.repeat(k, 1)
+
+        li_scores = []
+        for start in range(0, k, args.rerank_batch_size):
+            end = min(start + args.rerank_batch_size, k)
+            cand_ids = [code_dataset.examples[int(cid)]["code_ids"] for cid in top_idx_np[start:end]]
+            c_ids = torch.tensor(cand_ids, dtype=torch.long, device=device)
+            with torch.no_grad():
+                with torch.cuda.amp.autocast(enabled=args.fp16 and device.type == "cuda"):
+                    c_hidden = rerank_get_last_hidden(model, c_ids)
+                c_mask = rerank_token_mask(c_ids, tokenizer)
+                li = rerank_late_interaction_score(
+                    q_hidden[start:end].float(),
+                    q_mask[start:end],
+                    c_hidden.float(),
+                    c_mask,
+                )
+                li_scores.append(li.detach().cpu())
+        li_scores_np = torch.cat(li_scores, dim=0).numpy()
+
+        li_order = np.argsort(li_scores_np)[::-1]
+        li_ids = top_idx_np[li_order]
+        li_pos = int(np.where(li_ids == gold_idx)[0][0]) + 1
+        li_ranks.append(li_pos)
+
+        # Final score combines global retrieval and token-level evidence.
+        final_scores = alpha * rerank_zscore(bi_scores_np) + (1.0 - alpha) * rerank_zscore(li_scores_np)
+        fusion_order = np.argsort(final_scores)[::-1]
+        fusion_ids = top_idx_np[fusion_order]
+        fusion_pos = int(np.where(fusion_ids == gold_idx)[0][0]) + 1
+        fusion_ranks.append(fusion_pos)
+
+    result_rows = [
+        (
+            "bi_encoder",
+            rerank_mrr_from_ranks(bi_ranks),
+            rerank_recall_from_ranks(bi_ranks, 1),
+            rerank_recall_from_ranks(bi_ranks, 5),
+            rerank_recall_from_ranks(bi_ranks, 10),
+            rerank_recall_from_ranks(bi_ranks, 50),
+        ),
+        (
+            "late_interaction",
+            rerank_mrr_from_ranks(li_ranks),
+            rerank_recall_from_ranks(li_ranks, 1),
+            rerank_recall_from_ranks(li_ranks, 5),
+            rerank_recall_from_ranks(li_ranks, 10),
+            rerank_recall_from_ranks(li_ranks, 50),
+        ),
+        (
+            "fusion",
+            rerank_mrr_from_ranks(fusion_ranks),
+            rerank_recall_from_ranks(fusion_ranks, 1),
+            rerank_recall_from_ranks(fusion_ranks, 5),
+            rerank_recall_from_ranks(fusion_ranks, 10),
+            rerank_recall_from_ranks(fusion_ranks, 50),
+        ),
+    ]
+    result_lines = [
+        {
+            "method": name,
+            "MRR": round(mrr, 3),
+            "R@1": round(r1, 3),
+            "R@5": round(r5, 3),
+            "R@10": round(r10, 3),
+            "R@50": round(r50, 3),
+        }
+        for name, mrr, r1, r5, r10, r50 in result_rows
+    ]
+
+    os.makedirs(args.output_dir, exist_ok=True)
+    out_file = os.path.join(args.output_dir, "result.jsonl")
+    with open(out_file, "w", encoding="utf-8") as f:
+        for line in result_lines:
+            f.write(json.dumps(line, ensure_ascii=False) + "\n")
+
+    print("\n===== ReFCode Result =====")
+    for line in result_lines:
+        print(json.dumps(line, ensure_ascii=False))
+    print(f"saved_to: {out_file}")
+
+
+
+def run_final_rerank(args):
+    """Entry point for `--run_rerank_only` final evaluation."""
+    args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    args.fp16 = bool(int(getattr(args, "rerank_fp16", 1)))
+
+    model, tokenizer = load_rerank_model(args)
+
+    query_dataset = RerankCodeSearchDataset(args.eval_data_file, tokenizer, args.code_length, args.nl_length, "query")
+    code_dataset = RerankCodeSearchDataset(args.codebase_file, tokenizer, args.code_length, args.nl_length, "code")
+
+    query_loader = DataLoader(query_dataset, sampler=SequentialSampler(query_dataset),
+                              batch_size=args.eval_batch_size, collate_fn=rerank_collate_ids, num_workers=4)
+    code_loader = DataLoader(code_dataset, sampler=SequentialSampler(code_dataset),
+                             batch_size=args.eval_batch_size, collate_fn=rerank_collate_ids, num_workers=4)
+
+    query_vecs = rerank_encode_pooled(model, query_loader, args.device, is_code=False, fp16=args.fp16)
+    code_vecs = rerank_encode_pooled(model, code_loader, args.device, is_code=True, fp16=args.fp16)
+
+    run_late_interaction_rerank(args, model, tokenizer, query_dataset, code_dataset, query_vecs, code_vecs)
+
+
 def main():
     
     args = parse_args()
+    if args.run_rerank_only:
+        return run_final_rerank(args)
     #set log
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',level=logging.INFO )

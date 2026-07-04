@@ -7,6 +7,7 @@ import pickle
 
 
 def save_json_data(output_dir, filename, data):
+    """Write a JSON result file under an experiment output directory."""
     os.makedirs(output_dir, exist_ok=True)
     path = os.path.join(output_dir, filename)
     with open(path, "w", encoding="utf-8") as f:
@@ -15,6 +16,7 @@ def save_json_data(output_dir, filename, data):
 
 
 def save_pickle_data(output_dir, filename, data):
+    """Write a pickle artifact under an experiment output directory."""
     os.makedirs(output_dir, exist_ok=True)
     path = os.path.join(output_dir, filename)
     with open(path, "wb") as f:

@@ -8,12 +8,15 @@ Large assets are intentionally excluded. Datasets, checkpoints, logs, caches, an
 
 ```text
 configs/                 Default experiment settings for reference
-refcode/initial_retriever/       Initial retriever training and top-K retrieval support
-refcode/failure_harvesting/      Retrieval-failure mining and data construction
-refcode/refcode_refinement/      ReFCode refinement, reranking, and evaluation
+refcode/model.py         Shared bi-encoder model used by all stages
+refcode/run_initial_retriever.py
+refcode/run_failure_harvesting.py
+refcode/run_refcode_refinement.py
 refcode/utils/           Shared data, metric, parser, and I/O helpers
-scripts/                 Main runnable entry scripts
+run_*.sh                 Main runnable shell scripts
 ```
+
+The Python entry files are `refcode/run_initial_retriever.py`, `refcode/run_failure_harvesting.py`, and `refcode/run_refcode_refinement.py`.
 
 ## Environment Setup
 
@@ -64,19 +67,19 @@ Run commands from the repository root.
 1. Initial Retriever:
 
 ```bash
-bash scripts/run_initial_retriever.sh --lang javascript
+bash run_initial_retriever.sh --lang javascript
 ```
 
 2. Failure Harvesting:
 
 ```bash
-bash scripts/run_failure_harvesting.sh --lang javascript
+bash run_failure_harvesting.sh --lang javascript
 ```
 
-3. ReFCode Refinement:
+3. ReFCode Refinement and Final Reranking:
 
 ```bash
-bash scripts/run_refcode.sh --lang javascript
+bash run_refcode.sh --lang javascript
 ```
 
 Use `--seed 123456` to override the default seed. Runtime settings can also be overridden with environment variables documented in `REPRODUCIBILITY.md`.
@@ -89,8 +92,8 @@ The pipeline writes generated artifacts locally:
 dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
 dataset/<lang>/train_query_cocosoda_emb.pt
 dataset/<lang>/self_mined_top32_from_initial_retriever.pkl
-saved_models/initial_retriever/
-saved_models/refcode/
+saved_models/initial_retriever/<lang>/
+saved_models/refcode/<lang>/
 ```
 
 These files are ignored by git and should not be committed.

@@ -22,7 +22,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 import torch
@@ -30,7 +30,7 @@ from torch.utils.data import DataLoader, Dataset, SequentialSampler
 from tqdm import tqdm
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
-from refcode.refcode_refinement.model import Model
+from refcode.model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,7 @@ def _as_token_list(value):
 
 
 def get_code_tokens(js):
+    """Extract code tokens from CodeSearchNet-style rows."""
     if js.get('function_tokens'):
         return _as_token_list(js.get('function_tokens'))
     if js.get('code_tokens'):
@@ -69,6 +70,7 @@ def get_code_tokens(js):
 
 
 def get_nl_tokens(js):
+    """Extract query tokens from CodeSearchNet-style rows."""
     if js.get('docstring_tokens'):
         return _as_token_list(js.get('docstring_tokens'))
     if js.get('doc'):
@@ -85,6 +87,7 @@ def get_url(js, idx):
 
 
 def build_unixcoder_ids(tokens, tokenizer, max_length):
+    """Convert NL/code tokens to the UniXcoder encoder-only input format."""
     text = ' '.join(tokens) if isinstance(tokens, list) else ' '.join(str(tokens).split())
     toks = tokenizer.tokenize(text)[: max_length - 4]
     toks = [tokenizer.cls_token, '<encoder-only>', tokenizer.sep_token] + toks + [tokenizer.sep_token]
@@ -105,6 +108,11 @@ class IdDataset(Dataset):
 
 
 def load_train_items(path, tokenizer, nl_length, code_length, debug_limit=-1):
+    """Load train JSONL rows and tokenize both query and paired code.
+
+    The output order is kept identical to the train file so mined indices can be
+    used later as row-aligned failure candidates.
+    """
     items = []
     with open(path, encoding='utf-8') as f:
         for idx, line in enumerate(f):
@@ -127,6 +135,7 @@ def load_train_items(path, tokenizer, nl_length, code_length, debug_limit=-1):
 
 @torch.no_grad()
 def encode_ids(model, ids, batch_size, device, mode='nl', num_workers=4):
+    """Encode query or code ids with the current retriever checkpoint."""
     dataset = IdDataset(ids)
     loader = DataLoader(dataset, sampler=SequentialSampler(dataset), batch_size=batch_size, num_workers=num_workers)
     vecs = []
@@ -142,6 +151,7 @@ def encode_ids(model, ids, batch_size, device, mode='nl', num_workers=4):
 
 
 def resolve_checkpoint(args):
+    """Resolve the checkpoint used to harvest model-induced retrieval failures."""
     if args.checkpoint_file:
         return args.checkpoint_file
     if args.output_dir:
@@ -150,6 +160,7 @@ def resolve_checkpoint(args):
 
 
 def load_model(args, device):
+    """Load the base encoder plus an optional trained retriever checkpoint."""
     config = RobertaConfig.from_pretrained(args.config_name if args.config_name else args.model_name_or_path)
     tokenizer = RobertaTokenizer.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path)
     encoder = RobertaModel.from_pretrained(args.model_name_or_path)
@@ -166,6 +177,11 @@ def load_model(args, device):
 
 @torch.no_grad()
 def mine(q_vecs, c_vecs, urls, topk, chunk_size=8192, device='cuda', exclude_same_url=True):
+    """Mine top-ranked wrong training codes for each training query.
+
+    The gold code and same-URL examples are excluded by default. The saved lists
+    approximate retrieval failures produced by the current model.
+    """
     n = q_vecs.size(0)
     topk = int(topk)
     url_to_indices = defaultdict(list)
@@ -276,6 +292,8 @@ def main():
         'checkpoint': resolve_checkpoint(args),
         'exclude_same_url': not args.include_same_url,
     }
+    # Output format consumed by refinement: pickle(dict), with self_mined_idx[i]
+    # containing candidate row indices for train example i.
     Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output_file, 'wb') as f:
         pickle.dump(out, f)

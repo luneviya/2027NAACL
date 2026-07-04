@@ -1,3 +1,5 @@
+"""Shared ReFCode bi-encoder model used by all runnable experiment stages."""
+
 import logging
 import torch
 import torch.nn as nn
@@ -12,6 +14,7 @@ class BaseModel(nn.Module):
         super().__init__()
 
     def model_parameters(self):
+        """Return a compact parameter table for experiment logs."""
         table = PrettyTable()
         table.field_names = ["Layer Name", "Output Shape", "Param #"]
         table.align["Layer Name"] = "l"
@@ -97,6 +100,7 @@ class Model(BaseModel):
         return (hidden * mask[:, :, None]).sum(1) / denom
 
     def _encoder_forward(self, input_ids):
+        """Run the Hugging Face encoder while supporting tuple and dict outputs."""
         attention_mask = input_ids.ne(1)
         try:
             outputs = self.encoder(
@@ -118,6 +122,11 @@ class Model(BaseModel):
         return last_hidden, hidden_states
 
     def encode_inputs(self, input_ids, return_uncertainty=False, num_samples=4):
+        """Encode token ids into normalized retrieval vectors.
+
+        When requested, also returns uncertainty samples and Gaussian parameters
+        used by the ReFCode refinement losses.
+        """
         last_hidden, hidden_states = self._encoder_forward(input_ids)
         last_avg = self._mean_pool(last_hidden, input_ids)
         z = F.normalize(last_avg, p=2, dim=1)
@@ -157,6 +166,7 @@ class Model(BaseModel):
         }
 
     def forward(self, code_inputs=None, nl_inputs=None):
+        """Encode either code or natural-language inputs for cosine retrieval."""
         if code_inputs is not None:
             return self.encode_inputs(code_inputs, return_uncertainty=False)
         return self.encode_inputs(nl_inputs, return_uncertainty=False)
