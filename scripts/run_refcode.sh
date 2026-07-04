@@ -70,7 +70,7 @@ valid_rerank_batch_size=${VALID_RERANK_BATCH_SIZE:-64}
 valid_fusion_fp16=${VALID_FUSION_FP16:-1}
 
 if [[ -z "${INITIAL_RETRIEVER_OUT:-}" ]]; then
-  INITIAL_RETRIEVER_OUT=$(ls -td "./saved_models/refcode/initial_retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
+  INITIAL_RETRIEVER_OUT=$(ls -td "./saved_models/initial_retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
 fi
 
 if [[ -z "${INITIAL_RETRIEVER_OUT}" ]]; then
@@ -80,7 +80,7 @@ fi
 
 load_model_file=${LOAD_MODEL_FILE:-${INITIAL_RETRIEVER_OUT}/checkpoint-best-mrr/model.bin}
 self_mined_idx_file=${SELF_MINED_IDX_FILE:-dataset/${lang}/self_mined_top32_from_initial_retriever.pkl}
-output_dir=${OUTPUT_DIR:-./saved_models/refcode/refcode_refinement/${lang}_seed${seed}_K${self_mine_train_k}_W${self_mine_w}_LI${li_weight}_${current_time}}
+output_dir=${OUTPUT_DIR:-./saved_models/refcode/${lang}_seed${seed}_K${self_mine_train_k}_W${self_mine_w}_LI${li_weight}_${current_time}}
 
 if [[ ! -f "${load_model_file}" ]]; then
   echo "[ERROR] Retriever checkpoint not found: ${load_model_file}"
@@ -115,7 +115,6 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python refcode/refcode_refinement/r
   --loaded_model_filename ${load_model_file} \
   --lang=${lang} \
   --do_train \
-  --do_test \
   --train_data_file=dataset/${lang}/train.jsonl \
   --eval_data_file=dataset/${lang}/valid.jsonl \
   --test_data_file=dataset/${lang}/test.jsonl \
@@ -166,7 +165,7 @@ if [[ -f "${checkpoint_file}" ]]; then
     --loaded_model_filename "${checkpoint_file}" \
     --eval_data_file "dataset/${lang}/test.jsonl" \
     --codebase_file "dataset/${lang}/codebase.jsonl" \
-    --output_dir "./saved_models/refcode/rerank/${lang}_top${RERANK_TOP_K:-50}_alpha${RERANK_ALPHA:-0.5}" \
+    --output_dir "${output_dir}" \
     --code_length "${code_length}" \
     --nl_length "${nl_length}" \
     --eval_batch_size "${RERANK_EVAL_BATCH_SIZE:-128}" \

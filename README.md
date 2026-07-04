@@ -89,9 +89,8 @@ The pipeline writes generated artifacts locally:
 dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
 dataset/<lang>/train_query_cocosoda_emb.pt
 dataset/<lang>/self_mined_top32_from_initial_retriever.pkl
-saved_models/refcode/initial_retriever/
-saved_models/refcode/refcode_refinement/
-saved_models/refcode/rerank/
+saved_models/initial_retriever/
+saved_models/refcode/
 ```
 
 These files are ignored by git and should not be committed.

@@ -261,39 +261,53 @@ def rerank(args, model, tokenizer, query_dataset, code_dataset, query_vecs, code
         fusion_pos = int(np.where(fusion_ids == gold_idx)[0][0]) + 1
         fusion_ranks.append(fusion_pos)
 
-    result = {
-        "bi_mrr": mrr_from_ranks(bi_ranks),
-        "late_interaction_only_mrr": mrr_from_ranks(li_ranks),
-        "fusion_mrr": mrr_from_ranks(fusion_ranks),
-
-        "bi_recall@1": recall_from_ranks(bi_ranks, 1),
-        "bi_recall@5": recall_from_ranks(bi_ranks, 5),
-        "bi_recall@10": recall_from_ranks(bi_ranks, 10),
-        "bi_recall@50": recall_from_ranks(bi_ranks, 50),
-
-        "late_interaction_only_recall@1": recall_from_ranks(li_ranks, 1),
-        "late_interaction_only_recall@5": recall_from_ranks(li_ranks, 5),
-        "late_interaction_only_recall@10": recall_from_ranks(li_ranks, 10),
-        "late_interaction_only_recall@50": recall_from_ranks(li_ranks, 50),
-
-        "fusion_recall@1": recall_from_ranks(fusion_ranks, 1),
-        "fusion_recall@5": recall_from_ranks(fusion_ranks, 5),
-        "fusion_recall@10": recall_from_ranks(fusion_ranks, 10),
-        "fusion_recall@50": recall_from_ranks(fusion_ranks, 50),
-
-        "top_k": top_k,
-        "fusion_alpha": alpha,
-        "num_queries": len(query_dataset),
-    }
+    result_rows = [
+        (
+            "bi_encoder",
+            mrr_from_ranks(bi_ranks),
+            recall_from_ranks(bi_ranks, 1),
+            recall_from_ranks(bi_ranks, 5),
+            recall_from_ranks(bi_ranks, 10),
+            recall_from_ranks(bi_ranks, 50),
+        ),
+        (
+            "late_interaction",
+            mrr_from_ranks(li_ranks),
+            recall_from_ranks(li_ranks, 1),
+            recall_from_ranks(li_ranks, 5),
+            recall_from_ranks(li_ranks, 10),
+            recall_from_ranks(li_ranks, 50),
+        ),
+        (
+            "fusion",
+            mrr_from_ranks(fusion_ranks),
+            recall_from_ranks(fusion_ranks, 1),
+            recall_from_ranks(fusion_ranks, 5),
+            recall_from_ranks(fusion_ranks, 10),
+            recall_from_ranks(fusion_ranks, 50),
+        ),
+    ]
+    result_lines = [
+        {
+            "method": name,
+            "MRR": round(mrr, 3),
+            "R@1": round(r1, 3),
+            "R@5": round(r5, 3),
+            "R@10": round(r10, 3),
+            "R@50": round(r50, 3),
+        }
+        for name, mrr, r1, r5, r10, r50 in result_rows
+    ]
 
     os.makedirs(args.output_dir, exist_ok=True)
-    out_file = os.path.join(args.output_dir, f"late_interaction_{args.lang}_top{top_k}_alpha{alpha}.json")
+    out_file = os.path.join(args.output_dir, "result.jsonl")
     with open(out_file, "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2)
+        for line in result_lines:
+            f.write(json.dumps(line, ensure_ascii=False) + "\n")
 
-    print("\n===== Late Interaction Result =====")
-    for k, v in result.items():
-        print(f"{k}: {v:.6f}" if isinstance(v, float) else f"{k}: {v}")
+    print("\n===== ReFCode Result =====")
+    for line in result_lines:
+        print(json.dumps(line, ensure_ascii=False))
     print(f"saved_to: {out_file}")
 
 
@@ -306,7 +320,7 @@ def main():
     parser.add_argument("--loaded_model_filename", type=str, required=True)
     parser.add_argument("--eval_data_file", type=str, default="dataset/javascript/test.jsonl")
     parser.add_argument("--codebase_file", type=str, default="dataset/javascript/codebase.jsonl")
-    parser.add_argument("--output_dir", type=str, default="./saved_models/refcode/rerank")
+    parser.add_argument("--output_dir", type=str, default="./saved_models/refcode")
     parser.add_argument("--code_length", type=int, default=256)
     parser.add_argument("--nl_length", type=int, default=128)
     parser.add_argument("--eval_batch_size", type=int, default=128)
@@ -318,10 +332,6 @@ def main():
 
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     args.fp16 = bool(args.fp16)
-
-    print("===== Late Interaction Rerank Args =====")
-    for k, v in sorted(vars(args).items()):
-        print(f"{k}: {v}")
 
     model, tokenizer = load_model(args)
 

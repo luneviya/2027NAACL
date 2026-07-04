@@ -26,7 +26,7 @@ base_model=${BASE_MODEL:-DeepSoftwareAnalytics/CoCoSoDa}
 tokenizer_name=${TOKENIZER_NAME:-${base_model}}
 
 if [[ -z "${INITIAL_RETRIEVER_OUT:-}" ]]; then
-  INITIAL_RETRIEVER_OUT=$(ls -td "./saved_models/refcode/initial_retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
+  INITIAL_RETRIEVER_OUT=$(ls -td "./saved_models/initial_retriever/${lang}_seed${seed}_"* 2>/dev/null | head -n 1 || true)
 fi
 
 if [[ -z "${INITIAL_RETRIEVER_OUT}" ]]; then
