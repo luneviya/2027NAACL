@@ -148,6 +148,23 @@ def cal_r1_r5_r10(ranks):
     result = {"R@1":round(r1/data_len,3), "R@5": round(r5/data_len,3),  "R@10": round(r10/data_len,3)}
     return result
 
+
+def _is_report_metric(key):
+    key = str(key).lower()
+    return key.startswith("r@") or "mrr" in key or "recall" in key
+
+
+def format_report_metric(key, value):
+    """Round reported MRR/Recall values without changing training decisions."""
+    if isinstance(value, float) and _is_report_metric(key):
+        return round(value, 3)
+    return value
+
+
+def format_report_result(result):
+    """Return a copy of a metric dictionary with reported scores rounded."""
+    return {key: format_report_metric(key, value) for key, value in result.items()}
+
 #remove comments, tokenize code and extract dataflow                                        
 def extract_dataflow(code, parser,lang):
     #remove comments
@@ -1368,7 +1385,7 @@ def train(args, model, tokenizer,pool):
 
         results = evaluate(args, model, tokenizer,args.eval_data_file, pool, eval_when_training=True)
         for key, value in results.items():
-            logger.info("  %s = %s", key, round(value,4) if isinstance(value, float) else value)
+            logger.info("  %s = %s", key, format_report_metric(key, value))
 
         select_mrr = results['eval_mrr']
         select_name = 'eval_mrr'
@@ -1383,7 +1400,7 @@ def train(args, model, tokenizer,pool):
                 eval_when_training=True,
             )
             for key, value in fusion_results.items():
-                logger.info("  %s = %s", key, round(value,4) if isinstance(value, float) else value)
+                logger.info("  %s = %s", key, format_report_metric(key, value))
 
             select_mrr = fusion_results['eval_fusion_mrr']
             select_name = 'eval_fusion_mrr'
@@ -1391,7 +1408,7 @@ def train(args, model, tokenizer,pool):
         if select_mrr > best_mrr:
             best_mrr = select_mrr
             logger.info("  "+"*"*20)
-            logger.info("  Best %s:%s", select_name, round(best_mrr,4))
+            logger.info("  Best %s:%s", select_name, format_report_metric(select_name, best_mrr))
             logger.info("  "+"*"*20)
             checkpoint_prefix = 'checkpoint-best-mrr'
             output_dir = os.path.join(args.output_dir, '{}'.format(checkpoint_prefix))
@@ -1566,13 +1583,13 @@ def  multi_lang_continue_pre_train(args, model, tokenizer,pool):
                 results = evaluate(args, model, tokenizer,args.eval_data_file, pool, eval_when_training=True)
 
                 # for key, value in results.items():
-                #     logger.info("  %s = %s", key, round(value,6))
-                logger.info("  %s = %s", 'eval_mrr', round(results['eval_mrr'],6))
+                #     logger.info("  %s = %s", key, format_report_metric(key, value))
+                logger.info("  %s = %s", 'eval_mrr', format_report_metric('eval_mrr', results['eval_mrr']))
 
                 if results['eval_mrr']>best_mrr:
                     best_mrr=results['eval_mrr']
                     logger.info("  "+"*"*20)  
-                    logger.info("  Best mrr:%s",round(best_mrr,4))
+                    logger.info("  Best mrr:%s", format_report_metric('eval_mrr', best_mrr))
                     logger.info("  "+"*"*20)                          
 
                     output_dir = os.path.join(args.output_dir, '{}'.format('checkpoint-best-mrr'))                        
@@ -2521,7 +2538,7 @@ def main():
         result=evaluate(args, model, tokenizer,args.eval_data_file, pool)
         logger.info("***** Eval valid results *****")
         for key in sorted(result.keys()):
-            logger.info("  %s = %s", key, str(round(result[key],4)))
+            logger.info("  %s = %s", key, str(format_report_metric(key, result[key])))
             
     if args.do_test:
 
@@ -2534,8 +2551,8 @@ def main():
         result=evaluate(args, model, tokenizer,args.test_data_file, pool)
         logger.info("***** Eval test results *****")
         for key in sorted(result.keys()):
-            logger.info("  %s = %s", key, str(round(result[key],4)))
-        save_json_data(args.output_dir, "result.jsonl", result)
+            logger.info("  %s = %s", key, str(format_report_metric(key, result[key])))
+        save_json_data(args.output_dir, "result.jsonl", format_report_result(result))
     return results
 
 

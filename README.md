@@ -1,49 +1,37 @@
-# ReFCode
+# ReFCode: Failure-Calibrated Dual-Granularity Refinement for Code Search
 
-ReFCode is a compact research artifact for code search. The runnable pipeline is organized around the actual experiment flow: train an initial retriever, harvest retrieval failures, then run refinement with reranking and evaluation.
+This repository contains the implementation of **ReFCode**, a failure-calibrated dual-granularity refinement framework for code search.
 
-Large assets are intentionally excluded. Datasets, checkpoints, logs, caches, and generated indices should be prepared or produced locally.
+ReFCode follows a compact three-step pipeline:
 
-## Repository Structure
+1. **Initial Retriever**: train or load a strong dual-encoder retriever and generate top-ranked candidates.
+2. **Failure Harvesting**: mine model-induced high-ranked non-ground-truth candidates from the initial retrieval results.
+3. **ReFCode Refinement and Final Reranking**: train the refinement model and rerank top candidates by combining global and local matching scores.
 
-```text
-configs/                 Default experiment settings for reference
-dataset/                 Placeholder CodeSearchNet language layout
-refcode/model.py         Shared bi-encoder model used by all stages
-refcode/run_initial_retriever.py
-refcode/run_failure_harvesting.py
-refcode/run_refcode_refinement.py
-refcode/utils/           Shared data, metric, parser, and I/O helpers
-run_*.sh                 Main runnable shell scripts
-saved_models/            Placeholder output layout
-```
+## Framework
 
-The Python entry files are `refcode/run_initial_retriever.py`, `refcode/run_failure_harvesting.py`, and `refcode/run_refcode_refinement.py`.
+![ReFCode framework](figure/framework.png)
 
-## Environment Setup
+## Environment
 
-Create an environment with either:
+Create the environment with Conda:
 
 ```bash
 conda env create -f environment.yml
 conda activate refcode
 ```
 
-or:
+Alternatively, install dependencies with pip:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-The default encoder is loaded from Hugging Face:
+## Dataset
 
-```text
-DeepSoftwareAnalytics/CoCoSoDa
-```
+The experiments use the **CodeSearchNet** benchmark, a widely used natural language code search dataset containing query-code pairs from six programming languages.
 
-## Data Preparation
-
-The `dataset/` directory only shows the expected CodeSearchNet language layout:
+The expected dataset layout is:
 
 ```text
 dataset/
@@ -55,72 +43,96 @@ dataset/
 └── python/
 ```
 
-Place processed data files under the corresponding language directory:
+Full datasets are not included in this repository. Place the processed data under the corresponding language directory or configure dataset paths in `configs/*.yaml`.
 
-```text
-dataset/<lang>/train.jsonl
-dataset/<lang>/valid.jsonl
-dataset/<lang>/test.jsonl
-dataset/<lang>/codebase.jsonl
-```
+### CodeSearchNet Statistics
 
-Each example should contain code tokens or code text, natural-language tokens or text, and a stable `url` or retrieval identifier. The repository does not include raw datasets.
+| Language | Train | Valid | Test |
+|---|---:|---:|---:|
+| Ruby | 24,927 | 1,400 | 1,261 |
+| JavaScript | 58,025 | 3,885 | 3,291 |
+| Go | 167,288 | 7,325 | 8,122 |
+| Python | 251,820 | 13,914 | 14,918 |
+| Java | 164,923 | 5,183 | 10,955 |
+| PHP | 241,241 | 12,982 | 14,014 |
 
-If the tree-sitter shared library is missing, rebuild it from the parser directory:
+## Running the Pipeline
 
-```bash
-cd refcode/utils/parser
-bash build.sh
-cd -
-```
+Run the following commands from the repository root.
 
-## Running The Pipeline
-
-Run commands from the repository root.
-
-1. Initial Retriever:
+### 1. Initial Retriever
 
 ```bash
 bash run_initial_retriever.sh --lang javascript
 ```
 
-2. Failure Harvesting:
+This step trains or loads the initial retriever and generates top-ranked retrieval results.
+
+### 2. Failure Harvesting
 
 ```bash
 bash run_failure_harvesting.sh --lang javascript
 ```
 
-3. ReFCode Refinement and Final Reranking:
+This step mines failure candidates from the initial retrieval results.
+
+### 3. ReFCode Refinement and Final Reranking
 
 ```bash
 bash run_refcode.sh --lang javascript
 ```
 
-Use `--seed 123456` to override the default seed. Runtime settings can also be overridden with environment variables such as `BASE_MODEL`, `OUTPUT_DIR`, and `BATCH_SIZE`.
+This step trains the ReFCode refinement model and performs final reranking/evaluation.
 
-## Expected Outputs
-
-The `saved_models/` directory shows the default output layout:
+The language argument can be replaced with:
 
 ```text
-saved_models/
-├── initial_retriever/
-├── failure_harvesting/
-└── refcode/
+ruby, javascript, java, go, php, python
 ```
 
-The pipeline writes generated artifacts locally:
+## Configuration
+
+The main configuration files are:
 
 ```text
-dataset/<lang>/refcode_hard_idx_top500_rank50.pkl
-dataset/<lang>/train_query_cocosoda_emb.pt
-dataset/<lang>/self_mined_top32_from_initial_retriever.pkl
-saved_models/initial_retriever/<lang>/
-saved_models/refcode/<lang>/
+configs/
+├── retriever.yaml     # Initial retriever settings
+├── harvesting.yaml    # Failure candidate harvesting settings
+└── refcode.yaml       # ReFCode refinement and reranking settings
 ```
 
-These files are ignored by git and should not be committed.
+Dataset paths, output paths, and training settings can be adjusted in these files.
 
-## Anonymous Review Notes
+## Results
 
-This artifact omits author names, affiliations, acknowledgements, personal links, raw datasets, and trained checkpoints. Local paths in examples use relative paths or placeholders.
+### Overall MRR on CodeSearchNet (%)
+
+| Method | Java | JavaScript | Ruby | Python | PHP | Go | Avg. |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| CodeBERT | 67.6 | 62.0 | 67.9 | 67.2 | 62.8 | 88.2 | 69.3 |
+| GraphCodeBERT | 69.1 | 64.4 | 70.3 | 69.2 | 64.9 | 89.7 | 71.3 |
+| UniXcoder | 72.6 | 68.4 | 74.0 | 72.0 | 67.6 | 91.5 | 74.4 |
+| SynCoBERT | 72.3 | 67.7 | 72.2 | 72.4 | 67.8 | 91.3 | 74.0 |
+| CodeRetriever | 76.5 | 71.9 | 77.1 | 75.8 | 70.8 | 92.4 | 77.4 |
+| CoCoSoDa | 76.3 | 76.4 | 81.8 | 75.7 | 70.3 | 92.1 | 78.8 |
+| UA-HN | 77.2 | 77.7 | 82.2 | 77.2 | 71.9 | 92.4 | 79.8 |
+| HedgeCode | 78.5 | 77.1 | 82.5 | 77.6 | 73.8 | 92.7 | 80.3 |
+| **ReFCode** | **78.6** | **79.4** | **83.6** | **78.5** | **73.5** | **93.3** | **81.2** |
+
+### Average Recall@K (%)
+
+| Method | R@1 | R@5 | R@10 |
+|---|---:|---:|---:|
+| CoCoSoDa | 69.0 | 89.8 | 93.8 |
+| UA-HN | 70.7 | 91.3 | 95.1 |
+| **ReFCode** | **72.8** | **91.6** | **95.2** |
+
+## Outputs
+
+Generated retrieval results, harvested candidates, checkpoints, reranked outputs, and metric files are saved under `saved_models/` or the output paths specified in `configs/*.yaml`.
+
+The `dataset/` and `saved_models/` directories provide the expected layout only. Large datasets, checkpoints, logs, and generated outputs are ignored by Git.
+
+## Notes
+
+This repository provides the code, configuration files, and placeholder directory structure needed to reproduce the ReFCode pipeline. To reproduce the main results, prepare the processed CodeSearchNet data, configure the paths in `configs/*.yaml`, and run the three pipeline commands in order.
