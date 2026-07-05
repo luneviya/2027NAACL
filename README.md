@@ -8,12 +8,14 @@ Large assets are intentionally excluded. Datasets, checkpoints, logs, caches, an
 
 ```text
 configs/                 Default experiment settings for reference
+dataset/                 Placeholder CodeSearchNet language layout
 refcode/model.py         Shared bi-encoder model used by all stages
 refcode/run_initial_retriever.py
 refcode/run_failure_harvesting.py
 refcode/run_refcode_refinement.py
 refcode/utils/           Shared data, metric, parser, and I/O helpers
 run_*.sh                 Main runnable shell scripts
+saved_models/            Placeholder output layout
 ```
 
 The Python entry files are `refcode/run_initial_retriever.py`, `refcode/run_failure_harvesting.py`, and `refcode/run_refcode_refinement.py`.
@@ -41,7 +43,19 @@ DeepSoftwareAnalytics/CoCoSoDa
 
 ## Data Preparation
 
-Prepare CodeSearchNet-style files under:
+The `dataset/` directory only shows the expected CodeSearchNet language layout:
+
+```text
+dataset/
+├── ruby/
+├── javascript/
+├── java/
+├── go/
+├── php/
+└── python/
+```
+
+Place processed data files under the corresponding language directory:
 
 ```text
 dataset/<lang>/train.jsonl
@@ -82,9 +96,18 @@ bash run_failure_harvesting.sh --lang javascript
 bash run_refcode.sh --lang javascript
 ```
 
-Use `--seed 123456` to override the default seed. Runtime settings can also be overridden with environment variables documented in `REPRODUCIBILITY.md`.
+Use `--seed 123456` to override the default seed. Runtime settings can also be overridden with environment variables such as `BASE_MODEL`, `OUTPUT_DIR`, and `BATCH_SIZE`.
 
 ## Expected Outputs
+
+The `saved_models/` directory shows the default output layout:
+
+```text
+saved_models/
+├── initial_retriever/
+├── failure_harvesting/
+└── refcode/
+```
 
 The pipeline writes generated artifacts locally:
 
@@ -97,10 +120,6 @@ saved_models/refcode/<lang>/
 ```
 
 These files are ignored by git and should not be committed.
-
-## Reproducibility Notes
-
-Detailed commands, paths, hardware notes, and expected ruby metrics from the local verification run are in `REPRODUCIBILITY.md`.
 
 ## Anonymous Review Notes
 
