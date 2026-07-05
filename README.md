@@ -1,12 +1,6 @@
 # ReFCode: Failure-Calibrated Dual-Granularity Refinement for Code Search
 
-This repository contains the implementation of **ReFCode**, a failure-calibrated dual-granularity refinement framework for code search.
-
-ReFCode follows a compact three-step pipeline:
-
-1. **Initial Retriever**: train or load a strong dual-encoder retriever and generate top-ranked candidates.
-2. **Failure Harvesting**: mine model-induced high-ranked non-ground-truth candidates from the initial retrieval results.
-3. **ReFCode Refinement and Final Reranking**: train the refinement model and rerank top candidates by combining global and local matching scores.
+This repository provides the implementation and reproduction scripts for ReFCode.
 
 ## Framework
 
