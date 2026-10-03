@@ -1,4 +1,4 @@
-# ReFCode: Failure-Calibrated Dual-Granularity Refinement for Code Search
+# ReFCode: Learning from Retriever-Induced Confusions for Code Search
 
 This repository provides the implementation and reproduction scripts for ReFCode.
 
@@ -99,27 +99,40 @@ Dataset paths, output paths, and training settings can be adjusted in these file
 
 ## Results
 
-### Overall MRR on CodeSearchNet (%)
+### Matched local evaluation on CodeSearchNet (%)
 
-| Method | Java | JavaScript | Ruby | Python | PHP | Go | Avg. |
+| Method | Java | JavaScript | Ruby | Python | PHP | Go | Macro |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| CodeBERT | 67.6 | 62.0 | 67.9 | 67.2 | 62.8 | 88.2 | 69.3 |
-| GraphCodeBERT | 69.1 | 64.4 | 70.3 | 69.2 | 64.9 | 89.7 | 71.3 |
-| UniXcoder | 72.6 | 68.4 | 74.0 | 72.0 | 67.6 | 91.5 | 74.4 |
-| SynCoBERT | 72.3 | 67.7 | 72.2 | 72.4 | 67.8 | 91.3 | 74.0 |
-| CodeRetriever | 76.5 | 71.9 | 77.1 | 75.8 | 70.8 | 92.4 | 77.4 |
-| CoCoSoDa | 76.3 | 76.4 | 81.8 | 75.7 | 70.3 | 92.1 | 78.8 |
-| UA-HN | 77.2 | 77.7 | 82.2 | 77.2 | 71.9 | 92.4 | 79.8 |
-| HedgeCode | 78.5 | 77.1 | 82.5 | 77.6 | 73.8 | 92.7 | 80.3 |
-| **ReFCode** | **78.6** | **79.4** | **83.6** | **78.5** | **73.5** | **93.3** | **81.2** |
+| UA-HN source | 77.20 | 77.72 | 82.16 | 77.17 | 71.91 | 92.43 | 79.77 |
+| ReFCode-Global | 78.14 | 78.36 | 82.84 | 77.95 | 73.10 | 93.03 | 80.57 |
+| **ReFCode-Rerank** | **78.57** | **78.95** | **83.51** | **78.30** | **73.58** | **93.41** | **81.06** |
 
 ### Average Recall@K (%)
 
 | Method | R@1 | R@5 | R@10 |
 |---|---:|---:|---:|
-| CoCoSoDa | 69.0 | 89.8 | 93.8 |
-| UA-HN | 70.7 | 91.3 | 95.1 |
-| **ReFCode** | **72.8** | **91.6** | **95.2** |
+| UA-HN source | 70.72 | 91.28 | 95.10 |
+| ReFCode-Global | 71.90 | 91.52 | **95.17** |
+| **ReFCode-Rerank** | **72.64** | **91.68** | 95.11 |
+
+The source, global-refinement, and reranking rows use the same frozen data,
+candidate codebases, and evaluation implementation. Published reference values
+are kept separate in the paper because they were not rerun in this pipeline.
+
+## Paper
+
+The ACL-format bilingual working draft is in
+[`paper_workspace/acl_template_bilingual/main.tex`](paper_workspace/acl_template_bilingual/main.tex).
+All experiment-section LaTeX is contained directly in that file. The recovered
+pre-ACL source and figures are preserved under `paper_workspace/refcode_original/`.
+
+## Experiment scripts and evidence
+
+Additional controlled experiments, audits, exporters, and table-generation
+scripts are under `experiments/`. The lightweight result and provenance index is
+[`experimental_results/RESULTS_MANIFEST.md`](experimental_results/RESULTS_MANIFEST.md).
+Set `PYTHON_BIN`, `COCOSODA_REPO`, and model-path environment variables when the
+defaults do not match the local machine.
 
 ## Outputs
 

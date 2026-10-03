@@ -587,6 +587,9 @@ class TextDataset_unixcoder(Dataset):
             logger.info("Loaded ReFCode global hard negatives: %d entries", len(self.hard_idx))
 
         self.self_mined_idx = None
+        self.source_gold_scores = None
+        self.source_candidate_scores = None
+        self.source_gold_ranks = None
         if self.split == "train" and getattr(args, 'self_mined_idx_file', ''):
             mined_path = args.self_mined_idx_file
             logger.info("Loading self-mined hard negatives from %s", mined_path)
@@ -617,6 +620,23 @@ class TextDataset_unixcoder(Dataset):
             self.self_mined_idx = cleaned
             logger.info("Loaded self-mined hard negatives: %d entries, first row K=%d", len(self.self_mined_idx), len(self.self_mined_idx[0]))
 
+            if isinstance(mined_obj, dict) and mined_obj.get('source_gold_scores') is not None:
+                self.source_gold_scores = np.asarray(
+                    mined_obj['source_gold_scores'], dtype=np.float32
+                )[:len(self.examples)]
+                self.source_candidate_scores = np.asarray(
+                    mined_obj['source_candidate_scores'], dtype=np.float32
+                )[:len(self.examples), :len(self.self_mined_idx[0])]
+                self.source_gold_ranks = np.asarray(
+                    mined_obj['source_gold_ranks_within_pool'], dtype=np.int64
+                )[:len(self.examples)]
+                if self.source_candidate_scores.shape[0] != len(self.examples):
+                    raise ValueError("Boundary metadata is not aligned with the training rows.")
+                logger.info(
+                    "Loaded failure-boundary metadata: true_failure_rate=%.4f",
+                    float(np.mean(self.source_gold_ranks > 1)),
+                )
+
         if "train" in file_path:
             aug_nl_count = sum(getattr(x, 'has_aug_nl', 0) for x in self.examples)
             aug_code_count = sum(getattr(x, 'has_aug_code', 0) for x in self.examples)
@@ -636,7 +656,8 @@ class TextDataset_unixcoder(Dataset):
         ex = self.examples[i]
         if self.split == "train" and (getattr(self.args, 'use_refcode_uncertainty', False)
                                       or getattr(self.args, 'use_refcode_augmented_views', False)
-                                      or getattr(self.args, 'use_refcode_global_hard_negative', False)):
+                                      or getattr(self.args, 'use_refcode_global_hard_negative', False)
+                                      or getattr(self.args, 'use_self_mined_hard_negative', False)):
             item = (
                 torch.tensor(ex.code_ids),
                 torch.tensor(ex.nl_ids),
@@ -1140,7 +1161,16 @@ def compute_ctrd_relevance_loss(model, nl_vec, code_vec, hard_code_vec, args):
     return bce + float(args.ctrd_rank_weight) * rank_loss
 
 
-def compute_self_mined_hard_loss(model, nl_vec, code_vec, mined_code_inputs, args):
+def compute_self_mined_hard_loss(
+        model,
+        nl_vec,
+        code_vec,
+        mined_code_inputs,
+        args,
+        source_gold_scores=None,
+        source_candidate_scores=None,
+        source_gold_ranks=None,
+):
     """Listwise loss over model-mined hard negatives.
 
     mined_code_inputs: [B, K, L], where each row contains codes that a previous
@@ -1156,6 +1186,61 @@ def compute_self_mined_hard_loss(model, nl_vec, code_vec, mined_code_inputs, arg
     bs, k, length = mined_code_inputs.size()
     if bs == 0 or k == 0:
         return nl_vec.new_tensor(0.0)
+    strategy = str(getattr(args, 'failure_strategy', 'baseline')).lower()
+    if strategy != 'baseline':
+        if source_gold_scores is None or source_candidate_scores is None or source_gold_ranks is None:
+            raise ValueError(
+                f"failure_strategy={strategy} requires a candidate file with boundary metadata"
+            )
+
+        source_candidate_scores = source_candidate_scores[:, :k]
+        failure_counts = (source_candidate_scores > source_gold_scores.unsqueeze(1)).sum(dim=1)
+        is_failure = source_gold_ranks > 1
+
+        # True failures use the candidate closest to the gold decision
+        # boundary among candidates that still outrank it. Correct queries use
+        # their top non-gold candidate.
+        selected_rank = (failure_counts - 1).clamp(min=0, max=k - 1)
+        batch_rows = torch.arange(bs, device=mined_code_inputs.device)
+        selected_inputs = mined_code_inputs[batch_rows, selected_rank]
+        selected_source_scores = source_candidate_scores[batch_rows, selected_rank]
+
+        if getattr(args, 'use_refcode_uncertainty', False):
+            selected_vec = refcode_encode(model, selected_inputs, args)['z']
+        else:
+            selected_vec = model(code_inputs=selected_inputs)
+
+        pos_sim = torch.einsum('bd,bd->b', nl_vec, code_vec)
+        neg_sim = torch.einsum('bd,bd->b', nl_vec, selected_vec)
+        source_margin = source_gold_scores - selected_source_scores
+
+        near_margin = float(getattr(args, 'near_failure_margin', 0.02))
+        near_weight = float(getattr(args, 'near_failure_weight', 0.25))
+        is_near = (~is_failure) & (source_margin <= near_margin)
+
+        example_weights = is_failure.float()
+        if strategy in {'boundary', 'boundary_preserve'}:
+            example_weights = example_weights + near_weight * is_near.float()
+
+        tau = max(float(getattr(args, 'self_mined_temperature', 0.03)), 1e-6)
+        pair_margin = float(getattr(args, 'failure_pair_margin', 0.02))
+        pair_losses = F.softplus((neg_sim - pos_sim + pair_margin) / tau)
+        if example_weights.sum() > 0:
+            loss = (pair_losses * example_weights).sum() / example_weights.sum()
+        else:
+            loss = pair_losses.sum() * 0.0
+
+        if strategy == 'boundary_preserve':
+            stable = (~is_failure) & (~is_near)
+            if stable.any():
+                current_margin = pos_sim - neg_sim
+                tolerance = float(getattr(args, 'source_preserve_tolerance', 0.005))
+                target_margin = (source_margin - tolerance).clamp_min(0.0)
+                preserve = F.relu(target_margin - current_margin) / tau
+                loss = loss + float(getattr(args, 'source_preserve_weight', 0.25)) * preserve[stable].mean()
+
+        return loss
+
 
     train_k = int(getattr(args, 'self_mined_train_k', 0))
     if train_k > 0 and k > train_k:
@@ -1197,6 +1282,99 @@ def compute_self_mined_hard_loss(model, nl_vec, code_vec, mined_code_inputs, arg
         max_loss = F.softplus((hardest_neg - pos_sim + margin) / tau).mean()
         ce_loss = ce_loss + max_weight * max_loss
     return ce_loss
+
+
+def compute_reliable_local_distillation_loss(
+        model,
+        tokenizer,
+        nl_inputs,
+        code_inputs,
+        mined_code_inputs,
+        nl_vec,
+        code_vec,
+        args,
+        source_gold_scores,
+        source_candidate_scores,
+        source_gold_ranks,
+):
+    """Distil reliable token-level evidence into the global retrieval space.
+
+    The late-interaction branch is a detached teacher and is never needed at
+    inference time. It supervises only source failures and near-boundary
+    examples for which token-level MaxSim already ranks the gold code above
+    the selected confusing candidate.
+    """
+    if mined_code_inputs is None or mined_code_inputs.dim() != 3:
+        return nl_vec.new_tensor(0.0)
+    if source_gold_scores is None or source_candidate_scores is None or source_gold_ranks is None:
+        raise ValueError("Reliable local distillation requires source-boundary metadata.")
+
+    bs, k, _ = mined_code_inputs.size()
+    if bs == 0 or k == 0:
+        return nl_vec.new_tensor(0.0)
+
+    candidate_scores = source_candidate_scores[:, :k]
+    failure_counts = (candidate_scores > source_gold_scores.unsqueeze(1)).sum(dim=1)
+    is_failure = source_gold_ranks > 1
+    selected_rank = (failure_counts - 1).clamp(min=0, max=k - 1)
+    rows = torch.arange(bs, device=mined_code_inputs.device)
+    selected_inputs = mined_code_inputs[rows, selected_rank]
+    selected_source_scores = candidate_scores[rows, selected_rank]
+
+    source_margin = source_gold_scores - selected_source_scores
+    near_margin = float(getattr(args, 'near_failure_margin', 0.02))
+    is_near = (~is_failure) & (source_margin <= near_margin)
+    active = is_failure | is_near
+    active_idx = active.nonzero(as_tuple=False).squeeze(1)
+    if active_idx.numel() == 0:
+        return nl_vec.new_tensor(0.0)
+
+    sample_size = int(getattr(args, 'local_distill_sample_size', 16))
+    if sample_size > 0 and active_idx.numel() > sample_size:
+        order = torch.randperm(active_idx.numel(), device=active_idx.device)[:sample_size]
+        active_idx = active_idx.index_select(0, order)
+
+    q_ids = nl_inputs.index_select(0, active_idx)
+    pos_ids = code_inputs.index_select(0, active_idx)
+    neg_ids = selected_inputs.index_select(0, active_idx)
+    q_student = nl_vec.index_select(0, active_idx)
+    pos_student = code_vec.index_select(0, active_idx)
+    if getattr(args, 'use_refcode_uncertainty', False):
+        neg_student = refcode_encode(model, neg_ids, args)['z']
+    else:
+        neg_student = model(code_inputs=neg_ids)
+    student_margin = (q_student * pos_student).sum(dim=1) - (q_student * neg_student).sum(dim=1)
+
+    q_ids = _li_truncate_inputs(q_ids, int(getattr(args, 'local_distill_nl_length', 64)))
+    pos_ids = _li_truncate_inputs(pos_ids, int(getattr(args, 'local_distill_code_length', 128)))
+    neg_ids = _li_truncate_inputs(neg_ids, int(getattr(args, 'local_distill_code_length', 128)))
+
+    was_training = model.training
+    model.eval()
+    with torch.no_grad():
+        q_hidden, q_mask = li_encode_tokens(model, q_ids, tokenizer)
+        pos_hidden, pos_mask = li_encode_tokens(model, pos_ids, tokenizer)
+        neg_hidden, neg_mask = li_encode_tokens(model, neg_ids, tokenizer)
+        teacher_pos = li_maxsim_score(q_hidden, q_mask, pos_hidden, pos_mask)
+        teacher_neg = li_maxsim_score(q_hidden, q_mask, neg_hidden, neg_mask)
+        teacher_margin = teacher_pos - teacher_neg
+    model.train(was_training)
+
+    min_margin = float(getattr(args, 'local_distill_min_margin', 0.02))
+    reliable = teacher_margin > min_margin
+    if not reliable.any():
+        return student_margin.sum() * 0.0
+
+    max_margin = float(getattr(args, 'local_distill_max_margin', 0.20))
+    target_margin = teacher_margin.detach().clamp(min=min_margin, max=max_margin)
+    temperature = max(float(getattr(args, 'local_distill_temperature', 0.05)), 1e-6)
+    per_example = F.softplus((target_margin - student_margin) / temperature)
+
+    # Stronger local evidence is trusted more, while every accepted teacher
+    # still receives a non-zero weight.
+    confidence = (teacher_margin.detach() / max(max_margin, 1e-6)).clamp(min=0.25, max=1.0)
+    weights = confidence * reliable.float()
+    return (per_example * weights).sum() / weights.sum().clamp_min(1.0)
 
 
 def train(args, model, tokenizer,pool):
@@ -1266,6 +1444,28 @@ def train(args, model, tokenizer,pool):
                 nl_vec = model(nl_inputs=nl_inputs)
                 scores = torch.einsum("ab,cb->ac",nl_vec,code_vec)
                 loss = loss_fct(scores*20, targets)
+
+                # FC refinement is independent of the uncertainty branch. A
+                # plain bi-encoder can therefore learn directly from failures
+                # mined by its frozen source checkpoint.
+                if (getattr(args, 'use_self_mined_hard_negative', False)
+                        and getattr(args, 'self_mined_weight', 0.0) > 0
+                        and len(batch) >= 8):
+                    maybe_mined = batch[-1]
+                    if hasattr(maybe_mined, 'dim') and maybe_mined.dim() == 3:
+                        if str(getattr(args, 'failure_strategy', 'baseline')).lower() != 'baseline':
+                            raise ValueError(
+                                "Non-baseline failure strategies are not enabled for plain bi-encoder refinement."
+                            )
+                        mined_code_inputs = maybe_mined.to(args.device)
+                        loss_self_mined = compute_self_mined_hard_loss(
+                            model=model,
+                            nl_vec=nl_vec,
+                            code_vec=code_vec,
+                            mined_code_inputs=mined_code_inputs,
+                            args=args,
+                        )
+                        loss = loss + args.self_mined_weight * loss_self_mined
             else:
                 code_enc = refcode_encode(model, code_inputs, args)
                 nl_enc = refcode_encode(model, nl_inputs, args)
@@ -1327,14 +1527,61 @@ def train(args, model, tokenizer,pool):
                 if (getattr(args, 'use_self_mined_hard_negative', False)
                         and getattr(args, 'self_mined_weight', 0.0) > 0
                         and mined_code_inputs is not None):
+                    source_gold_scores = None
+                    source_candidate_scores = None
+                    source_gold_ranks = None
+                    if str(getattr(args, 'failure_strategy', 'baseline')).lower() != 'baseline':
+                        if train_dataset.source_gold_scores is None:
+                            raise ValueError(
+                                "Selected failure strategy requires source-score boundary metadata."
+                            )
+                        row_indices = batch[6].cpu().numpy()
+                        source_gold_scores = torch.as_tensor(
+                            train_dataset.source_gold_scores[row_indices],
+                            dtype=nl_vec.dtype,
+                            device=args.device,
+                        )
+                        source_candidate_scores = torch.as_tensor(
+                            train_dataset.source_candidate_scores[row_indices],
+                            dtype=nl_vec.dtype,
+                            device=args.device,
+                        )
+                        source_gold_ranks = torch.as_tensor(
+                            train_dataset.source_gold_ranks[row_indices],
+                            dtype=torch.long,
+                            device=args.device,
+                        )
                     loss_self_mined = compute_self_mined_hard_loss(
                         model=model,
                         nl_vec=nl_vec,
                         code_vec=code_vec,
                         mined_code_inputs=mined_code_inputs,
                         args=args,
+                        source_gold_scores=source_gold_scores,
+                        source_candidate_scores=source_candidate_scores,
+                        source_gold_ranks=source_gold_ranks,
                     )
                     loss = loss + args.self_mined_weight * loss_self_mined
+
+                local_distill_every = max(1, int(getattr(args, 'local_distill_every_n_steps', 2)))
+                if (getattr(args, 'use_reliable_local_distillation', 0)
+                        and getattr(args, 'local_distill_weight', 0.0) > 0
+                        and mined_code_inputs is not None
+                        and ((step + 1) % local_distill_every == 0)):
+                    loss_local_distill = compute_reliable_local_distillation_loss(
+                        model=model,
+                        tokenizer=tokenizer,
+                        nl_inputs=nl_inputs,
+                        code_inputs=code_inputs,
+                        mined_code_inputs=mined_code_inputs,
+                        nl_vec=nl_vec,
+                        code_vec=code_vec,
+                        args=args,
+                        source_gold_scores=source_gold_scores,
+                        source_candidate_scores=source_candidate_scores,
+                        source_gold_ranks=source_gold_ranks,
+                    )
+                    loss = loss + float(args.local_distill_weight) * loss_local_distill
 
                 li_every_n_steps = max(1, int(getattr(args, 'li_every_n_steps', 1)))
                 if (getattr(args, 'use_lite_late_interaction_train', 0)
@@ -1390,6 +1637,7 @@ def train(args, model, tokenizer,pool):
         select_mrr = results['eval_mrr']
         select_name = 'eval_mrr'
 
+        fusion_results = {}
         if getattr(args, 'use_valid_fusion_select', 0):
             fusion_results = evaluate_late_fusion(
                 args,
@@ -1418,6 +1666,19 @@ def train(args, model, tokenizer,pool):
             output_dir = os.path.join(output_dir, '{}'.format('model.bin'))
             torch.save(model_to_save.state_dict(), output_dir)
             logger.info("Saving model checkpoint to %s", output_dir)
+            validation_summary = {
+                'epoch': int(idx + 1),
+                'selection_metric': select_name,
+                'selection_mrr': float(select_mrr),
+                'global_mrr': float(results['eval_mrr']),
+            }
+            if fusion_results:
+                validation_summary.update({
+                    'fusion_mrr': float(fusion_results['eval_fusion_mrr']),
+                    'late_mrr': float(fusion_results['eval_li_only_mrr']),
+                })
+            with open(os.path.join(args.output_dir, 'best_validation.json'), 'w', encoding='utf-8') as handle:
+                json.dump(validation_summary, handle, indent=2, sort_keys=True)
 
 def  multi_lang_continue_pre_train(args, model, tokenizer,pool):
     """ Train the model """
@@ -2077,6 +2338,29 @@ def parse_args():
     parser.add_argument('--self_mined_margin', type=float, default=0.02, help='margin for hardest-mined negative softplus term')
     parser.add_argument('--self_mined_max_weight', type=float, default=0.2, help='extra weight for hardest-mined negative term')
     parser.add_argument('--self_mined_false_negative_margin', type=float, default=999.0, help='mask mined negatives with sim > pos_sim + margin; 999 disables')
+    parser.add_argument(
+        '--failure_strategy',
+        default='baseline',
+        choices=['baseline', 'failure_only', 'boundary', 'boundary_preserve'],
+        help='optional source-boundary-aware FC supervision',
+    )
+    parser.add_argument('--near_failure_margin', type=float, default=0.02)
+    parser.add_argument('--near_failure_weight', type=float, default=0.25)
+    parser.add_argument('--failure_pair_margin', type=float, default=0.02)
+    parser.add_argument('--source_preserve_weight', type=float, default=0.25)
+    parser.add_argument('--source_preserve_tolerance', type=float, default=0.005)
+
+    # Reliable local-evidence distillation: token MaxSim is a detached training
+    # teacher; inference remains the original single-vector retriever.
+    parser.add_argument('--use_reliable_local_distillation', type=int, default=0)
+    parser.add_argument('--local_distill_weight', type=float, default=0.05)
+    parser.add_argument('--local_distill_sample_size', type=int, default=16)
+    parser.add_argument('--local_distill_every_n_steps', type=int, default=2)
+    parser.add_argument('--local_distill_temperature', type=float, default=0.05)
+    parser.add_argument('--local_distill_min_margin', type=float, default=0.02)
+    parser.add_argument('--local_distill_max_margin', type=float, default=0.20)
+    parser.add_argument('--local_distill_nl_length', type=int, default=64)
+    parser.add_argument('--local_distill_code_length', type=int, default=128)
 
     # Lightweight training-stage Late Interaction branch.
     # Main/global branch still uses full BATCH_SIZE=128, so in-batch negatives are unchanged.
@@ -2142,7 +2426,14 @@ def create_model(args,model,tokenizer, config=None):
     model = Model(model)
     if (args.loaded_model_filename) and ("pytorch_model.bin" not in args.loaded_model_filename) :
         logger.info("reload model from {}".format(args.loaded_model_filename))
-        model.load_state_dict(torch.load(args.loaded_model_filename), strict=not (getattr(args, 'use_refcode_uncertainty', False) or getattr(args, 'use_ctrd', False))) 
+        model.load_state_dict(
+            torch.load(args.loaded_model_filename),
+            strict=not (
+                getattr(args, 'use_refcode_uncertainty', False)
+                or getattr(args, 'use_ctrd', False)
+                or getattr(args, 'use_self_mined_hard_negative', False)
+            ),
+        )
         # strict=False lets ReFCode heads be initialized when loading an older bi-encoder checkpoint.
         # model.from_pretrained(args.loaded_model_filename)  
     if (args.loaded_codebert_model_filename) :

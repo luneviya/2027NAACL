@@ -62,6 +62,16 @@ param_sensitivity/
 rq4_rank_movement/
 rq4_case_study/
 
+# Local experiment artifacts (keep only the lightweight result manifest)
+experimental_inputs/
+experimental_results/*
+!experimental_results/RESULTS_MANIFEST.md
+
+# Locally downloaded reading material and source archives
+references/
+paper_workspace/source_downloads/
+paper_workspace/*.zip
+
 # Tree-sitter sources downloaded by refcode/utils/parser/build.sh
 refcode/utils/parser/tree-sitter-*/
 

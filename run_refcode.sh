@@ -3,6 +3,7 @@ set -euo pipefail
 
 lang=javascript
 seed=123456
+python_bin=${PYTHON_BIN:-python}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -43,6 +44,7 @@ refcode_tau=${REFCODE_TAU:-0.03}
 refcode_samples=${REFCODE_SAMPLES:-1}
 refcode_intra_w=${REFCODE_INTRA_W:-1.0}
 refcode_kl_w=${REFCODE_KL_W:-1e-5}
+use_refcode_uncertainty=${USE_REFCODE_UNCERTAINTY:-1}
 
 self_mine_w=${SELF_MINE_W:-0.45}
 self_mine_topk=${SELF_MINE_TOPK:-8}
@@ -66,6 +68,38 @@ valid_fusion_topk=${VALID_FUSION_TOPK:-50}
 valid_fusion_alpha=${VALID_FUSION_ALPHA:-0.5}
 valid_rerank_batch_size=${VALID_RERANK_BATCH_SIZE:-64}
 valid_fusion_fp16=${VALID_FUSION_FP16:-1}
+
+failure_args=(
+  --failure_strategy "${FAILURE_STRATEGY:-baseline}"
+  --near_failure_margin "${NEAR_FAILURE_MARGIN:-0.02}"
+  --near_failure_weight "${NEAR_FAILURE_WEIGHT:-0.25}"
+  --failure_pair_margin "${FAILURE_PAIR_MARGIN:-0.02}"
+  --source_preserve_weight "${SOURCE_PRESERVE_WEIGHT:-0.25}"
+  --source_preserve_tolerance "${SOURCE_PRESERVE_TOLERANCE:-0.005}"
+)
+
+local_distill_args=(
+  --use_reliable_local_distillation "${USE_RELIABLE_LOCAL_DISTILLATION:-0}"
+  --local_distill_weight "${LOCAL_DISTILL_W:-0.05}"
+  --local_distill_sample_size "${LOCAL_DISTILL_SAMPLE_SIZE:-16}"
+  --local_distill_every_n_steps "${LOCAL_DISTILL_EVERY_N_STEPS:-2}"
+  --local_distill_temperature "${LOCAL_DISTILL_TEMP:-0.05}"
+  --local_distill_min_margin "${LOCAL_DISTILL_MIN_MARGIN:-0.02}"
+  --local_distill_max_margin "${LOCAL_DISTILL_MAX_MARGIN:-0.20}"
+  --local_distill_nl_length "${LOCAL_DISTILL_NL_LENGTH:-64}"
+  --local_distill_code_length "${LOCAL_DISTILL_CODE_LENGTH:-128}"
+)
+
+refcode_uncertainty_args=()
+if [[ "${use_refcode_uncertainty}" == "1" ]]; then
+  refcode_uncertainty_args=(
+    --use_refcode_uncertainty
+    --refcode_temperature "${refcode_tau}"
+    --refcode_uncertainty_samples "${refcode_samples}"
+    --refcode_intra_weight "${refcode_intra_w}"
+    --refcode_kl_weight "${refcode_kl_w}"
+  )
+fi
 
 if [[ -z "${INITIAL_RETRIEVER_OUT:-}" ]]; then
   INITIAL_RETRIEVER_OUT="./saved_models/initial_retriever/${lang}"
@@ -99,7 +133,7 @@ echo "[ReFCode-Refinement] load_model_file=${load_model_file}"
 echo "[ReFCode-Refinement] self_mined_idx_file=${self_mined_idx_file}"
 echo "[ReFCode-Refinement] output_dir=${output_dir}"
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_refcode_refinement \
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} "${python_bin}" -m refcode.run_refcode_refinement \
   --eval_frequency 100 \
   --moco_m ${moco_m} \
   --moco_t ${moco_t} \
@@ -124,11 +158,7 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_refcode_refin
   --eval_batch_size ${eval_batch_size} \
   --learning_rate ${lr} \
   --seed ${seed} \
-  --use_refcode_uncertainty \
-  --refcode_temperature ${refcode_tau} \
-  --refcode_uncertainty_samples ${refcode_samples} \
-  --refcode_intra_weight ${refcode_intra_w} \
-  --refcode_kl_weight ${refcode_kl_w} \
+  "${refcode_uncertainty_args[@]}" \
   --use_self_mined_hard_negative \
   --self_mined_idx_file ${self_mined_idx_file} \
   --self_mined_weight ${self_mine_w} \
@@ -151,11 +181,13 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_refcode_refin
   --valid_fusion_alpha ${valid_fusion_alpha} \
   --valid_rerank_batch_size ${valid_rerank_batch_size} \
   --valid_fusion_fp16 ${valid_fusion_fp16} \
+  "${failure_args[@]}" \
+  "${local_distill_args[@]}" \
   2>&1 | tee ${output_dir}/running.log
 
 checkpoint_file=${output_dir}/checkpoint-best-mrr/model.bin
-if [[ -f "${checkpoint_file}" ]]; then
-  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} python -m refcode.run_refcode_refinement \
+if [[ "${SKIP_FINAL_RERANK:-0}" != "1" && -f "${checkpoint_file}" ]]; then
+  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} "${python_bin}" -m refcode.run_refcode_refinement \
     --run_rerank_only \
     --lang "${lang}" \
     --model_name_or_path "${base_model}" \
