@@ -20,6 +20,8 @@
 \newcommand{\method}{\textsc{ReFCode}}
 \newcommand{\reported}{\textsuperscript{\textdagger}}
 \newcommand{\localrun}{\textsuperscript{\textdaggerdbl}}
+\newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\second}[1]{\underline{#1}}
 
 % Uncomment and adjust if the title/author block needs more vertical space.
 % \setlength\titlebox{5cm}
@@ -33,8 +35,8 @@
 \maketitle
 
 \begin{abstract}
-Neural code search systems commonly optimize static hard negatives that need not match the high-ranked confusions produced at inference time. We propose \method{}, a failure-calibrated refinement framework that mines high-ranked non-ground-truth candidates from a frozen retriever and uses them as targeted contrastive supervision. \method{} first refines global query--code representations and then applies a parameter-free token-level MaxSim reranker only to the top-\(K\) candidates. Under a matched local protocol on the six-language CodeSearchNet benchmark, refinement raises macro MRR from 79.77 to 80.57, and final reranking reaches 81.06, a 1.29-point paired improvement over the initial retriever with a query-level 95\% bootstrap confidence interval of [1.11, 1.47]. Candidate-selection controls and rank-stratified diagnostics show that the gains concentrate on initially mis-ranked queries, while also revealing regressions for some initial top-1 cases.
-% 中文：神经代码检索系统通常使用静态困难负样本进行优化，但这些负样本未必对应模型在推理时实际产生的高排名混淆候选。本文提出 \method{}，一种失败校准的细化框架：它从冻结的检索器中挖掘高排名非标注候选，并将其作为有针对性的对比监督。\method{} 首先细化全局查询—代码表示，随后仅对前 \(K\) 个候选应用无参数的词元级 MaxSim 重排器。在六语言 CodeSearchNet 基准上的协议一致本地评测中，全局细化将宏平均 MRR 从 79.77 提升到 80.57，最终重排达到 81.06；相比初始检索器配对提高 1.29 个点，查询级 95\% bootstrap 置信区间为 [1.11, 1.47]。候选选择对照和分层排名诊断表明，收益主要集中在初始排序错误的查询上，同时也揭示了部分初始首位样本发生回退。
+Neural code search systems commonly optimize static hard negatives that need not match the high-ranked confusions produced at inference time. We propose \method{}, a failure-calibrated refinement framework that mines high-ranked non-ground-truth candidates from a frozen retriever and uses them as targeted contrastive supervision. \method{} first refines global query--code representations and then applies a parameter-free token-level MaxSim reranker only to the top-\(K\) candidates. Under a matched local protocol on the six-language CodeSearchNet benchmark, refinement raises macro MRR from 79.8 to 80.6, and final reranking reaches 81.1, a 1.3-point paired improvement over the initial retriever with a query-level 95\% bootstrap confidence interval of [1.11, 1.47]. Candidate-selection controls and rank-stratified diagnostics show that the gains concentrate on initially mis-ranked queries, while also revealing regressions for some initial top-1 cases.
+% 中文：神经代码检索系统通常使用静态困难负样本进行优化，但这些负样本未必对应模型在推理时实际产生的高排名混淆候选。本文提出 \method{}，一种失败校准的细化框架：它从冻结的检索器中挖掘高排名非标注候选，并将其作为有针对性的对比监督。\method{} 首先细化全局查询—代码表示，随后仅对前 \(K\) 个候选应用无参数的词元级 MaxSim 重排器。在六语言 CodeSearchNet 基准上的协议一致本地评测中，全局细化将宏平均 MRR 从 79.8 提升到 80.6，最终重排达到 81.1；相比初始检索器配对提高 1.3 个点，查询级 95\% bootstrap 置信区间为 [1.11, 1.47]。候选选择对照和分层排名诊断表明，收益主要集中在初始排序错误的查询上，同时也揭示了部分初始首位样本发生回退。
 \end{abstract}
 
 % Add the revised Introduction, Related Work, and Method sections above the
@@ -91,14 +93,14 @@ We use a stratified paired bootstrap over test queries to characterize query-sam
 % 中文：我们在测试查询上采用分层配对 bootstrap，刻画细化系统与初始检索器之间差值的查询采样不确定性。这些区间以单个已训练检查点为条件，因此不能衡量不同训练种子带来的波动。
 
 \paragraph{Comparison protocol.}
-Following the compact single-table presentation of UA-HN~\citep{AAAIUA}, Table~\ref{tab:main_results} places previously published CodeSearchNet results above the divider and our two variants below it. Rows marked with \reported{} are copied from the cited papers and provide field context; rows marked with \localrun{} are produced by our local evaluation. Controlled deltas and confidence intervals use the matched initial checkpoint rather than the reported rows.
-% 中文：参照 UA-HN~\citep{AAAIUA} 的紧凑单表形式，表~\ref{tab:main_results} 在分隔线上方展示此前发表的 CodeSearchNet 结果，在分隔线下方展示本文的两个模型变体。标记为 \reported{} 的行取自所引用的论文，用于说明领域背景；标记为 \localrun{} 的行来自本文的本地评测。受控差值和置信区间使用协议一致的初始检查点计算，而不是使用论文报告行。
+Following the compact single-table presentation of UA-HN~\citep{AAAIUA}, Table~\ref{tab:main_results} places the comparison methods above the divider and our two variants below it. Rows marked with \reported{} are copied from the cited papers and provide field context; rows marked with \localrun{} are produced by our local evaluation. Controlled deltas and confidence intervals use the matched initial checkpoint rather than the reported rows.
+% 中文：参照 UA-HN~\citep{AAAIUA} 的紧凑单表形式，表~\ref{tab:main_results} 在分隔线上方展示对比方法，在分隔线下方展示本文的两个模型变体。标记为 \reported{} 的行取自所引用的论文，用于说明领域背景；标记为 \localrun{} 的行来自本文的本地评测。受控差值和置信区间使用协议一致的初始检查点计算，而不是使用论文报告行。
 
 \subsection{Main Results}
 \label{sec:main_results}
 
-Table~\ref{tab:main_results} presents the main MRR results in the language order used by UA-HN. \method{}-Global obtains an average MRR of 80.57, and the validation-selected parameter-free reranker further raises it to 81.06. In the matched local evaluation, these scores correspond to gains of 0.80 and 1.29 points, respectively, over the initial retriever at 79.77; the global variant improves all six languages.
-% 中文：表~\ref{tab:main_results} 按照 UA-HN 使用的语言顺序展示主要 MRR 结果。\method{}-Global 的平均 MRR 为 80.57，进一步应用由验证集选择的无参数重排器后达到 81.06。在协议一致的本地评测中，这两个结果相对于平均 MRR 为 79.77 的初始检索器分别提升 0.80 和 1.29 个点；其中全局变体在六种语言上均有提升。
+Table~\ref{tab:main_results} presents the main MRR results in the language order used by UA-HN. \method{}-Global obtains an average MRR of 80.6, and the validation-selected parameter-free reranker further raises it to 81.1. In the matched local evaluation, these scores correspond to gains of 0.8 and 1.3 points, respectively, over the initial retriever at 79.8; the global variant improves all six languages.
+% 中文：表~\ref{tab:main_results} 按照 UA-HN 使用的语言顺序展示主要 MRR 结果。\method{}-Global 的平均 MRR 为 80.6，进一步应用由验证集选择的无参数重排器后达到 81.1。在协议一致的本地评测中，这两个结果相对于平均 MRR 为 79.8 的初始检索器分别提升 0.8 和 1.3 个点；其中全局变体在六种语言上均有提升。
 
 \begin{table*}[t]
   \centering
@@ -108,19 +110,20 @@ Table~\ref{tab:main_results} presents the main MRR results in the language order
     \toprule
     Model & Ruby & JavaScript & Go & Python & Java & PHP & Avg. \\
     \midrule
-    CodeBERT~\citep{CodeBERT}\reported{} & 67.90 & 62.00 & 88.20 & 67.20 & 67.60 & 62.80 & 69.30 \\
-    GraphCodeBERT~\citep{GraphCodeBERT}\reported{} & 70.30 & 64.40 & 89.70 & 69.20 & 69.10 & 64.90 & 71.30 \\
-    SynCoBERT~\citep{SynCoBERT}\reported{} & 72.20 & 67.70 & 91.30 & 72.40 & 72.30 & 67.80 & 74.00 \\
-    UniXcoder~\citep{UniXcoder}\reported{} & 74.00 & 68.40 & 91.50 & 72.00 & 72.60 & 67.60 & 74.40 \\
-    CodeRetriever~\citep{CodeRetriever}\reported{} & 77.10 & 71.90 & 92.40 & 75.80 & 76.50 & 70.80 & 77.40 \\
-    CoCoSoDa~\citep{CoCoSoDa}\reported{} & 81.80 & 76.40 & 92.10 & 75.70 & 76.30 & 70.30 & 78.80 \\
-    UA-HN~\citep{AAAIUA}\reported{} & 82.90 & 77.80 & 92.60 & 77.30 & 77.20 & 71.90 & 80.00 \\
+    CodeBERT~\citep{CodeBERT}\reported{} & 67.9 & 62.0 & 88.2 & 67.2 & 67.6 & 62.8 & 69.3 \\
+    GraphCodeBERT~\citep{GraphCodeBERT}\reported{} & 70.3 & 64.4 & 89.7 & 69.2 & 69.1 & 64.9 & 71.3 \\
+    SynCoBERT~\citep{SynCoBERT}\reported{} & 72.2 & 67.7 & 91.3 & 72.4 & 72.3 & 67.8 & 74.0 \\
+    UniXcoder~\citep{UniXcoder}\reported{} & 74.0 & 68.4 & 91.5 & 72.0 & 72.6 & 67.6 & 74.4 \\
+    CodeRetriever~\citep{CodeRetriever}\reported{} & 77.1 & 71.9 & 92.4 & 75.8 & 76.5 & 70.8 & 77.4 \\
+    CoCoSoDa~\citep{CoCoSoDa}\reported{} & 81.8 & 76.4 & 92.1 & 75.7 & 76.3 & 70.3 & 78.8 \\
+    UA-HN~\citep{AAAIUA}\localrun{} & 82.2 & 77.7 & 92.4 & 77.2 & 77.2 & 71.9 & 79.8 \\
+    HedgeCode~\citep{HedgeCode}\reported{} & 82.5 & 77.1 & 92.7 & 77.6 & \second{78.5} & \best{73.8} & 80.3 \\
     \midrule
-    \method{}-Global\localrun{} & 82.84 & 78.36 & 93.03 & 77.95 & 78.14 & 73.10 & 80.57 \\
-    \method{}-Rerank\localrun{} & \textbf{83.51} & \textbf{78.95} & \textbf{93.41} & \textbf{78.30} & \textbf{78.57} & \textbf{73.58} & \textbf{81.06} \\
+    \method{}-Global\localrun{} & \second{82.8} & \second{78.4} & \second{93.0} & \second{78.0} & 78.1 & 73.1 & \second{80.6} \\
+    \method{}-Rerank\localrun{} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \second{73.6} & \best{81.1} \\
     \bottomrule
   \end{tabular*}
-  \caption{MRR (\%) on CodeSearchNet. \reported{} denotes values reported in the cited papers; \localrun{} denotes our unified local evaluation with seed 123456. The last two rows are our results.}
+  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. Best results are in bold, and second-best results are underlined. \reported{} denotes values reported in the cited papers; \localrun{} denotes our unified local evaluation with seed 123456. The last two rows are our results.}
   \label{tab:main_results}
 \end{table*}
 
