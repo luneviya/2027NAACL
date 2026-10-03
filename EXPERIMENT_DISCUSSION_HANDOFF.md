@@ -89,6 +89,43 @@ code corpus, producing a degenerate validation MRR of 1.0.
 
 ## Work remaining
 
+### Priority 0: reranker-only control on the initial UA-HN retriever
+
+This is the highest-priority missing experiment for the paper.  Apply the same
+parameter-free token-level MaxSim reranking procedure directly to the locally
+evaluated UA-HN initial retriever.  The purpose is to determine how much of the
+final improvement comes from ReFCode training and how much comes from a generic
+top-K reranking step.
+
+Report the following 2-by-2 comparison over all six CodeSearchNet languages:
+
+| Training | Inference | Macro MRR | Status |
+|---|---|---:|---|
+| UA-HN | Global retrieval | 79.77 | Complete |
+| UA-HN | Top-K MaxSim fusion | TBD | Missing; run this control |
+| ReFCode failure-candidate refinement | Global retrieval | 80.57 | Complete |
+| ReFCode failure-candidate refinement | Top-K MaxSim fusion | 81.06 | Complete |
+
+Protocol requirements:
+
+- Use the same data splits, candidate codebases, token scoring implementation,
+  and evaluation script as the final ReFCode experiment.
+- Select K and fusion weight on the six-language validation macro MRR only,
+  using the same grid as the ReFCode sweep; freeze them before test evaluation.
+- Rerank every query without checking whether the gold code is in the top-K.
+- Preserve the order of candidates outside the reranked top-K and compute
+  metrics from the resulting full ranking.
+- Report MRR, R@1, R@5, R@10, latency, and peak memory.  Parameter-free does
+  not mean cost-free.
+- Optionally also report UA-HN with ReFCode's fixed K=20 and alpha=0.5 as a
+  same-operator diagnostic, but do not substitute this for validation-based
+  selection of the UA-HN reranker.
+
+Paper interpretation rule: ReFCode-Global is the core method and the MaxSim
+stage is an optional accuracy--latency trade-off.  Do not claim that the
+reranker is specific to ReFCode until this control shows that the refined model
+retains a clear advantage over UA-HN under the same reranking budget.
+
 ### Completed 1: final no-LI result export
 
 - Table 2 is exported under
