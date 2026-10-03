@@ -90,9 +90,15 @@ At inference time, \method{}-Global remains a dual encoder. The optional reranke
 We use a stratified paired bootstrap over test queries to characterize query-sampling uncertainty in the difference between each refined system and its source. These intervals condition on the single trained checkpoint and therefore do not measure variation across training seeds.
 % 中文：我们在测试查询上采用分层配对 bootstrap，刻画细化系统与源检索器之间差值的查询采样不确定性。这些区间以单个已训练检查点为条件，因此不能衡量不同训练种子带来的波动。
 
-\paragraph{Published reference systems.}
-Table~\ref{tab:reported_context} lists representative CodeSearchNet systems whose values are copied from their original papers. These rows provide field context only because their training and evaluation artifacts were not rerun in our pipeline. Accordingly, our quantitative claims are based on the matched local comparison in Table~\ref{tab:main_results}, rather than on differences from Table~\ref{tab:reported_context}.
-% 中文：表~\ref{tab:reported_context} 汇总了若干具有代表性的 CodeSearchNet 系统，其数值直接取自原论文。由于我们没有在当前流程中重新运行这些系统，它们只用于说明领域背景。因此，本文的定量主张依据的是表~\ref{tab:main_results} 中协议一致的本地比较，而不是与表~\ref{tab:reported_context} 之间的数值差异。
+\paragraph{Comparison protocol.}
+Following the compact single-table presentation of UA-HN~\citep{AAAIUA}, Table~\ref{tab:main_results} places published CodeSearchNet results and our matched local evaluation in one table. Rows marked with \reported{} are copied from the cited papers and provide field context only; rows marked with \localrun{} use the same local data, candidate codebase, evaluation script, and seed. All controlled improvement claims compare only the locally evaluated rows below the divider.
+% 中文：参照 UA-HN~\citep{AAAIUA} 的紧凑单表形式，表~\ref{tab:main_results} 将 CodeSearchNet 上已发表的结果与本文协议一致的本地评测放在同一张表中。标记为 \reported{} 的行取自所引用的论文，只用于说明领域背景；标记为 \localrun{} 的行使用相同的本地数据、候选代码库、评测脚本和随机种子。本文所有受控增益结论都只比较分隔线下方的本地评测结果。
+
+\subsection{Main Results}
+\label{sec:main_results}
+
+Table~\ref{tab:main_results} presents the main MRR results in the language order used by UA-HN. Under the matched local protocol, failure-candidate refinement improves average MRR from 79.77 to 80.57, an absolute gain of 0.80 points, and improves every language. Applying the validation-selected parameter-free reranker further raises average MRR to 81.06, corresponding to gains of 0.48 points over \method{}-Global and 1.29 points over the source retriever.
+% 中文：表~\ref{tab:main_results} 按照 UA-HN 使用的语言顺序展示主要 MRR 结果。在协议一致的本地评测下，失败候选细化将平均 MRR 从 79.77 提升到 80.57，绝对提高 0.80 个点，并在六种语言上均有提升。进一步应用由验证集选择的无参数重排器后，平均 MRR 达到 81.06，相比 \method{}-Global 提升 0.48 个点，相比源检索器提升 1.29 个点。
 
 \begin{table*}[t]
   \centering
@@ -100,48 +106,30 @@ Table~\ref{tab:reported_context} lists representative CodeSearchNet systems whos
   \setlength{\tabcolsep}{6.0pt}
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrr@{}}
     \toprule
-    Method & Java & JavaScript & Ruby & Python & PHP & Go & Macro \\
+    Model & Ruby & JavaScript & Go & Python & Java & PHP & Avg. \\
     \midrule
-    CodeBERT~\citep{CodeBERT} & 67.60 & 62.00 & 67.90 & 67.20 & 62.80 & 88.20 & 69.30 \\
-    GraphCodeBERT~\citep{GraphCodeBERT} & 69.10 & 64.40 & 70.30 & 69.20 & 64.90 & 89.70 & 71.30 \\
-    SynCoBERT~\citep{SynCoBERT} & 72.30 & 67.70 & 72.20 & 72.40 & 67.80 & 91.30 & 74.00 \\
-    UniXcoder~\citep{UniXcoder} & 72.60 & 68.40 & 74.00 & 72.00 & 67.60 & 91.50 & 74.40 \\
-    CodeRetriever~\citep{CodeRetriever} & 76.50 & 71.90 & 77.10 & 75.80 & 70.80 & 92.40 & 77.40 \\
-    CoCoSoDa~\citep{CoCoSoDa} & 76.30 & 76.40 & 81.80 & 75.70 & 70.30 & 92.10 & 78.80 \\
+    CodeBERT~\citep{CodeBERT}\reported{} & 67.90 & 62.00 & 88.20 & 67.20 & 67.60 & 62.80 & 69.30 \\
+    GraphCodeBERT~\citep{GraphCodeBERT}\reported{} & 70.30 & 64.40 & 89.70 & 69.20 & 69.10 & 64.90 & 71.30 \\
+    SynCoBERT~\citep{SynCoBERT}\reported{} & 72.20 & 67.70 & 91.30 & 72.40 & 72.30 & 67.80 & 74.00 \\
+    UniXcoder~\citep{UniXcoder}\reported{} & 74.00 & 68.40 & 91.50 & 72.00 & 72.60 & 67.60 & 74.40 \\
+    CodeRetriever~\citep{CodeRetriever}\reported{} & 77.10 & 71.90 & 92.40 & 75.80 & 76.50 & 70.80 & 77.40 \\
+    CoCoSoDa~\citep{CoCoSoDa}\reported{} & 81.80 & 76.40 & 92.10 & 75.70 & 76.30 & 70.30 & 78.80 \\
+    UA-HN~\citep{AAAIUA}\reported{} & 82.90 & 77.80 & 92.60 & 77.30 & 77.20 & 71.90 & 80.00 \\
+    \midrule
+    UA-HN source\localrun{} & 82.16 & 77.72 & 92.43 & 77.17 & 77.20 & 71.91 & 79.77 \\
+    \method{}-Global\localrun{} & 82.84 & 78.36 & 93.03 & 77.95 & 78.14 & 73.10 & 80.57 \\
+    \method{}-Rerank\localrun{} & \textbf{83.51} & \textbf{78.95} & \textbf{93.41} & \textbf{78.30} & \textbf{78.57} & \textbf{73.58} & \textbf{81.06} \\
     \bottomrule
   \end{tabular*}
-  \caption{Published MRR (\%) on CodeSearchNet. All values are reported reference results and were not rerun in our unified pipeline.}
-  \label{tab:reported_context}
-\end{table*}
-
-\subsection{Main Results}
-\label{sec:main_results}
-
-Table~\ref{tab:main_results} reports our matched local evaluation. Failure-candidate refinement improves macro MRR from 79.77 to 80.57, an absolute gain of 0.80 points, and improves every language. Applying the validation-selected parameter-free reranker further raises macro MRR to 81.06, corresponding to gains of 0.48 points over \method{}-Global and 1.29 points over the source retriever.
-% 中文：表~\ref{tab:main_results} 给出了协议一致的本地评测。失败候选细化将宏平均 MRR 从 79.77 提升到 80.57，绝对提高 0.80 个点，并在六种语言上均有提升。进一步应用由验证集选择的无参数重排器后，宏平均 MRR 达到 81.06，相比 \method{}-Global 提升 0.48 个点，相比源检索器提升 1.29 个点。
-
-\begin{table*}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{5.0pt}
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrrrrr@{}}
-    \toprule
-    Method & Java & JavaScript & Ruby & Python & PHP & Go & Macro & R@1 & R@5 & R@10 \\
-    \midrule
-    UA-HN source\localrun{}  & 77.20 & 77.72 & 82.16 & 77.17 & 71.91 & 92.43 & 79.77 & 70.72 & 91.28 & 95.10 \\
-    + \method{}-Global\localrun{} & 78.14 & 78.36 & 82.84 & 77.95 & 73.10 & 93.03 & 80.57 & 71.90 & 91.52 & 95.17 \\
-    + \method{}-Rerank\localrun{} & \textbf{78.57} & \textbf{78.95} & \textbf{83.51} & \textbf{78.30} & \textbf{73.58} & \textbf{93.41} & \textbf{81.06} & \textbf{72.64} & \textbf{91.68} & 95.11 \\
-    \bottomrule
-  \end{tabular*}
-  \caption{Results (\%) on six CodeSearchNet languages. \localrun{} denotes our unified local evaluation with seed 123456. Recall columns are six-language macro averages.}
+  \caption{MRR (\%) on CodeSearchNet. \reported{} denotes values reported in the cited papers; \localrun{} denotes our unified local evaluation with seed 123456. The last two rows are our results.}
   \label{tab:main_results}
 \end{table*}
 
 The recall results clarify the type of improvement. From the source to the final reranked system, R@1 increases from 70.72 to 72.64, whereas R@5 changes from 91.28 to 91.68 and R@10 from 95.10 to 95.11. The gain is therefore concentrated in ordering already retrieved candidates near the top rather than expanding broad top-10 coverage. This pattern matches the intended role of failure-candidate refinement and shallow top-\(K\) reranking.
 % 中文：召回率结果进一步说明了性能提升的性质。从源检索器到最终重排系统，R@1 从 70.72 提升到 72.64，而 R@5 仅从 91.28 变为 91.68，R@10 从 95.10 变为 95.11。因此，增益主要来自把已经检索到的候选更准确地排到前列，而不是扩大整体的前 10 名覆盖率。这与失败候选细化及浅层前 \(K\) 重排的预期作用一致。
 
-The locally reproduced source is the appropriate point of comparison because it shares the full training and evaluation pipeline with \method{}. Published results from prior code-search systems should be shown in a separately marked context block in the final paper; differences from those reported values are not controlled improvements and do not support a state-of-the-art claim.
-% 中文：由于本地复现的源检索器与 \method{} 共享完整的训练和评测流程，它才是合适的直接比较对象。最终论文可以在单独标记的参考区域展示既有代码检索系统的已报告结果；但与这些数值之间的差异不是受控增益，也不能据此提出新的最优性能主张。
+The locally reproduced source is the appropriate point of comparison because it shares the full training and evaluation pipeline with \method{}. The upper block of Table~\ref{tab:main_results} provides published context, whereas only the lower, locally evaluated block supports controlled improvement claims; differences from the reported rows do not by themselves establish a state-of-the-art result.
+% 中文：由于本地复现的源检索器与 \method{} 共享完整的训练和评测流程，它才是合适的直接比较对象。表~\ref{tab:main_results} 的上半部分提供已发表结果作为背景，只有下半部分的本地评测结果能够支持受控增益结论；仅凭与已报告行之间的数值差异，不能证明取得了新的最优结果。
 
 \subsection{Does the Candidate Source Matter?}
 \label{sec:candidate_controls}
