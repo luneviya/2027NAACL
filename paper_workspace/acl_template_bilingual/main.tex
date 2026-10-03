@@ -33,8 +33,8 @@
 \maketitle
 
 \begin{abstract}
-Neural code search systems commonly optimize static hard negatives that need not match the high-ranked confusions produced at inference time. We propose \method{}, a failure-calibrated refinement framework that mines high-ranked non-ground-truth candidates from a frozen baseline retriever and uses them as targeted contrastive supervision. \method{} first refines global query--code representations and then applies a parameter-free token-level MaxSim reranker only to the top-\(K\) candidates. Under a matched local protocol on the six-language CodeSearchNet benchmark, refinement raises macro MRR from 79.77 to 80.57, and final reranking reaches 81.06, a 1.29-point improvement over the baseline with a query-level 95\% bootstrap confidence interval of [1.11, 1.47]. Candidate-selection controls and rank-stratified diagnostics show that the gains concentrate on initially mis-ranked queries, while also revealing regressions for some baseline top-1 cases.
-% 中文：神经代码检索系统通常使用静态困难负样本进行优化，但这些负样本未必对应模型在推理时实际产生的高排名混淆候选。本文提出 \method{}，一种失败校准的细化框架：它从冻结的基线检索器中挖掘高排名非标注候选，并将其作为有针对性的对比监督。\method{} 首先细化全局查询—代码表示，随后仅对前 \(K\) 个候选应用无参数的词元级 MaxSim 重排器。在六语言 CodeSearchNet 基准上的协议一致本地评测中，全局细化将宏平均 MRR 从 79.77 提升到 80.57，最终重排达到 81.06；相比基线提高 1.29 个点，查询级 95\% bootstrap 置信区间为 [1.11, 1.47]。候选选择对照和分层排名诊断表明，收益主要集中在初始排序错误的查询上，同时也揭示了部分基线首位样本发生回退。
+Neural code search systems commonly optimize static hard negatives that need not match the high-ranked confusions produced at inference time. We propose \method{}, a failure-calibrated refinement framework that mines high-ranked non-ground-truth candidates from a frozen retriever and uses them as targeted contrastive supervision. \method{} first refines global query--code representations and then applies a parameter-free token-level MaxSim reranker only to the top-\(K\) candidates. Under a matched local protocol on the six-language CodeSearchNet benchmark, refinement raises macro MRR from 79.77 to 80.57, and final reranking reaches 81.06, a 1.29-point paired improvement over the initial retriever with a query-level 95\% bootstrap confidence interval of [1.11, 1.47]. Candidate-selection controls and rank-stratified diagnostics show that the gains concentrate on initially mis-ranked queries, while also revealing regressions for some initial top-1 cases.
+% 中文：神经代码检索系统通常使用静态困难负样本进行优化，但这些负样本未必对应模型在推理时实际产生的高排名混淆候选。本文提出 \method{}，一种失败校准的细化框架：它从冻结的检索器中挖掘高排名非标注候选，并将其作为有针对性的对比监督。\method{} 首先细化全局查询—代码表示，随后仅对前 \(K\) 个候选应用无参数的词元级 MaxSim 重排器。在六语言 CodeSearchNet 基准上的协议一致本地评测中，全局细化将宏平均 MRR 从 79.77 提升到 80.57，最终重排达到 81.06；相比初始检索器配对提高 1.29 个点，查询级 95\% bootstrap 置信区间为 [1.11, 1.47]。候选选择对照和分层排名诊断表明，收益主要集中在初始排序错误的查询上，同时也揭示了部分初始首位样本发生回退。
 \end{abstract}
 
 % Add the revised Introduction, Related Work, and Method sections above the
@@ -75,30 +75,30 @@ We use the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, 
   \label{tab:dataset_stats}
 \end{table}
 
-\paragraph{Baseline and comparison protocol.}
-We locally reproduce UA-HN~\citep{AAAIUA} with the CoCoSoDa~\citep{CoCoSoDa} encoder as the matched baseline. The baseline, \method{}-Global, and \method{} with reranking are evaluated with the same data, candidate codebase, and evaluation script. Values copied from prior papers are marked as reported and are included only to situate the local results; we do not compute paired differences or significance claims against those rows. We compare candidate-selection strategies under an equal budget of one additional candidate per query: a uniformly sampled non-positive (Random), a fixed pre-mined hard negative (Static), and a high-ranked non-ground-truth candidate mined by the frozen baseline retriever (FC).
-% 中文：我们使用 CoCoSoDa~\citep{CoCoSoDa} 编码器在本地复现 UA-HN~\citep{AAAIUA}，并将其作为协议一致的比较基线。该基线、\method{}-Global 以及带重排的 \method{} 均使用相同的数据、候选代码库和评测脚本。从既有论文复制的数值会被明确标记为“已报告”，仅用于说明本地结果在领域中的位置；我们不会针对这些行计算配对差值或提出显著性结论。为了公平比较候选选择策略，我们为每个查询统一加入一个额外候选：随机采样的非正例（Random）、固定的预挖掘困难负例（Static），以及由冻结基线检索器挖掘得到的高排名非标注候选（FC）。
+\paragraph{Implementation and comparison protocol.}
+Our implementation uses the CoCoSoDa~\citep{CoCoSoDa} encoder and follows the UA-HN~\citep{AAAIUA} training configuration. The initial retriever, \method{}-Global, and \method{} with reranking are evaluated with the same data, candidate codebase, and evaluation script. Values copied from prior papers are marked as reported and are included only to situate our results; paired differences and confidence intervals are computed only against the initial checkpoint evaluated in our pipeline. We compare candidate-selection strategies under an equal budget of one additional candidate per query: a uniformly sampled non-positive (Random), a fixed pre-mined hard negative (Static), and a high-ranked non-ground-truth candidate mined by the frozen retriever (FC).
+% 中文：本文实现采用 CoCoSoDa~\citep{CoCoSoDa} 编码器，并遵循 UA-HN~\citep{AAAIUA} 的训练配置。初始检索器、\method{}-Global 以及带重排的 \method{} 均使用相同的数据、候选代码库和评测脚本。从既有论文复制的数值会被明确标记为“已报告”，仅用于说明本文结果在领域中的位置；配对差值和置信区间只相对于在本文流程中评测的初始检查点计算。为了公平比较候选选择策略，我们为每个查询统一加入一个额外候选：随机采样的非正例（Random）、固定的预挖掘困难负例（Static），以及由冻结检索器挖掘得到的高排名非标注候选（FC）。
 
 \paragraph{Training and model selection.}
-The baseline is trained for 10 epochs with batch size 128, learning rate \(8\times10^{-6}\), and temperature 0.03. To construct FC supervision, we freeze the baseline checkpoint, retrieve over the training codebase, remove the paired code and candidates with the same URL, and store the top 32 remaining candidates. Refinement retains the first eight candidates and samples one per update. We train for three epochs with batch size 128, learning rate \(5\times10^{-6}\), FC weight 0.45, and FC temperature 0.03. The final refinement objective contains no CTRD or token-level local-interaction training loss.
-% 中文：基线训练 10 个 epoch，批量大小为 128，学习率为 \(8\times10^{-6}\)，温度为 0.03。构造 FC 监督时，我们冻结基线检查点，在训练代码库上执行检索，排除配对代码以及 URL 相同的候选，并保存排名最高的 32 个剩余候选。细化训练保留前 8 个候选，每次更新采样其中 1 个。细化阶段训练 3 个 epoch，批量大小为 128，学习率为 \(5\times10^{-6}\)，FC 权重为 0.45，FC 温度为 0.03。最终细化目标不包含 CTRD，也不包含词元级局部交互训练损失。
+The initial retriever is trained for 10 epochs with batch size 128, learning rate \(8\times10^{-6}\), and temperature 0.03. To construct FC supervision, we freeze this checkpoint, retrieve over the training codebase, remove the paired code and candidates with the same URL, and store the top 32 remaining candidates. Refinement retains the first eight candidates and samples one per update. We train for three epochs with batch size 128, learning rate \(5\times10^{-6}\), FC weight 0.45, and FC temperature 0.03. The final refinement objective contains no CTRD or token-level local-interaction training loss.
+% 中文：初始检索器训练 10 个 epoch，批量大小为 128，学习率为 \(8\times10^{-6}\)，温度为 0.03。构造 FC 监督时，我们冻结该检查点，在训练代码库上执行检索，排除配对代码以及 URL 相同的候选，并保存排名最高的 32 个剩余候选。细化训练保留前 8 个候选，每次更新采样其中 1 个。细化阶段训练 3 个 epoch，批量大小为 128，学习率为 \(5\times10^{-6}\)，FC 权重为 0.45，FC 温度为 0.03。最终细化目标不包含 CTRD，也不包含词元级局部交互训练损失。
 
 At inference time, \method{}-Global remains a dual encoder. The optional reranker computes a parameter-free token-level MaxSim score only for the global top-\(K\) candidates and combines the query-wise standardized global and local scores. We select \(K=20\) and fusion weight \(\alpha=0.5\) using six-language validation macro MRR and freeze both values before test evaluation. Checkpoints are also selected on validation data. All reported local results use the fixed training seed 123456 on one NVIDIA H20 GPU.
 % 中文：在推理阶段，\method{}-Global 仍然是双编码器。可选重排器只对全局检索得到的前 \(K\) 个候选计算无需训练参数的词元级 MaxSim 分数，再融合按查询标准化后的全局分数与局部分数。我们依据六种语言验证集上的宏平均 MRR 选择 \(K=20\) 和融合权重 \(\alpha=0.5\)，并在测试前冻结这两个取值。模型检查点同样仅根据验证集选择。所有本地结果均使用固定训练种子 123456，并在一张 NVIDIA H20 GPU 上运行。
 
 \paragraph{Uncertainty estimates.}
-We use a stratified paired bootstrap over test queries to characterize query-sampling uncertainty in the difference between each refined system and the baseline. These intervals condition on the single trained checkpoint and therefore do not measure variation across training seeds.
-% 中文：我们在测试查询上采用分层配对 bootstrap，刻画细化系统与基线之间差值的查询采样不确定性。这些区间以单个已训练检查点为条件，因此不能衡量不同训练种子带来的波动。
+We use a stratified paired bootstrap over test queries to characterize query-sampling uncertainty in the difference between each refined system and the initial retriever. These intervals condition on the single trained checkpoint and therefore do not measure variation across training seeds.
+% 中文：我们在测试查询上采用分层配对 bootstrap，刻画细化系统与初始检索器之间差值的查询采样不确定性。这些区间以单个已训练检查点为条件，因此不能衡量不同训练种子带来的波动。
 
 \paragraph{Comparison protocol.}
-Following the compact single-table presentation of UA-HN~\citep{AAAIUA}, Table~\ref{tab:main_results} places published CodeSearchNet results and our matched local evaluation in one table. Rows marked with \reported{} are copied from the cited papers and provide field context only; rows marked with \localrun{} use the same local data, candidate codebase, evaluation script, and seed. All controlled improvement claims compare only the locally evaluated rows below the divider.
-% 中文：参照 UA-HN~\citep{AAAIUA} 的紧凑单表形式，表~\ref{tab:main_results} 将 CodeSearchNet 上已发表的结果与本文协议一致的本地评测放在同一张表中。标记为 \reported{} 的行取自所引用的论文，只用于说明领域背景；标记为 \localrun{} 的行使用相同的本地数据、候选代码库、评测脚本和随机种子。本文所有受控增益结论都只比较分隔线下方的本地评测结果。
+Following the compact single-table presentation of UA-HN~\citep{AAAIUA}, Table~\ref{tab:main_results} places previously published CodeSearchNet results above the divider and our two variants below it. Rows marked with \reported{} are copied from the cited papers and provide field context; rows marked with \localrun{} are produced by our local evaluation. Controlled deltas and confidence intervals use the matched initial checkpoint rather than the reported rows.
+% 中文：参照 UA-HN~\citep{AAAIUA} 的紧凑单表形式，表~\ref{tab:main_results} 在分隔线上方展示此前发表的 CodeSearchNet 结果，在分隔线下方展示本文的两个模型变体。标记为 \reported{} 的行取自所引用的论文，用于说明领域背景；标记为 \localrun{} 的行来自本文的本地评测。受控差值和置信区间使用协议一致的初始检查点计算，而不是使用论文报告行。
 
 \subsection{Main Results}
 \label{sec:main_results}
 
-Table~\ref{tab:main_results} presents the main MRR results in the language order used by UA-HN. Under the matched local protocol, failure-candidate refinement improves average MRR from 79.77 to 80.57, an absolute gain of 0.80 points, and improves every language. Applying the validation-selected parameter-free reranker further raises average MRR to 81.06, corresponding to gains of 0.48 points over \method{}-Global and 1.29 points over the baseline.
-% 中文：表~\ref{tab:main_results} 按照 UA-HN 使用的语言顺序展示主要 MRR 结果。在协议一致的本地评测下，失败候选细化将平均 MRR 从 79.77 提升到 80.57，绝对提高 0.80 个点，并在六种语言上均有提升。进一步应用由验证集选择的无参数重排器后，平均 MRR 达到 81.06，相比 \method{}-Global 提升 0.48 个点，相比基线提升 1.29 个点。
+Table~\ref{tab:main_results} presents the main MRR results in the language order used by UA-HN. \method{}-Global obtains an average MRR of 80.57, and the validation-selected parameter-free reranker further raises it to 81.06. In the matched local evaluation, these scores correspond to gains of 0.80 and 1.29 points, respectively, over the initial retriever at 79.77; the global variant improves all six languages.
+% 中文：表~\ref{tab:main_results} 按照 UA-HN 使用的语言顺序展示主要 MRR 结果。\method{}-Global 的平均 MRR 为 80.57，进一步应用由验证集选择的无参数重排器后达到 81.06。在协议一致的本地评测中，这两个结果相对于平均 MRR 为 79.77 的初始检索器分别提升 0.80 和 1.29 个点；其中全局变体在六种语言上均有提升。
 
 \begin{table*}[t]
   \centering
@@ -114,8 +114,8 @@ Table~\ref{tab:main_results} presents the main MRR results in the language order
     UniXcoder~\citep{UniXcoder}\reported{} & 74.00 & 68.40 & 91.50 & 72.00 & 72.60 & 67.60 & 74.40 \\
     CodeRetriever~\citep{CodeRetriever}\reported{} & 77.10 & 71.90 & 92.40 & 75.80 & 76.50 & 70.80 & 77.40 \\
     CoCoSoDa~\citep{CoCoSoDa}\reported{} & 81.80 & 76.40 & 92.10 & 75.70 & 76.30 & 70.30 & 78.80 \\
+    UA-HN~\citep{AAAIUA}\reported{} & 82.90 & 77.80 & 92.60 & 77.30 & 77.20 & 71.90 & 80.00 \\
     \midrule
-    UA-HN~\citep{AAAIUA}\localrun{} & 82.16 & 77.72 & 92.43 & 77.17 & 77.20 & 71.91 & 79.77 \\
     \method{}-Global\localrun{} & 82.84 & 78.36 & 93.03 & 77.95 & 78.14 & 73.10 & 80.57 \\
     \method{}-Rerank\localrun{} & \textbf{83.51} & \textbf{78.95} & \textbf{93.41} & \textbf{78.30} & \textbf{78.57} & \textbf{73.58} & \textbf{81.06} \\
     \bottomrule
@@ -124,17 +124,17 @@ Table~\ref{tab:main_results} presents the main MRR results in the language order
   \label{tab:main_results}
 \end{table*}
 
-The recall results clarify the type of improvement. From the baseline to the final reranked system, R@1 increases from 70.72 to 72.64, whereas R@5 changes from 91.28 to 91.68 and R@10 from 95.10 to 95.11. The gain is therefore concentrated in ordering already retrieved candidates near the top rather than expanding broad top-10 coverage. This pattern matches the intended role of failure-candidate refinement and shallow top-\(K\) reranking.
-% 中文：召回率结果进一步说明了性能提升的性质。从基线到最终重排系统，R@1 从 70.72 提升到 72.64，而 R@5 仅从 91.28 变为 91.68，R@10 从 95.10 变为 95.11。因此，增益主要来自把已经检索到的候选更准确地排到前列，而不是扩大整体的前 10 名覆盖率。这与失败候选细化及浅层前 \(K\) 重排的预期作用一致。
+The recall results clarify the type of improvement. From the initial retriever to the final reranked system, R@1 increases from 70.72 to 72.64, whereas R@5 changes from 91.28 to 91.68 and R@10 from 95.10 to 95.11. The gain is therefore concentrated in ordering already retrieved candidates near the top rather than expanding broad top-10 coverage. This pattern matches the intended role of failure-candidate refinement and shallow top-\(K\) reranking.
+% 中文：召回率结果进一步说明了性能提升的性质。从初始检索器到最终重排系统，R@1 从 70.72 提升到 72.64，而 R@5 仅从 91.28 变为 91.68，R@10 从 95.10 变为 95.11。因此，增益主要来自把已经检索到的候选更准确地排到前列，而不是扩大整体的前 10 名覆盖率。这与失败候选细化及浅层前 \(K\) 重排的预期作用一致。
 
-The locally reproduced baseline is the appropriate point of comparison because it shares the full training and evaluation pipeline with \method{}. The upper block of Table~\ref{tab:main_results} provides published context, whereas only the lower, locally evaluated block supports controlled improvement claims; differences from the reported rows do not by themselves establish a state-of-the-art result.
-% 中文：由于本地复现的基线与 \method{} 共享完整的训练和评测流程，它才是合适的直接比较对象。表~\ref{tab:main_results} 的上半部分提供已发表结果作为背景，只有下半部分的本地评测结果能够支持受控增益结论；仅凭与已报告行之间的数值差异，不能证明取得了新的最优结果。
+For controlled deltas, we compare each \method{} variant with the pre-refinement checkpoint evaluated in the same pipeline. The upper block of Table~\ref{tab:main_results} provides published context, whereas the paired analyses below establish the measured improvements; differences from the reported rows alone do not establish a controlled gain.
+% 中文：计算受控差值时，我们将每个 \method{} 变体与同一流程中评测的细化前检查点进行比较。表~\ref{tab:main_results} 的上半部分提供已发表结果作为背景，后续配对分析用于确定实际测得的提升；仅凭与论文报告行之间的差异不能证明受控增益。
 
 \subsection{Does Candidate Selection Matter?}
 \label{sec:candidate_controls}
 
-Table~\ref{tab:candidate_controls} controls the number of added candidates and changes only how the candidate is selected. Neither another training stage with Random candidates nor refinement with Static hard negatives improves the baseline. In contrast, a single retriever-mined candidate raises macro MRR by 0.35 points and R@1 by 0.83 points. This matched comparison supports the narrower claim that candidates from the trained retriever's own ranking neighborhood provide a more targeted refinement signal than the two proxy strategies tested here.
-% 中文：表~\ref{tab:candidate_controls} 固定额外候选的数量，只改变候选选择方式。无论是使用 Random 候选再训练一个阶段，还是使用 Static 困难负例进行细化，都没有提升基线；相反，每个查询只使用一个由检索器挖掘的候选，就使宏平均 MRR 提升 0.35 个点、R@1 提升 0.83 个点。这一匹配对比支持一个更克制的结论：与本文测试的两种代理策略相比，训练完成的检索器自身排序邻域能够提供更有针对性的细化信号。
+Table~\ref{tab:candidate_controls} controls the number of added candidates and changes only how the candidate is selected. Neither another training stage with Random candidates nor refinement with Static hard negatives improves over no refinement. In contrast, a single retriever-mined candidate raises macro MRR by 0.35 points and R@1 by 0.83 points. This matched comparison supports the narrower claim that candidates from the trained retriever's own ranking neighborhood provide a more targeted refinement signal than the two proxy strategies tested here.
+% 中文：表~\ref{tab:candidate_controls} 固定额外候选的数量，只改变候选选择方式。无论是使用 Random 候选再训练一个阶段，还是使用 Static 困难负例进行细化，其结果都没有超过未细化设置；相反，每个查询只使用一个由检索器挖掘的候选，就使宏平均 MRR 提升 0.35 个点、R@1 提升 0.83 个点。这一匹配对比支持一个更克制的结论：与本文测试的两种代理策略相比，训练完成的检索器自身排序邻域能够提供更有针对性的细化信号。
 
 \begin{table}[t]
   \centering
@@ -160,8 +160,8 @@ The control also exposes a trade-off: FC improves top-rank accuracy while R@10 d
 \subsection{Where Does the Improvement Occur?}
 \label{sec:rank_analysis}
 
-We stratify all 52,561 test queries by the baseline rank of the labeled code. Table~\ref{tab:rank_strata} shows that the largest gains occur when the baseline places the labeled code at ranks 2--10: \method{}-Global improves MRR by 8.89 points in this stratum, and reranking increases the gain to 11.32 points. Gains are smaller but positive at ranks 11--50 and beyond 50. These results localize the aggregate improvement to the high-ranked neighborhood targeted by the method.
-% 中文：我们按照标注代码在基线结果中的排名，对全部 52,561 个测试查询进行分层。表~\ref{tab:rank_strata} 显示，当基线把标注代码排在第 2--10 位时，增益最大：在这一层中，\method{}-Global 将 MRR 提升 8.89 个点，加入重排后增益扩大到 11.32 个点。在第 11--50 位和 50 位以后，增益较小但仍为正。这表明总体提升主要来自本文方法所针对的高排名邻域。
+We stratify all 52,561 test queries by the pre-refinement rank of the labeled code. Table~\ref{tab:rank_strata} shows that the largest gains occur when the labeled code is initially ranked at positions 2--10: \method{}-Global improves MRR by 8.89 points in this stratum, and reranking increases the gain to 11.32 points. Gains are smaller but positive at ranks 11--50 and beyond 50. These results localize the aggregate improvement to the high-ranked neighborhood targeted by the method.
+% 中文：我们按照细化前标注代码的排名，对全部 52,561 个测试查询进行分层。表~\ref{tab:rank_strata} 显示，当标注代码的初始排名为第 2--10 位时，增益最大：在这一层中，\method{}-Global 将 MRR 提升 8.89 个点，加入重排后增益扩大到 11.32 个点。在第 11--50 位和 50 位以后，增益较小但仍为正。这表明总体提升主要来自本文方法所针对的高排名邻域。
 
 \begin{table*}[t]
   \centering
@@ -169,7 +169,7 @@ We stratify all 52,561 test queries by the baseline rank of the labeled code. Ta
   \setlength{\tabcolsep}{8pt}
   \begin{tabular}{lrrrrrr}
     \toprule
-    Baseline-rank stratum & Queries & Baseline MRR & Global MRR & \(\Delta\)Global & Rerank MRR & \(\Delta\)Rerank \\
+    Initial-rank stratum & Queries & Initial MRR & Global MRR & \(\Delta\)Global & Rerank MRR & \(\Delta\)Rerank \\
     \midrule
     1      & 36,274 & 100.00 & 97.88 & -2.12 & 97.53 & -2.47 \\
     2--10  & 13,261 & 35.75  & 44.65 & +8.89 & 47.07 & +11.32 \\
@@ -177,12 +177,12 @@ We stratify all 52,561 test queries by the baseline rank of the labeled code. Ta
     \(>50\) & 756   & 0.97   & 1.29  & +0.32 & 1.30  & +0.33 \\
     \bottomrule
   \end{tabular}
-  \caption{Pooled rank-conditioned diagnostic. Strata are defined by the baseline rank of the labeled code; this diagnostic is query-pooled rather than language-balanced.}
+  \caption{Pooled rank-conditioned diagnostic. Strata are defined by the pre-refinement rank of the labeled code; this diagnostic is query-pooled rather than language-balanced.}
   \label{tab:rank_strata}
 \end{table*}
 
-The same analysis also reveals regressions that an aggregate score would hide. Relative to the baseline, final reranking improves the labeled-code rank for 7,121 queries and worsens it for 5,741; it repairs 2,644 non-top-1 cases to rank 1 but moves 1,624 baseline top-1 cases downward. In the baseline-rank-1 stratum, MRR decreases by 2.47 points. \method{} should therefore be understood as a net corrective intervention rather than a monotonic improvement for every query. Designing a gate that preserves confident baseline top-1 decisions is a promising direction for future work.
-% 中文：同一分析也揭示了总体指标会掩盖的回退现象。相对于基线，最终重排使 7,121 个查询中的标注代码排名上升，同时使 5,741 个查询的排名下降；它把 2,644 个原本非首位的样本修复到第 1 位，但也使 1,624 个基线首位样本向后移动。在基线排名为 1 的分层中，MRR 下降了 2.47 个点。因此，\method{} 应被理解为总体收益为正的纠正干预，而不是对每个查询都单调改进。未来可以设计门控机制，以保留基线中置信度较高的首位判断。
+The same analysis also reveals regressions that an aggregate score would hide. Relative to the pre-refinement ranking, final reranking improves the labeled-code rank for 7,121 queries and worsens it for 5,741; it repairs 2,644 non-top-1 cases to rank 1 but moves 1,624 initial top-1 cases downward. In the initial-rank-1 stratum, MRR decreases by 2.47 points. \method{} should therefore be understood as a net corrective intervention rather than a monotonic improvement for every query. Designing a gate that preserves confident initial top-1 decisions is a promising direction for future work.
+% 中文：同一分析也揭示了总体指标会掩盖的回退现象。相对于细化前排序，最终重排使 7,121 个查询中的标注代码排名上升，同时使 5,741 个查询的排名下降；它把 2,644 个原本非首位的样本修复到第 1 位，但也使 1,624 个初始首位样本向后移动。在初始排名为 1 的分层中，MRR 下降了 2.47 个点。因此，\method{} 应被理解为总体收益为正的纠正干预，而不是对每个查询都单调改进。未来可以设计门控机制，以保留初始排序中置信度较高的首位判断。
 
 \subsection{Query-Level Uncertainty}
 \label{sec:bootstrap}
@@ -196,7 +196,7 @@ Table~\ref{tab:bootstrap} reports paired query-bootstrap intervals for the fixed
   \setlength{\tabcolsep}{2.5pt}
   \begin{tabular}{lrrrr}
     \toprule
-    Language & Baseline & Global \(\Delta\) [95\% CI] & Rerank & Rerank \(\Delta\) [95\% CI] \\
+    Language & Initial & Global \(\Delta\) [95\% CI] & Rerank & Rerank \(\Delta\) [95\% CI] \\
     \midrule
     Java & 77.20 & +0.94 [0.68, 1.19] & 78.57 & +1.37 [1.07, 1.66] \\
     JavaScript & 77.72 & +0.64 [0.20, 1.08] & 78.95 & +1.23 [0.68, 1.78] \\
@@ -208,7 +208,7 @@ Table~\ref{tab:bootstrap} reports paired query-bootstrap intervals for the fixed
     Macro & 79.77 & +0.80 [0.66, 0.95] & 81.06 & +1.29 [1.11, 1.47] \\
     \bottomrule
   \end{tabular}
-  \caption{MRR and paired query-bootstrap differences from the baseline. Intervals quantify query-sampling uncertainty for seed 123456 only.}
+  \caption{MRR and paired query-bootstrap differences from the pre-refinement checkpoint. Intervals quantify query-sampling uncertainty for seed 123456 only.}
   \label{tab:bootstrap}
 \end{table}
 
@@ -252,16 +252,16 @@ The six warnings correspond to natural-language strings duplicated in the frozen
 \subsection{Scope of the Evidence}
 \label{sec:scope}
 
-Our conclusions are deliberately limited to the audited fixed-seed pipeline. Query-level bootstrap intervals do not replace multiple independent training runs, and the present results do not establish training-seed stability. Moreover, the final no-CTRD/no-local-training configuration has not yet been fully evaluated against matched baselines on multiple backbone families. We therefore claim improvement under the present experimental configuration, not universal backbone independence.
-% 中文：本文结论被有意限定在已经审计的固定种子流程内。查询级 bootstrap 区间不能替代多个独立训练实验，当前结果也不能证明训练种子稳定性。此外，最终的无 CTRD、无局部交互训练配置尚未在多个骨干模型及协议一致的基线上进行完整比较。因此，我们主张的是当前实验配置下的提升，而不是已经证明了对任意骨干模型都有效。
+Our conclusions are deliberately limited to the audited fixed-seed pipeline. Query-level bootstrap intervals do not replace multiple independent training runs, and the present results do not establish training-seed stability. Moreover, the final no-CTRD/no-local-training configuration has not yet been fully evaluated across multiple backbone families under matched protocols. We therefore claim improvement under the present experimental configuration, not universal backbone independence.
+% 中文：本文结论被有意限定在已经审计的固定种子流程内。查询级 bootstrap 区间不能替代多个独立训练实验，当前结果也不能证明随机种子稳定性。此外，最终的无 CTRD、无局部交互训练配置尚未在多个骨干模型上按照一致协议进行完整评测。因此，我们主张的是当前实验配置下的提升，而不是已经证明了对任意骨干模型都有效。
 
 Finally, CodeSearchNet provides one labeled code snippet per query, so a high-ranked non-ground-truth candidate may be a valid alternative implementation. Our method uses these candidates as challenging contrastive supervision without asserting that they are genuine semantic errors. A double-annotated candidate study would be needed to quantify alternative positives and fine-grained mismatch categories.
 % 中文：最后，CodeSearchNet 每个查询只提供一个标注代码，因此高排名的非标注候选可能是有效的替代实现。本文仅把这些候选当作具有挑战性的对比监督，并不声称它们一定是真实的语义错误。若要量化替代正例以及细粒度语义不匹配类别，还需要开展双人标注的候选分析。
 
 \section*{Limitations}
 
-Our evidence is limited to CodeSearchNet, one audited training seed, and the current CoCoSoDa/UA-HN experimental configuration. Query-level bootstrap intervals quantify evaluation-set uncertainty but do not establish stability across independent training runs. CodeSearchNet also provides only one labeled code snippet per query, so some high-ranked non-ground-truth candidates may be valid alternative implementations. Finally, the parameter-free reranker adds latency over global retrieval, and the current transfer evidence is insufficient to claim backbone independence.
-% 中文：当前证据仅覆盖 CodeSearchNet、一个经过审计的训练随机种子，以及当前的 CoCoSoDa/UA-HN 实验配置。查询级 bootstrap 区间能够刻画评测集不确定性，但不能证明不同独立训练之间的稳定性。CodeSearchNet 每个查询只提供一个标注代码，因此部分高排名非标注候选可能是有效的替代实现。此外，无参数重排器会在全局检索之上增加延迟，现有迁移证据也不足以支持骨干模型无关性的结论。
+Our evidence is limited to CodeSearchNet, one audited training seed, and one encoder and training configuration. Query-level bootstrap intervals quantify evaluation-set uncertainty but do not establish stability across independent training runs. CodeSearchNet also provides only one labeled code snippet per query, so some high-ranked non-ground-truth candidates may be valid alternative implementations. Finally, the parameter-free reranker adds latency over global retrieval, and the current transfer evidence is insufficient to claim backbone independence.
+% 中文：当前证据仅覆盖 CodeSearchNet、一个经过审计的训练随机种子，以及一种编码器和训练配置。查询级 bootstrap 区间能够刻画评测集不确定性，但不能证明不同独立训练之间的稳定性。CodeSearchNet 每个查询只提供一个标注代码，因此部分高排名非标注候选可能是有效的替代实现。此外，无参数重排器会在全局检索之上增加延迟，现有迁移证据也不足以支持骨干模型无关性的结论。
 
 \bibliography{custom}
 
