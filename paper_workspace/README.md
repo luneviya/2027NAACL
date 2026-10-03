@@ -5,14 +5,18 @@ source of the earlier RefCode manuscript.
 
 ## Current draft
 
-Use `acl_template_bilingual/main.tex` as the paper entry point. The revised
-experiment section is contained directly in this file rather than split across
-multiple `experiments_*.tex` files. English paragraphs are followed by blue
-Chinese translations for drafting; set `\showtranslationfalse` before a
-submission build.
+Use `acl_template_bilingual/main.tex` as the copy-ready Overleaf entry point.
+It retains the required ACL submission structure and packages while removing
+the instructional text, example tables, sample acknowledgments, and example
+appendix from the official template. The revised experiment section is written
+directly in `main.tex`; no paper content is split across additional TeX files.
 
-The draft depends on the adjacent `acl.sty`, `acl_natbib.bst`, and `custom.bib`
-files.
+Each English paragraph is followed by a Chinese translation written as a LaTeX
+comment beginning with `% 中文：`. The complete file can therefore be pasted
+into Overleaf and compiled without loading a Chinese typesetting package.
+
+The draft depends on the adjacent `acl.sty`, `acl_natbib.bst`, and
+`custom.bib` files.
 
 ## Archived source
 
