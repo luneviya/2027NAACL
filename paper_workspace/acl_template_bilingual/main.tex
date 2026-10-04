@@ -58,8 +58,31 @@ We evaluate \method{} along three complementary dimensions. First, we benchmark 
 \label{sec:experimental_setup}
 
 \paragraph{Dataset and metrics.}
-We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go; detailed split statistics are provided in Appendix Table~\ref{tab:dataset_stats}. At test time, each query is evaluated against the complete language-specific retrieval corpus. We use mean reciprocal rank (MRR) as the primary metric because it is sensitive to the position of the first relevant result, and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10) to measure retrieval coverage. All metrics are reported as percentages.
-% 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对；详细的数据划分统计见附录表~\ref{tab:dataset_stats}。测试时，每个查询都在相应语言的完整检索语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，因为它对首个相关结果的位置敏感；同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）以衡量检索覆盖率。所有指标均以百分比表示。
+We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go. Table~\ref{tab:dataset_stats} summarizes the fixed data splits and language-specific retrieval corpora. At test time, each query is evaluated against the complete corpus for its language. We use mean reciprocal rank (MRR) as the primary metric and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10). All metrics are reported as percentages.
+% 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对。表~\ref{tab:dataset_stats} 汇总了固定的数据划分和对应语言的检索语料库。测试时，每个查询都在其对应语言的完整语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，并同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）。所有指标均以百分比表示。
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4.2pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Language & Train & Valid & Test & Codebase \\
+    \midrule
+    Java       & 164,923 & 5,183  & 10,955 & 40,347 \\
+    JavaScript & 58,025  & 3,885  & 3,291  & 13,981 \\
+    Ruby       & 24,927  & 1,400  & 1,261  & 4,360 \\
+    Python     & 251,820 & 13,914 & 14,918 & 43,827 \\
+    PHP        & 241,241 & 12,982 & 14,014 & 52,660 \\
+    Go         & 167,288 & 7,325  & 8,122  & 28,120 \\
+    \midrule
+    Total      & 908,224 & 44,689 & 52,561 & 183,295 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Statistics of the CodeSearchNet splits. Codebase denotes the size of the language-specific retrieval corpus used for validation and testing.}
+  % 中文表注：CodeSearchNet 数据划分统计。Codebase 表示验证和测试时使用的对应语言检索语料库规模。
+  \label{tab:dataset_stats}
+\end{table}
 
 \paragraph{Implementation and controlled comparisons.}
 Our primary experiments use CoCoSoDa~\citep{CoCoSoDa} as the encoder and adopt the training configuration of UA-HN~\citep{AAAIUA}. The initial retriever, \method{}-Global, and \method{}-Rerank are evaluated on identical data splits and retrieval corpora using the same metric implementation. In the candidate-selection controls, we fix the refinement schedule and the number of additional candidates per query, and vary only the selection strategy: a randomly sampled unpaired code snippet (Random), a fixed pre-mined hard negative (Static HN), or a high-ranked unpaired candidate mined by the frozen initial retriever (failure candidate; FC). Under the same candidate budget, this controlled design isolates the effect of candidate selection from that of additional optimization.
@@ -121,91 +144,64 @@ Table~\ref{tab:main_results} compares retrieval performance across the six CodeS
 The Recall@\(K\) results further clarify how the ranking changes. From the initial retriever to \method{}-Rerank, R@1 increases from 70.72 to 72.64, whereas R@5 rises only from 91.28 to 91.68 and R@10 remains essentially unchanged (95.10 versus 95.11). This pattern indicates that the improvement stems primarily from reordering candidates near the top of the ranked list, rather than from increasing top-10 retrieval coverage.
 % 中文：Recall@\(K\) 结果进一步说明了排序发生变化的方式。从初始检索器到 \method{}-Rerank，R@1 从 70.72 提升到 72.64，而 R@5 仅从 91.28 提升到 91.68，R@10 基本保持不变（95.10 对 95.11）。这一结果模式表明，性能提升主要来自对排序列表前部候选的重新排序，而不是扩大前 10 名的检索覆盖率。
 
-The reported results in the upper block place \method{} in the context of prior work. All quantitative estimates of improvement, however, use the matched local comparison with the initial retriever. The following sections further examine these differences through candidate-selection controls, rank-conditioned diagnostics, and paired bootstrap analysis.
-% 中文：表格上半部分的论文报告结果用于说明 \method{} 在既有工作中的性能位置。不过，所有性能提升的定量估计都基于与初始检索器之间的协议一致本地比较。下文进一步通过候选选择对照、按排名分层的诊断以及配对 bootstrap 分析检验这些差异。
+The reported results in the upper block place \method{} in the context of prior work. All quantitative estimates of improvement, however, use the matched local comparison with the initial retriever. We next examine the contribution of each component, the role of candidate selection, and the robustness and computational cost of the resulting system.
+% 中文：表格上半部分的论文报告结果用于说明 \method{} 在既有工作中的性能位置。不过，所有性能提升的定量估计都基于与初始检索器之间的协议一致本地比较。下文将继续分析各组件的贡献、候选选择的作用，以及最终系统的稳健性和计算开销。
 
-\subsection{Controlled Effect of Candidate Selection}
-\label{sec:candidate_controls}
+\subsection{Ablation Study}
+\label{sec:ablation}
 
-Table~\ref{tab:candidate_controls} isolates the effect of candidate selection under a fixed budget of one additional unpaired candidate per training query. All budget-matched refinement conditions use the same optimization schedule and are evaluated with global retrieval only. Random sampling and Static HN yield MRR values of 79.72 and 79.67, respectively, neither of which improves over the unrefined checkpoint (79.77). Under the same budget, retriever-mined FC reaches 80.12 MRR and improves R@1 by 0.83 points. The final FC configuration is shown separately for reference and reaches 80.57 MRR.
-% 中文：表~\ref{tab:candidate_controls} 在每个训练查询增加一个未配对候选的固定预算下，单独考察候选选择的作用。所有预算一致的细化条件采用相同的优化日程，并且都只使用全局检索进行评测。Random 和 Static HN 的 MRR 分别为 79.72 和 79.67，均未超过未细化检查点（79.77）。在相同预算下，检索器挖掘的 FC 达到 80.12 MRR，并使 R@1 提升 0.83 个点。表中另列最终 FC 配置作为参照，其 MRR 达到 80.57。
-
-\begin{table*}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{8.0pt}
-  \begin{tabular}{lrrrrr}
-    \toprule
-    Candidate strategy & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
-    \midrule
-    No refinement & 79.77 & 70.72 & 91.28 & 95.10 & -- \\
-    Random        & 79.72 & 70.72 & 91.15 & 95.00 & -0.05 \\
-    Static HN     & 79.67 & 70.65 & 91.05 & 94.88 & -0.10 \\
-    Retriever-mined FC (control) & 80.12 & 71.55 & 91.02 & 94.58 & +0.35 \\
-    \midrule
-    Retriever-mined FC (final) & \textbf{80.57} & \textbf{71.90} & \textbf{91.52} & \textbf{95.17} & \textbf{+0.80} \\
-    \bottomrule
-  \end{tabular}
-  \caption{Candidate-selection comparison under global retrieval. The first four rows form the budget-matched control with one additional unpaired candidate per training query; the final row reports the selected full configuration.}
-  % 中文表注：仅使用全局检索时的候选选择比较。前四行为每个训练查询增加一个未配对候选的预算一致对照；最后一行报告选定的完整配置。
-  \label{tab:candidate_controls}
-\end{table*}
-
-The budget-matched control also reveals a cutoff-dependent trade-off: FC improves MRR and R@1 but reduces R@10 by 0.52 points. The selected full configuration recovers R@10 to 95.17 while preserving the top-rank gain. Section~\ref{sec:refinement_robustness} further examines the sensitivity of this configuration to the retained candidate depth.
-% 中文：预算一致的对照还揭示了依赖检索截断位置的权衡：FC 提高了 MRR 和 R@1，但使 R@10 下降 0.52 个点。选定的完整配置将 R@10 恢复到 95.17，同时保留了排序顶部的收益。第~\ref{sec:refinement_robustness} 节进一步分析该配置对保留候选深度的敏感性。
-
-\subsection{Separating Refinement and Reranking Effects}
-\label{sec:training_inference_control}
-
-Because the MaxSim reranker can be applied to either the initial or refined checkpoint, Table~\ref{tab:training_inference_control} crosses the training configuration with the inference procedure. Within each inference condition, both checkpoints are evaluated on identical data splits and retrieval corpora using the same scoring function. Reranking hyperparameters are selected independently on validation data for each training configuration and then fixed for testing. The matched initial-retriever reranking row is reserved until this protocol is complete; it is necessary to distinguish gains from failure-candidate refinement from gains obtainable through generic top-\(K\) reranking alone.
-% 中文：由于 MaxSim 重排器既可以应用于初始检查点，也可以应用于细化后的检查点，表~\ref{tab:training_inference_control} 将训练配置与推理方式进行交叉比较。在每一种推理条件下，两个检查点均在完全相同的数据划分和检索语料库上，使用同一评分函数评测。对于每种训练配置，重排超参数都先在验证集上独立选择，再固定用于测试。协议一致的初始检索器重排行将在该流程完成后填写；这一对照对于区分失败候选细化的增益与通用前 \(K\) 重排本身可获得的增益是必要的。
+Table~\ref{tab:ablation} ablates the two operational components of \method{}: failure-candidate refinement during training and MaxSim fusion during inference. Removing MaxSim while retaining refinement yields an MRR of 80.57, an improvement of 0.80 points over the initial retriever. The complete system reaches 81.06 MRR and improves R@1 by 1.92 points. The MaxSim-only row is reserved for the matched control in which the same validation-only selection procedure is applied to the initial retriever.
+% 中文：表~\ref{tab:ablation} 对 \method{} 的两个实际组成部分进行消融：训练阶段的失败候选细化和推理阶段的 MaxSim 融合。保留细化而移除 MaxSim 后，MRR 为 80.57，相比初始检索器提高 0.80 个点。完整系统达到 81.06 MRR，并将 R@1 提高 1.92 个点。MaxSim-only 行预留给协议一致的对照实验，其中相同的仅基于验证集的选择流程将应用于初始检索器。
 
 \begin{table*}[t]
   \centering
   \small
-  \setlength{\tabcolsep}{5.2pt}
+  \setlength{\tabcolsep}{6.0pt}
   \begin{tabular}{llrrrrl}
     \toprule
-    Training configuration & Inference & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR [95\% CI] \\
+    Refinement & Reranking & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR [95\% CI] \\
     \midrule
-    UA-HN & Global retrieval & 79.77 & 70.72 & 91.28 & 95.10 & -- \\
-    UA-HN & MaxSim fusion & \pending & \pending & \pending & \pending & \pending \\
-    \midrule
-    Failure-candidate refinement & Global retrieval & 80.57 & 71.90 & 91.52 & 95.17 & +0.80 [0.66, 0.95] \\
-    Failure-candidate refinement & MaxSim fusion & 81.06 & 72.64 & 91.68 & 95.11 & +1.29 [1.11, 1.47] \\
+    None & None & 79.77 & 70.72 & 91.28 & 95.10 & -- \\
+    None & MaxSim & \pending & \pending & \pending & \pending & \pending \\
+    FC & None & 80.57 & 71.90 & 91.52 & \textbf{95.17} & +0.80 [0.66, 0.95] \\
+    FC & MaxSim & \textbf{81.06} & \textbf{72.64} & \textbf{91.68} & 95.11 & \textbf{+1.29 [1.11, 1.47]} \\
     \bottomrule
   \end{tabular}
-  \caption{\(2\times2\) comparison of refinement training and inference-time reranking. Retrieval metrics are macro-averaged over the six languages. Confidence intervals are obtained by stratified paired bootstrap over test queries relative to the locally evaluated UA-HN row. \pending{} denotes the incomplete matched reranking control.}
-  % 中文表注：该表交叉比较细化训练与推理阶段重排，效果指标为六语言宏平均。置信区间通过测试查询上的分层配对 bootstrap 获得，并以本地评测的 UA-HN 行为参照。\pending{} 表示尚未完成的协议一致重排对照。
-  \label{tab:training_inference_control}
+  \caption{Component ablation of failure-candidate refinement and inference-time MaxSim fusion. Retrieval metrics are macro-averaged over the six languages. Confidence intervals are obtained by stratified paired bootstrap over test queries relative to the initial retriever.}
+  % 中文表注：失败候选细化与推理阶段 MaxSim 融合的组件消融。检索指标为六语言宏平均；置信区间通过测试查询上的分层配对 bootstrap 获得，并以初始检索器为参照。
+  \label{tab:ablation}
 \end{table*}
 
-\subsection{Rank-Conditioned Retrieval Behavior}
-\label{sec:rank_analysis}
+The two completed removal conditions show that refinement alone accounts for a substantial portion of the overall improvement, while MaxSim provides a further increase when applied to the refined representations. Completing the MaxSim-only condition is necessary to determine how much of that second increase depends on refinement rather than on reranking alone.
+% 中文：两个已完成的移除条件表明，单独的细化阶段已经贡献了总体提升中的重要部分，而 MaxSim 应用于细化表示后还能进一步提高性能。仍需完成 MaxSim-only 条件，才能确定第二部分提升在多大程度上依赖细化，而非仅由重排产生。
 
-We partition all 52,561 test queries according to the rank of the gold code snippet under the initial retriever. As shown in Table~\ref{tab:rank_strata}, the largest improvements occur for queries whose gold code is initially ranked between 2 and 10. Within this stratum, \method{}-Global improves MRR by 8.89 points, and \method{}-Rerank increases the improvement to 11.32 points. Positive but smaller differences are observed for initial ranks 11--50 and beyond 50. The concentration of gains among queries with near-top gold ranks is consistent with the intended role of failure-candidate refinement.
-% 中文：我们根据初始检索器下正确代码片段的排名，对全部 52,561 个测试查询进行分组。如表~\ref{tab:rank_strata} 所示，当正确代码的初始排名位于第 2--10 位时，性能提升最大。在这一分组中，\method{}-Global 将 MRR 提升 8.89 个点，\method{}-Rerank 则将提升扩大到 11.32 个点。当初始排名为第 11--50 位或 50 位以后时，也能观察到正向但较小的差异。收益集中在正确代码初始排名接近首位的查询上，这与失败候选细化的预期作用一致。
+\subsection{Effect of Candidate Selection}
+\label{sec:candidate_controls}
+
+Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.35 points and R@1 by 0.83 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
+% 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.35 和 0.83 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
 
 \begin{table*}[t]
   \centering
   \small
   \setlength{\tabcolsep}{8pt}
-  \begin{tabular}{lrrrrrr}
+  \begin{tabular}{lrrrrr}
     \toprule
-    Initial-rank stratum & Queries & Initial MRR & Global MRR & \(\Delta\)Global & Rerank MRR & \(\Delta\)Rerank \\
+    Candidate-selection strategy & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
     \midrule
-    1      & 36,274 & 100.00 & 97.88 & -2.12 & 97.53 & -2.47 \\
-    2--10  & 13,261 & 35.75  & 44.65 & +8.89 & 47.07 & +11.32 \\
-    11--50 & 2,270  & 5.54   & 7.88  & +2.34 & 9.20  & +3.66 \\
-    \(>50\) & 756   & 0.97   & 1.29  & +0.32 & 1.30  & +0.33 \\
+    No refinement & 79.77 & 70.72 & \textbf{91.28} & \textbf{95.10} & -- \\
+    Random & 79.72 & 70.72 & 91.15 & 95.00 & -0.05 \\
+    Static hard negative & 79.67 & 70.65 & 91.05 & 94.88 & -0.10 \\
+    Retriever-mined failure candidate & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
     \bottomrule
   \end{tabular}
-  \caption{MRR conditioned on the gold code's rank under the initial retriever. Results are micro-averaged over test queries rather than macro-averaged over programming languages.}
-  \label{tab:rank_strata}
+  \caption{Budget-matched comparison of candidate-selection strategies. Each refinement variant uses one additional unpaired candidate per query and is evaluated with global retrieval only. \(\Delta\)MRR is measured relative to the initial retriever without refinement.}
+  % 中文表注：候选选择策略的预算一致比较。每个细化变体为每个查询引入一个额外未配对候选，并且仅使用全局检索评测。\(\Delta\)MRR 以未进行细化的初始检索器为参照。
+  \label{tab:candidate_controls}
 \end{table*}
 
-The transition counts reveal behavior that is obscured by aggregate MRR. Compared with the initial retriever, \method{}-Rerank improves the rank of the gold code for 7,121 queries and worsens it for 5,741 queries. It moves the gold code to rank 1 for 2,644 queries for which it was not initially top-ranked, but demotes the gold code for 1,624 queries that were initially correct at rank 1. Accordingly, MRR decreases by 2.47 points within the initial-rank-1 stratum. The overall improvement therefore reflects substantial corrections on initially misranked queries, partially offset by regressions on some initially correct rankings. A confidence-aware gating mechanism could potentially mitigate these regressions.
-% 中文：排名转移计数揭示了总体 MRR 所掩盖的行为。与初始检索器相比，\method{}-Rerank 使 7,121 个查询的正确代码排名上升，同时使 5,741 个查询的排名下降。对于 2,644 个正确代码原本不在首位的查询，它将正确代码提升至第 1 位；但对于 1,624 个正确代码原本位于第 1 位的查询，它也使正确代码发生后移。因此，在初始排名为 1 的分组中，MRR 下降了 2.47 个点。总体提升由对初始错误排序查询的大幅修复构成，但部分收益被一些初始正确排序上的回退所抵消。未来可探索置信度感知的门控机制以缓解这些回退。
+The gains are concentrated at the top of the ranking: failure-candidate selection raises R@1 but slightly reduces R@5 and R@10. This trade-off motivates the separate analysis of reranking depth in Figure~\ref{fig:reranking_sensitivity}; a rank-conditioned account of corrected and regressed queries is provided in Appendix~\ref{app:rank_analysis}.
+% 中文：收益主要集中在排名列表顶部：失败候选选择提高了 R@1，但 R@5 和 R@10 略有下降。这一权衡引出图~\ref{fig:reranking_sensitivity} 中对重排深度的独立分析；附录~\ref{app:rank_analysis} 进一步按初始排名分析被修复与发生回退的查询。
 
 \subsection{Refinement Robustness and Transferability}
 \label{sec:refinement_robustness}
@@ -277,8 +273,8 @@ Figure~\ref{fig:refinement_robustness} jointly examines robustness to the two tr
 \subsection{Additional Reliability and Semantic Analyses}
 \label{sec:additional_analyses}
 
-The paired bootstrap results in Table~\ref{tab:bootstrap} provide a complementary estimate of evaluation uncertainty. Relative to the fixed initial-retriever checkpoint, \method{}-Global improves macro-averaged MRR by 0.80 points with a 95\% confidence interval of \([0.66,0.95]\), while \method{}-Rerank improves it by 1.29 points with an interval of \([1.11,1.47]\). The per-language intervals are reported in the appendix because they elaborate, rather than replace, the matched aggregate comparison in Table~\ref{tab:training_inference_control}.
-% 中文：表~\ref{tab:bootstrap} 中的配对 bootstrap 结果为评测不确定性提供了补充估计。相对于固定的初始检索器检查点，\method{}-Global 的宏平均 MRR 提升 0.80 个点，95\% 置信区间为 \([0.66,0.95]\)；\method{}-Rerank 提升 1.29 个点，区间为 \([1.11,1.47]\)。逐语言区间放在附录中，因为它们是对表~\ref{tab:training_inference_control} 中协议一致总体比较的展开，而不是对该比较的替代。
+The paired bootstrap results in Table~\ref{tab:bootstrap} provide a complementary estimate of evaluation uncertainty. Relative to the fixed initial-retriever checkpoint, \method{}-Global improves macro-averaged MRR by 0.80 points with a 95\% confidence interval of \([0.66,0.95]\), while \method{}-Rerank improves it by 1.29 points with an interval of \([1.11,1.47]\). The per-language intervals are reported in the appendix because they elaborate, rather than replace, the matched aggregate comparison in Table~\ref{tab:ablation}. Appendix Table~\ref{tab:rank_strata} further localizes these changes by the gold code's rank under the initial retriever.
+% 中文：表~\ref{tab:bootstrap} 中的配对 bootstrap 结果为评测不确定性提供了补充估计。相对于固定的初始检索器检查点，\method{}-Global 的宏平均 MRR 提升 0.80 个点，95\% 置信区间为 \([0.66,0.95]\)；\method{}-Rerank 提升 1.29 个点，区间为 \([1.11,1.47]\)。逐语言区间放在附录中，因为它们是对表~\ref{tab:ablation} 中协议一致总体比较的展开，而不是对该比较的替代。附录表~\ref{tab:rank_strata} 进一步根据初始检索器下正确代码的排名定位这些变化。
 
 CodeSearchNet supplies one paired code snippet per query, so a high-ranked unpaired candidate need not be semantically irrelevant. Appendix Table~\ref{tab:candidate_annotation} therefore reserves a two-annotator analysis that separates valid alternatives, related but functionally different code, local semantic mismatches, irrelevant candidates, and uncertain cases, together with Cohen's \(\kappa\). Until adjudication is complete, we use the label \emph{unpaired candidate} without assuming semantic incorrectness. Appendix Table~\ref{tab:seed_stability} separately reserves the matched three-seed results needed to quantify retraining variability.
 % 中文：CodeSearchNet 每个查询只提供一个配对代码片段，因此高排名未配对候选不一定在语义上无关。附录表~\ref{tab:candidate_annotation} 预留了由两名标注者开展的分析，将样本区分为有效替代实现、语义相关但功能不同的代码、局部语义不匹配、无关候选和不确定样本，并报告 Cohen's \(\kappa\)。在分歧裁决完成前，我们使用“未配对候选”这一称谓，而不假定其语义一定错误。附录表~\ref{tab:seed_stability} 则另行预留协议一致的三个随机种子结果，用于衡量重新训练带来的变异。
@@ -362,38 +358,40 @@ Our evidence is currently limited to CodeSearchNet, a single audited training se
 
 \appendix
 
-\section{Dataset and Reproducibility Details}
+\section{Reproducibility Details}
 \label{app:experimental_details}
-
-Table~\ref{tab:dataset_stats} reports the fixed CodeSearchNet splits used throughout the experiments. The codebase column denotes the language-specific corpus against which every validation or test query is ranked.
-% 中文：表~\ref{tab:dataset_stats} 给出了全部实验采用的固定 CodeSearchNet 数据划分。Codebase 列表示每个验证或测试查询执行排序时所使用的对应语言检索语料库。
-
-\begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{4.2pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    Language & Train & Valid & Test & Codebase \\
-    \midrule
-    Java       & 164,923 & 5,183  & 10,955 & 40,347 \\
-    JavaScript & 58,025  & 3,885  & 3,291  & 13,981 \\
-    Ruby       & 24,927  & 1,400  & 1,261  & 4,360 \\
-    Python     & 251,820 & 13,914 & 14,918 & 43,827 \\
-    PHP        & 241,241 & 12,982 & 14,014 & 52,660 \\
-    Go         & 167,288 & 7,325  & 8,122  & 28,120 \\
-    \midrule
-    Total      & 908,224 & 44,689 & 52,561 & 183,295 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Statistics of the CodeSearchNet splits. Codebase denotes the size of the language-specific retrieval corpus used for validation and testing.}
-  % 中文表注：CodeSearchNet 数据划分统计。Codebase 表示验证和测试时使用的对应语言检索语料库规模。
-  \label{tab:dataset_stats}
-\end{table}
 
 \paragraph{Pipeline audit.}
 We verify data-split isolation, candidate-cache validity, checkpoint provenance, validation-only model selection, and test-set evaluation configurations before admitting a local result. There is no exact overlap in URLs, repositories, or normalized code across the training, validation, and test partitions, and the paired code is present in the retrieval corpus for every validation and test query. Each FC cache contains 32 unique candidates with valid training-corpus indices and excludes both the paired example and candidates sharing its URL. Reconstructing model selection from the stored validation results independently yields the same reranking configuration, \(K=20\) and \(\alpha=0.5\).
 % 中文：在纳入本地结果前，我们核验数据划分隔离、候选缓存有效性、检查点来源、仅基于验证集的模型选择，以及测试集评测配置。训练集、验证集和测试集之间不存在 URL、代码仓库或规范化代码的精确重叠；每个验证和测试查询的配对代码都存在于检索语料库中。每个 FC 缓存包含 32 个唯一且训练语料库索引有效的候选，并排除配对样本以及与其 URL 相同的候选。根据保存的验证集结果独立重建模型选择过程后，得到相同的重排配置，即 \(K=20\)、\(\alpha=0.5\)。
+
+\section{Rank-Conditioned Retrieval Behavior}
+\label{app:rank_analysis}
+
+We partition all 52,561 test queries according to the rank of the gold code snippet under the initial retriever. As shown in Table~\ref{tab:rank_strata}, the largest improvements occur for queries whose gold code is initially ranked between 2 and 10. Within this stratum, \method{}-Global improves MRR by 8.89 points, and \method{}-Rerank increases the improvement to 11.32 points. Positive but smaller differences are observed for initial ranks 11--50 and beyond 50. The concentration of gains among queries with near-top gold ranks is consistent with the intended role of failure-candidate refinement.
+% 中文：我们根据初始检索器下正确代码片段的排名，对全部 52,561 个测试查询进行分组。如表~\ref{tab:rank_strata} 所示，当正确代码的初始排名位于第 2--10 位时，性能提升最大。在这一分组中，\method{}-Global 将 MRR 提升 8.89 个点，\method{}-Rerank 则将提升扩大到 11.32 个点。当初始排名为第 11--50 位或 50 位以后时，也能观察到正向但较小的差异。收益集中在正确代码初始排名接近首位的查询上，这与失败候选细化的预期作用一致。
+
+\begin{table*}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{8pt}
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    Initial-rank stratum & Queries & Initial MRR & Global MRR & \(\Delta\)Global & Rerank MRR & \(\Delta\)Rerank \\
+    \midrule
+    1      & 36,274 & 100.00 & 97.88 & -2.12 & 97.53 & -2.47 \\
+    2--10  & 13,261 & 35.75  & 44.65 & +8.89 & 47.07 & +11.32 \\
+    11--50 & 2,270  & 5.54   & 7.88  & +2.34 & 9.20  & +3.66 \\
+    \(>50\) & 756   & 0.97   & 1.29  & +0.32 & 1.30  & +0.33 \\
+    \bottomrule
+  \end{tabular}
+  \caption{MRR conditioned on the gold code's rank under the initial retriever. Results are micro-averaged over test queries rather than macro-averaged over programming languages.}
+  % 中文表注：根据正确代码在初始检索器下的排名分层报告 MRR。结果在全部测试查询上进行微平均，而非对编程语言进行宏平均。
+  \label{tab:rank_strata}
+\end{table*}
+
+The transition counts reveal behavior that is obscured by aggregate MRR. Compared with the initial retriever, \method{}-Rerank improves the rank of the gold code for 7,121 queries and worsens it for 5,741 queries. It moves the gold code to rank 1 for 2,644 queries for which it was not initially top-ranked, but demotes the gold code for 1,624 queries that were initially correct at rank 1. Accordingly, MRR decreases by 2.47 points within the initial-rank-1 stratum. The overall improvement therefore reflects substantial corrections on initially misranked queries, partially offset by regressions on some initially correct rankings. A confidence-aware gating mechanism could potentially mitigate these regressions.
+% 中文：排名转移计数揭示了总体 MRR 所掩盖的行为。与初始检索器相比，\method{}-Rerank 使 7,121 个查询的正确代码排名上升，同时使 5,741 个查询的排名下降。对于 2,644 个正确代码原本不在首位的查询，它将正确代码提升至第 1 位；但对于 1,624 个正确代码原本位于第 1 位的查询，它也使正确代码发生后移。因此，在初始排名为 1 的分组中，MRR 下降了 2.47 个点。总体提升由对初始错误排序查询的大幅修复构成，但部分收益被一些初始正确排序上的回退所抵消。未来可探索置信度感知的门控机制以缓解这些回退。
 
 \section{Semantic Profile of Retriever-Mined Candidates}
 \label{app:candidate_annotation}
@@ -427,8 +425,8 @@ An unpaired candidate is not necessarily semantically irrelevant because CodeSea
 \section{Statistical Reliability}
 \label{app:statistical_reliability}
 
-Table~\ref{tab:bootstrap} expands the aggregate intervals in Table~\ref{tab:training_inference_control} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs.
-% 中文：表~\ref{tab:bootstrap} 按编程语言展开表~\ref{tab:training_inference_control} 中的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。
+Table~\ref{tab:bootstrap} expands the aggregate intervals in Table~\ref{tab:ablation} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs.
+% 中文：表~\ref{tab:bootstrap} 按编程语言展开表~\ref{tab:ablation} 中的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。
 
 \begin{table}[t]
   \centering
