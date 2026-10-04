@@ -17,6 +17,9 @@
 \usepackage{booktabs}
 \usepackage{colortbl}
 \usepackage{amsmath}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
 
 \newcommand{\method}{\textsc{ReFCode}}
 \newcommand{\reported}{\textsuperscript{\textdagger}}
@@ -85,11 +88,11 @@ Our primary experiments use CoCoSoDa~\citep{CoCoSoDa} as the encoder and adopt t
 % 中文：主要实验采用 CoCoSoDa~\citep{CoCoSoDa} 作为编码器，并沿用 UA-HN~\citep{AAAIUA} 的训练配置。初始检索器、\method{}-Global 和 \method{}-Rerank 均在完全相同的数据划分和检索语料库上，使用同一套指标实现进行评测。在候选选择对照中，我们固定细化训练日程以及每个查询新增候选的数量，仅改变选择策略：随机采样的未配对代码片段（Random）、固定的预挖掘困难负例（Static HN），或由冻结初始检索器挖掘的高排名未配对候选（失败候选；FC）。这一受控设计在相同候选预算下，将候选选择的作用与额外优化的影响区分开来。
 
 \paragraph{Training and model selection.}
-We train the initial retriever for 10 epochs with a batch size of 128, a learning rate of \(8\times10^{-6}\), and a contrastive temperature of 0.03. To construct the FC pool, we freeze the validation-selected checkpoint and perform retrieval over the training corpus. After removing the paired code snippet and any candidate that shares its URL, we retain the 32 highest-ranked candidates. During refinement, we restrict this pool to the top eight candidates and sample one candidate per query at each update. We train the refinement stage for three epochs with a batch size of 128, a learning rate of \(5\times10^{-6}\), an FC loss weight of 0.45, and an FC temperature of 0.03. The refinement objective operates exclusively on global query--code representations; neither CTRD nor a token-level local-interaction loss is used during training.
-% 中文：初始检索器训练 10 个 epoch，批量大小为 128，学习率为 \(8\times10^{-6}\)，对比学习温度为 0.03。构造 FC 候选池时，我们冻结由验证集选定的检查点，并在训练语料库上执行检索。移除配对代码片段以及与其 URL 相同的所有候选后，保留排名最高的 32 个候选。细化阶段将候选池限制为前 8 个候选，并在每次更新时为每个查询采样 1 个候选。细化训练进行 3 个 epoch，批量大小为 128，学习率为 \(5\times10^{-6}\)，FC 损失权重为 0.45，FC 温度为 0.03。细化目标仅作用于全局查询—代码表示；训练过程中既不使用 CTRD，也不使用词元级局部交互损失。
+We train the initial retriever for 10 epochs with a batch size of 128, a learning rate of \(8\times10^{-6}\), and a contrastive temperature of 0.03. To construct the FC pool, we freeze the validation-selected checkpoint and perform retrieval over the training corpus. After removing the paired code snippet and any candidate that shares its URL, we retain the 32 highest-ranked candidates (\(M=32\)). During refinement, we restrict this pool to the top eight candidates (\(m=8\)) and sample one candidate per query at each update (\(r=1\)). We train the refinement stage for three epochs with a batch size of 128, a learning rate of \(5\times10^{-6}\), an FC loss weight of 0.45, and an FC temperature of 0.03. The refinement objective operates exclusively on global query--code representations; neither CTRD nor a token-level local-interaction loss is used during training.
+% 中文：初始检索器训练 10 个 epoch，批量大小为 128，学习率为 \(8\times10^{-6}\)，对比学习温度为 0.03。构造 FC 候选池时，我们冻结由验证集选定的检查点，并在训练语料库上执行检索。移除配对代码片段以及与其 URL 相同的所有候选后，保留排名最高的 32 个候选（\(M=32\)）。细化阶段将候选池限制为前 8 个候选（\(m=8\)），并在每次更新时为每个查询采样 1 个候选（\(r=1\)）。细化训练进行 3 个 epoch，批量大小为 128，学习率为 \(5\times10^{-6}\)，FC 损失权重为 0.45，FC 温度为 0.03。细化目标仅作用于全局查询—代码表示；训练过程中既不使用 CTRD，也不使用词元级局部交互损失。
 
-At inference time, \method{}-Global performs standard dual-encoder retrieval over the full corpus. The optional reranker computes a parameter-free token-level MaxSim score only for the top-\(K\) candidates returned by global retrieval and combines the per-query standardized global and MaxSim scores. We select \(K=20\) and the fusion weight \(\alpha=0.5\) by maximizing macro-averaged MRR across the six validation sets, and fix both hyperparameters before test-set evaluation. Model checkpoints are likewise selected exclusively according to validation performance. Unless otherwise stated, all locally evaluated results use random seed 123456 and are obtained on a single NVIDIA H20 GPU.
-% 中文：推理时，\method{}-Global 在完整语料库上执行标准双编码器检索。可选重排器仅对全局检索返回的前 \(K\) 个候选计算无额外训练参数的词元级 MaxSim 分数，并融合逐查询标准化后的全局分数和 MaxSim 分数。我们通过最大化六个验证集上的宏平均 MRR，选择 \(K=20\) 和融合权重 \(\alpha=0.5\)，并在测试集评测前固定这两个超参数。模型检查点同样完全依据验证集表现选择。除非另有说明，所有本地评测结果均使用随机种子 123456，并在单张 NVIDIA H20 GPU 上获得。
+At inference time, \method{}-Global performs standard dual-encoder retrieval over the full corpus. The optional reranker computes a parameter-free token-level MaxSim score only for the top-\(K\) candidates returned by global retrieval. It combines the per-query standardized global score \(\widetilde{s}_g\) and MaxSim score \(\widetilde{s}_m\) as \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\). We select \(K=20\) and \(\alpha=0.5\) by maximizing macro-averaged MRR across the six validation sets, and fix both hyperparameters before test-set evaluation. Model checkpoints are likewise selected exclusively according to validation performance. Unless otherwise stated, all locally evaluated results use random seed 123456 and are obtained on a single NVIDIA H20 GPU.
+% 中文：推理时，\method{}-Global 在完整语料库上执行标准双编码器检索。可选重排器仅对全局检索返回的前 \(K\) 个候选计算无额外训练参数的词元级 MaxSim 分数。它按照 \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\) 融合逐查询标准化后的全局分数 \(\widetilde{s}_g\) 与 MaxSim 分数 \(\widetilde{s}_m\)。我们通过最大化六个验证集上的宏平均 MRR，选择 \(K=20\) 和 \(\alpha=0.5\)，并在测试集评测前固定这两个超参数。模型检查点同样完全依据验证集表现选择。除非另有说明，所有本地评测结果均使用随机种子 123456，并在单张 NVIDIA H20 GPU 上获得。
 
 \paragraph{Uncertainty estimates.}
 We estimate 95\% confidence intervals for paired MRR differences using a stratified paired bootstrap over test queries. Because the bootstrap keeps the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variability across independent training runs.
@@ -98,6 +101,10 @@ We estimate 95\% confidence intervals for paired MRR differences using a stratif
 \paragraph{Result provenance.}
 We distinguish results taken from prior work from those obtained with our local evaluation pipeline. Rows marked with \reported{} contain values reported in the cited papers and serve as contextual comparisons; rows marked with \localrun{} contain locally evaluated results. We compute paired differences and confidence intervals only between systems evaluated locally under an identical protocol.
 % 中文：我们区分取自既有工作的结果与使用本文本地评测流程得到的结果。标记为 \reported{} 的行包含所引用论文报告的数值，仅用于提供对比背景；标记为 \localrun{} 的行包含本地评测结果。配对差值和置信区间只在采用完全相同协议进行本地评测的系统之间计算。
+
+\paragraph{Pipeline checks.}
+Before reporting local results, we verify data-split isolation, candidate-cache validity, checkpoint provenance, validation-only model selection, and test-set evaluation configurations. There is no exact overlap in URLs, repositories, or normalized code across the training, validation, and test partitions; the gold code is present in the retrieval corpus for every validation and test query. Each FC cache contains 32 unique candidates with valid training-corpus indices and excludes the paired example and candidates sharing its URL. Independently reconstructing model selection from the stored validation results yields the same configuration, \(K=20\) and \(\alpha=0.5\). The complete audit checklist is reserved for the appendix.
+% 中文：在报告本地结果前，我们核验数据划分隔离、候选缓存有效性、检查点来源、仅基于验证集的模型选择，以及测试集评测配置。训练集、验证集和测试集之间不存在 URL、代码仓库或规范化代码的精确重叠；每个验证和测试查询的正确代码都存在于相应检索语料库中。每个 FC 缓存包含 32 个唯一且训练语料库索引有效的候选，并排除配对样本以及与其 URL 相同的候选。根据保存的验证集结果独立重建模型选择过程后，得到相同的配置，即 \(K=20\)、\(\alpha=0.5\)。完整审计清单将在附录中报告。
 
 \subsection{Overall Retrieval Effectiveness}
 \label{sec:main_results}
@@ -192,6 +199,56 @@ Because the MaxSim reranker can be applied to either the initial or refined chec
   \label{tab:training_inference_control}
 \end{table*}
 
+\subsection{Sensitivity to Refinement Hyperparameters}
+\label{sec:refinement_sensitivity}
+
+The two training-side hyperparameters most directly tied to the proposed refinement mechanism are the failure-candidate loss weight \(\lambda_f\) and the retained candidate-pool size \(m\). We vary one factor at a time on JavaScript using \(\lambda_f\in\{0.25,0.35,0.45,0.55,0.65\}\) and \(m\in\{2,4,8,16,32\}\), while keeping the final refinement protocol unchanged. Figure~\ref{fig:refinement_sensitivity} will report global-retrieval MRR so that inference-time reranking does not confound the training-side comparison. The default configuration is \(\lambda_f=0.45\) and \(m=8\). We do not treat the cache depth \(M=32\) as a separate sensitivity variable because it only bounds the stored pool when \(m\leq M\); the per-update candidate budget remains fixed at \(r=1\). The FC temperature is tied to the initial contrastive temperature at 0.03 rather than tuned independently.
+% 中文：与本文细化机制最直接相关的两个训练侧超参数是失败候选损失权重 \(\lambda_f\) 和保留候选池大小 \(m\)。我们在 JavaScript 上采用单因素变化方式，分别考察 \(\lambda_f\in\{0.25,0.35,0.45,0.55,0.65\}\) 与 \(m\in\{2,4,8,16,32\}\)，同时保持最终细化协议不变。图~\ref{fig:refinement_sensitivity} 将报告仅使用全局检索时的 MRR，从而避免推理阶段重排干扰训练侧比较。默认配置为 \(\lambda_f=0.45\)、\(m=8\)。我们不把缓存深度 \(M=32\) 作为单独的敏感性变量，因为当 \(m\leq M\) 时，它只限制缓存中保存的候选池大小；每次更新使用的候选预算固定为 \(r=1\)。FC 温度直接设为与初始对比学习温度相同的 0.03，而不进行独立调参。
+
+\begin{figure*}[t]
+  \centering
+  % Replace the empty panels with audited JavaScript results from the final
+  % no-auxiliary-loss protocol. Do not reuse the legacy K=50/LI artifacts.
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      group style={group size=2 by 1, horizontal sep=1.4cm},
+      width=0.43\textwidth,
+      height=0.22\textwidth,
+      grid=major,
+      tick label style={font=\scriptsize},
+      label style={font=\small},
+      title style={font=\small},
+      ylabel={Global MRR (\%)},
+      ymin=0,
+      ymax=1,
+      ytick=\empty
+    ]
+      \nextgroupplot[
+        title={(a) Failure-candidate weight},
+        xlabel={\(\lambda_f\)},
+        xmin=0.2,
+        xmax=0.7,
+        xtick={0.25,0.35,0.45,0.55,0.65}
+      ]
+      \node[font=\small, text=gray] at (rel axis cs:0.5,0.55) {Audited results pending};
+      \draw[dashed] (axis cs:0.45,0) -- (axis cs:0.45,1);
+
+      \nextgroupplot[
+        title={(b) Retained candidate depth},
+        xlabel={\(m\)},
+        xmin=0,
+        xmax=34,
+        xtick={2,4,8,16,32}
+      ]
+      \node[font=\small, text=gray] at (rel axis cs:0.5,0.55) {Audited results pending};
+      \draw[dashed] (axis cs:8,0) -- (axis cs:8,1);
+    \end{groupplot}
+  \end{tikzpicture}
+  \caption{Planned sensitivity analysis of the two method-specific training hyperparameters on JavaScript. Each panel varies one hyperparameter while holding the other settings fixed; dashed lines mark the default values. Result curves will be added after the final-protocol runs pass provenance checks.}
+  % 中文表注：计划在 JavaScript 上分析两个方法特有训练超参数的敏感性。每个子图只改变一个超参数，其余设置保持不变；虚线表示默认取值。最终协议下的运行通过来源核验后再填入结果曲线。
+  \label{fig:refinement_sensitivity}
+\end{figure*}
+
 \subsection{Rank-Conditioned Retrieval Behavior}
 \label{sec:rank_analysis}
 
@@ -248,7 +305,7 @@ An unpaired candidate is not necessarily semantically irrelevant because CodeSea
   \label{tab:candidate_annotation}
 \end{table*}
 
-\subsection{Query-Sampling Uncertainty}
+\subsection{Statistical Reliability}
 \label{sec:bootstrap}
 
 Table~\ref{tab:bootstrap} reports 95\% confidence intervals for paired MRR differences relative to the initial retriever. For \method{}-Rerank, the macro-averaged improvement is 1.29 points, with a 95\% confidence interval of \([1.11,1.47]\). The interval excludes zero for every programming language. Because the resampling preserves query-level pairing, these intervals quantify uncertainty due to the finite evaluation sample; they do not establish robustness across independent training runs.
@@ -276,69 +333,138 @@ Table~\ref{tab:bootstrap} reports 95\% confidence intervals for paired MRR diffe
   \label{tab:bootstrap}
 \end{table}
 
-\subsection{Effectiveness--Efficiency Trade-off}
-\label{sec:efficiency}
-
-Table~\ref{tab:efficiency} examines the effectiveness--latency trade-off as the reranking depth varies, with the validation-selected fusion weight fixed at \(\alpha=0.5\). The selected configuration, \(K=20\), achieves a macro-averaged test MRR of 81.06, with an inference latency of 26.04 ms per JavaScript query and a peak GPU memory footprint of 3,063 MiB. Increasing \(K\) to 50 or 100 yields no further improvement in MRR while increasing total latency to 46.64 and 85.19 ms, respectively. With an MRR of 81.03 at 19.04 ms per query, \(K=10\) provides a lower-latency operating point.
-% 中文：表~\ref{tab:efficiency} 在固定验证集选定的融合权重 \(\alpha=0.5\) 后，通过改变重排深度考察检索效果与延迟之间的权衡。最终选定的配置 \(K=20\) 在测试集上取得 81.06 的宏平均 MRR；JavaScript 上的每查询推理延迟为 26.04 毫秒，峰值显存占用为 3,063 MiB。将 \(K\) 增至 50 或 100 并未进一步提高 MRR，却分别将总延迟增加到 46.64 和 85.19 毫秒。\(K=10\) 的 MRR 为 81.03，每查询延迟为 19.04 毫秒，因此可作为延迟更低的运行点。
-
-\begin{table*}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{6.0pt}
-  \begin{tabular}{lrrrrrrrr}
-    \toprule
-    Variant & \(K\) & MRR & R@1 & R@5 & R@10 & Global ms/q & Rerank ms/q & Total ms/q \\
-    \midrule
-    \method{}-Global & --  & 80.57 & 71.90 & 91.52 & 95.17 & --   & --    & -- \\
-    \method{}-Rerank & 10  & 81.03 & 72.60 & 91.65 & 95.17 & 0.97 & 18.08 & 19.04 \\
-    \method{}-Rerank & 20  & \textbf{81.06} & \textbf{72.64} & 91.68 & 95.11 & 0.90 & 25.13 & 26.04 \\
-    \method{}-Rerank & 50  & 81.02 & 72.57 & 91.67 & 95.12 & 0.98 & 45.66 & 46.64 \\
-    \method{}-Rerank & 100 & 81.01 & 72.56 & 91.68 & 95.11 & 0.92 & 84.27 & 85.19 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Retrieval effectiveness and inference latency at different reranking depths. Metrics are macro-averaged over six programming languages, whereas latency is measured on JavaScript. All reranked variants use \(\alpha=0.5\) and have a peak GPU memory footprint of 3,063 MiB.}
-  \label{tab:efficiency}
-\end{table*}
-
-Local-interaction scores are computed for every query, regardless of whether the gold code snippet appears among the top-\(K\) candidates. The reported latency therefore reflects the complete inference path rather than an oracle-assisted estimate.
-% 中文：无论正确代码片段是否出现在前 \(K\) 个候选中，我们都会为每个查询计算局部交互分数。因此，报告的延迟反映完整的推理流程，而不是借助正确答案信息得到的理想化估计。
-
-\subsection{Transfer Across Encoder Backbones}
-\label{sec:backbone_transfer}
-
-To assess transfer across encoder architectures, we apply the same refinement objective and validation-based hyperparameter selection procedure to CoCoSoDa, UniXcoder, and GraphCodeBERT. Table~\ref{tab:backbone_transfer} will report six-language macro-averaged MRR after verifying checkpoint provenance, candidate caches, and evaluation configurations for each run. Results reported in the corresponding encoder papers are included for context only because they were obtained under different implementations and are therefore not used as matched references for computing performance differences.
-% 中文：为考察方法在不同编码器架构之间的迁移能力，我们将相同的细化目标和基于验证集的超参数选择流程应用于 CoCoSoDa、UniXcoder 和 GraphCodeBERT。表~\ref{tab:backbone_transfer} 将在核验每次运行的检查点来源、候选缓存和评测配置后，报告六种语言的宏平均 MRR。相应编码器论文中报告的结果仅用于提供背景；由于这些结果来自不同实现，因此不作为计算性能差值时的协议一致参照。
+Query-level resampling does not capture variation introduced by retraining. We therefore reserve a matched three-seed comparison in Table~\ref{tab:seed_stability}. For each seed, the initial retriever, global refinement, and reranked system will share the same data, candidate-generation procedure, and evaluation pipeline. The table will report both the individual macro-averaged MRR values and the across-seed mean and standard deviation; no training-seed stability claim will be made until these runs are complete.
+% 中文：查询级重采样不能反映重新训练带来的变化。因此，我们在表~\ref{tab:seed_stability} 中预留了三个配对随机种子的比较。对于每个种子，初始检索器、全局细化系统和重排系统将共享相同的数据、候选生成流程与评测流程。该表将同时报告各随机种子的宏平均 MRR，以及跨种子的均值和标准差；在这些运行完成前，本文不会声称训练随机种子层面的稳定性。
 
 \begin{table}[t]
   \centering
   \small
-  \setlength{\tabcolsep}{4.5pt}
-  \begin{tabular}{lrrr}
+  \setlength{\tabcolsep}{3.6pt}
+  \begin{tabular}{lrrrr}
     \toprule
-    Encoder & Reported\reported{} & Global\localrun{} & Rerank\localrun{} \\
+    System & 123456 & 2027 & 2028 & Mean \(\pm\) SD \\
     \midrule
-    CoCoSoDa~\citep{CoCoSoDa} & 78.8 & \pending & \pending \\
-    UniXcoder~\citep{UniXcoder} & 74.4 & \pending & \pending \\
-    GraphCodeBERT~\citep{GraphCodeBERT} & 71.3 & \pending & \pending \\
+    Initial retriever & 79.77 & \pending & \pending & \pending \\
+    \method{}-Global & 80.57 & \pending & \pending & \pending \\
+    \method{}-Rerank & 81.06 & \pending & \pending & \pending \\
     \bottomrule
   \end{tabular}
-  \caption{Transfer results across encoder architectures on the six-language CodeSearchNet benchmark. Local result cells are reserved until the corresponding experiments and provenance checks are complete; values reported in prior work are included for context only.}
-  % 中文表注：六语言 CodeSearchNet 基准上跨编码器架构的迁移结果。本地结果单元格将在相应实验及来源核验完成后填写；已有工作中报告的数值仅用于提供背景。
-  \label{tab:backbone_transfer}
+  \caption{Planned matched-seed reliability analysis using six-language macro-averaged MRR. All systems within a seed are evaluated under the same local protocol.}
+  % 中文表注：计划开展的配对随机种子可靠性分析，指标为六语言宏平均 MRR。同一种子内的所有系统均采用相同的本地协议进行评测。
+  \label{tab:seed_stability}
 \end{table}
 
-We assess transfer using only the locally evaluated Global and Rerank variants under a common protocol. Comparisons with values reported in prior work are descriptive rather than controlled.
-% 中文：我们仅依据在统一协议下完成本地评测的 Global 和 Rerank 变体来判断迁移能力。与已有工作所报告数值的比较属于描述性比较，而非受控比较。
+\subsection{Reranking Hyperparameters and Efficiency}
+\label{sec:efficiency}
 
-\subsection{Pipeline Integrity and Provenance}
-\label{sec:audit}
+Figure~\ref{fig:reranking_sensitivity} separates validation-based hyperparameter selection from held-out test evaluation. Panel~(a) reports the complete \(K\times\alpha\) validation grid. The maximum macro-averaged validation MRR is obtained at \(K=20\) and \(\alpha=0.5\); both values are then fixed before evaluating the test set. Panel~(b) shows the resulting effectiveness--latency trade-off. The selected configuration reaches a test MRR of 81.06 at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 yields no further MRR improvement but raises latency to 46.64 and 85.19 ms, respectively. At 19.04 ms per query, \(K=10\) provides a lower-latency alternative with an MRR of 81.03.
+% 中文：图~\ref{fig:reranking_sensitivity} 将基于验证集的超参数选择与留出测试集评测明确分开。子图 (a) 报告完整的 \(K\times\alpha\) 验证网格；宏平均验证 MRR 在 \(K=20\)、\(\alpha=0.5\) 时达到最高，随后在测试集评测前固定这两个取值。子图 (b) 展示相应的检索效果—延迟权衡。最终选定的配置在 JavaScript 上以每查询 26.04 毫秒的延迟取得 81.06 的测试 MRR。将 \(K\) 增至 50 或 100 并未进一步提高 MRR，却分别将延迟增加到 46.64 和 85.19 毫秒。\(K=10\) 则以每查询 19.04 毫秒取得 81.03 MRR，可作为延迟更低的选择。
 
-We audit data-split isolation, candidate caches, checkpoint provenance, validation-based model selection, and test-set evaluation configurations. The audit comprises 121 automated checks: 115 pass, six produce non-critical warnings, and none fails. There is no exact overlap in URLs, repositories, or normalized code across the training, validation, and test partitions, and the gold code is present in the retrieval corpus for every validation and test query. For every training query, its FC cache contains 32 unique candidates with valid corpus indices, all drawn from the training corpus; the paired example and any candidate sharing its URL are excluded. Reconstructing model selection independently from the stored validation results yields the same configuration, \(K=20\) and \(\alpha=0.5\).
-% 中文：我们审计了数据划分隔离、候选缓存、检查点来源、基于验证集的模型选择，以及测试集评测配置。审计共包含 121 项自动检查：115 项通过，6 项产生非关键警告，没有检查失败。训练集、验证集和测试集之间不存在 URL、代码仓库或规范化代码的精确重叠，并且每个验证和测试查询的正确代码都存在于相应的检索语料库中。对于每个训练查询，其 FC 缓存包含 32 个唯一且语料库索引有效的候选，这些候选均来自训练语料库；配对样本以及与其 URL 相同的所有候选均被排除。根据保存的验证集结果独立重建模型选择过程后，得到相同的配置，即 \(K=20\)、\(\alpha=0.5\)。
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      group style={group size=2 by 1, horizontal sep=1.55cm},
+      width=0.43\textwidth,
+      height=0.27\textwidth,
+      grid=major,
+      tick label style={font=\scriptsize},
+      label style={font=\small},
+      title style={font=\small},
+      legend style={font=\scriptsize, draw=none}
+    ]
+      \nextgroupplot[
+        title={(a) Validation sensitivity},
+        xlabel={Reranking depth \(K\)},
+        ylabel={Macro MRR (\%)},
+        xtick={10,20,50,100},
+        ymin=80.8,
+        ymax=82.35,
+        legend style={at={(0.5,-0.30)}, anchor=north, legend columns=3}
+      ]
+      \addplot[gray, dashed, mark=triangle*] coordinates {(10,81.334) (20,81.157) (50,81.037) (100,80.997)};
+      \addlegendentry{\(\alpha=0\)}
+      \addplot[black, densely dashed, mark=square*] coordinates {(10,81.826) (20,81.804) (50,81.777) (100,81.768)};
+      \addlegendentry{\(\alpha=0.25\)}
+      \addplot[black, very thick, mark=*] coordinates {(10,82.165) (20,82.219) (50,82.210) (100,82.203)};
+      \addlegendentry{\(\alpha=0.5\)}
+      \addplot[gray!70!black, dash pattern=on 4pt off 2pt on 1pt off 2pt, mark=diamond*] coordinates {(10,82.152) (20,82.167) (50,82.168) (100,82.169)};
+      \addlegendentry{\(\alpha=0.75\)}
+      \addplot[gray!55!black, dotted, mark=x] coordinates {(10,81.861) (20,81.861) (50,81.861) (100,81.861)};
+      \addlegendentry{\(\alpha=1\)}
+      \addplot[only marks, mark=star, mark size=4pt, black] coordinates {(20,82.219)};
 
-The six warnings concern natural-language strings duplicated across the frozen benchmark partitions. We retain and disclose these instances rather than modifying the benchmark after inspection. The audit establishes the procedural integrity and provenance of the experimental pipeline; it does not determine the semantic relevance of unpaired candidates, which is examined separately through the planned annotation study and discussed in the limitations.
-% 中文：六项警告涉及冻结基准的不同数据划分之间重复出现的自然语言文本。我们保留并披露这些样本，而不在检查数据后修改基准。该审计用于确认实验流程的程序完整性和来源可追溯性；它并不判断未配对候选的语义相关性，后者将通过计划中的人工标注研究单独考察，并在局限性部分讨论。
+      \nextgroupplot[
+        title={(b) Held-out effectiveness--latency trade-off},
+        xlabel={Total latency (ms/query)},
+        ylabel={Test macro MRR (\%)},
+        xmin=14,
+        xmax=90,
+        ymin=80.5,
+        ymax=81.1
+      ]
+      \addplot[black, densely dotted] coordinates {(14,80.571) (90,80.571)};
+      \node[font=\scriptsize, anchor=south west] at (axis cs:14,80.571) {Global retrieval};
+      \addplot[gray, thick, mark=*] coordinates {(19.04,81.035) (26.04,81.055) (46.64,81.017) (85.19,81.010)};
+      \addplot[only marks, mark=star, mark size=4pt, black] coordinates {(26.04,81.055)};
+      \node[font=\scriptsize, anchor=south east] at (axis cs:19.04,81.035) {\(K=10\)};
+      \node[font=\scriptsize, anchor=south west] at (axis cs:26.04,81.055) {\(K=20\)};
+      \node[font=\scriptsize, anchor=north west] at (axis cs:46.64,81.017) {\(K=50\)};
+      \node[font=\scriptsize, anchor=south east] at (axis cs:85.19,81.010) {\(K=100\)};
+    \end{groupplot}
+  \end{tikzpicture}
+  \caption{Reranking hyperparameters and inference efficiency. Panel (a) reports six-language macro-averaged MRR on the validation sets for every evaluated \((K,\alpha)\) pair; the star marks the selected configuration. Panel (b) reports test MRR against JavaScript inference latency after fixing \(\alpha=0.5\); the dotted line marks global retrieval without reranking. Local-interaction scores are computed for every query, and all configurations have a peak GPU memory footprint of 3,063 MiB.}
+  % 中文表注：重排超参数与推理效率。子图 (a) 报告每个候选 \((K,\alpha)\) 组合在六语言验证集上的宏平均 MRR，星号表示选定配置。子图 (b) 在固定 \(\alpha=0.5\) 后，展示测试 MRR 与 JavaScript 推理延迟之间的关系；点线表示不使用重排的全局检索。每个查询都实际计算局部交互分数，所有配置的峰值显存占用均为 3,063 MiB。
+  \label{fig:reranking_sensitivity}
+\end{figure*}
+
+The latency measurement therefore reflects the complete inference path rather than an oracle-assisted estimate: reranking is executed for every query regardless of whether the gold code snippet appears among the top-\(K\) candidates.
+% 中文：因此，延迟测量反映完整的推理流程，而不是借助正确答案信息得到的理想化估计：无论正确代码片段是否出现在前 \(K\) 个候选中，每个查询都会执行重排。
+
+The final efficiency report will additionally include the one-time GPU-hours required for FC mining and refinement. These offline costs are kept separate from per-query inference latency because they affect model preparation rather than deployment-time throughput.
+% 中文：最终效率报告还将补充 FC 挖掘和细化训练所需的一次性 GPU 小时。由于这些离线成本影响的是模型准备过程，而不是部署阶段的查询吞吐量，因此将其与每查询推理延迟分开报告。
+
+\subsection{Transfer Across Encoder Backbones}
+\label{sec:backbone_transfer}
+
+To assess transfer across encoder architectures, we apply the same refinement objective to CoCoSoDa, UniXcoder, and GraphCodeBERT while keeping the training recipe and the primary validation-selected reranking configuration fixed. Figure~\ref{fig:backbone_transfer} reports the change in six-language macro-averaged MRR relative to the matched locally evaluated initial retriever for each backbone. Expressing transfer as a within-backbone difference avoids conflating compatibility with the substantially different absolute performance levels of the encoders. Only runs that pass checkpoint-provenance, candidate-cache, and evaluation-configuration checks will be included.
+% 中文：为考察方法在不同编码器架构之间的迁移能力，我们将相同的细化目标应用于 CoCoSoDa、UniXcoder 和 GraphCodeBERT，同时固定训练流程以及在主要验证实验中选定的重排配置。图~\ref{fig:backbone_transfer} 报告每种骨干相对于协议一致本地初始检索器的六语言宏平均 MRR 变化。采用骨干内部差值可以避免把方法兼容性与不同编码器本身差异较大的绝对性能混为一谈。只有通过检查点来源、候选缓存和评测配置核验的运行才会纳入图中。
+
+\begin{figure*}[t]
+  \centering
+  % Replace the placeholder with audited absolute MRR-point gains. The two
+  % bars for each backbone should be ReFCode-Global and ReFCode-Rerank gains
+  % over that backbone's locally evaluated initial retriever.
+  \begin{tikzpicture}
+    \begin{axis}[
+      width=0.88\textwidth,
+      height=0.28\textwidth,
+      ybar,
+      bar width=16pt,
+      ylabel={\(\Delta\) macro MRR (points)},
+      symbolic x coords={CoCoSoDa,UniXcoder,GraphCodeBERT},
+      xtick={CoCoSoDa,UniXcoder,GraphCodeBERT},
+      ymin=-0.5,
+      ymax=2.0,
+      grid=major,
+      tick label style={font=\small},
+      label style={font=\small},
+      legend style={at={(0.5,-0.20)}, anchor=north, legend columns=2, draw=none, font=\small}
+    ]
+      \addlegendimage{ybar,fill=gray!35,draw=black}
+      \addlegendentry{\method{}-Global}
+      \addlegendimage{ybar,fill=gray!75,draw=black}
+      \addlegendentry{\method{}-Rerank}
+      \node[font=\small, text=gray] at (rel axis cs:0.5,0.55) {Audited transfer results pending};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Planned transfer evaluation across encoder backbones. Each bar will show the absolute MRR-point change relative to the matched locally evaluated initial retriever for the same backbone; reported values from the corresponding encoder papers are not mixed into this controlled comparison.}
+  % 中文表注：计划开展的跨编码器骨干迁移评测。每个柱形将表示相对于同一骨干下协议一致本地初始检索器的绝对 MRR 点数变化；相应编码器论文中报告的数值不与该受控比较混合。
+  \label{fig:backbone_transfer}
+\end{figure*}
+
+This experiment evaluates compatibility rather than a new ranking among backbone models. Accordingly, transfer claims will be based on the direction and consistency of the within-backbone gains, not on cross-backbone differences in absolute MRR.
+% 中文：该实验评估的是方法兼容性，而不是重新比较不同骨干模型的性能排名。因此，迁移结论将依据各骨干内部增益的方向与一致性，而不是不同骨干绝对 MRR 之间的差异。
 
 \section*{Limitations}
 
