@@ -58,30 +58,8 @@ We evaluate \method{} along three complementary dimensions. First, we benchmark 
 \label{sec:experimental_setup}
 
 \paragraph{Dataset and metrics.}
-We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go. Table~\ref{tab:dataset_stats} summarizes the fixed training, validation, and test splits. At test time, each query is evaluated against the complete language-specific retrieval corpus. We use mean reciprocal rank (MRR) as the primary metric because it is sensitive to the position of the first relevant result, and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10) to measure retrieval coverage. All metrics are reported as percentages.
-% 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对。表~\ref{tab:dataset_stats} 汇总了固定的训练集、验证集和测试集划分。测试时，每个查询都在相应语言的完整检索语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，因为它对首个相关结果的位置敏感；同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）以衡量检索覆盖率。所有指标均以百分比表示。
-
-\begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{4.2pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    Language & Train & Valid & Test & Codebase \\
-    \midrule
-    Java       & 164,923 & 5,183  & 10,955 & 40,347 \\
-    JavaScript & 58,025  & 3,885  & 3,291  & 13,981 \\
-    Ruby       & 24,927  & 1,400  & 1,261  & 4,360 \\
-    Python     & 251,820 & 13,914 & 14,918 & 43,827 \\
-    PHP        & 241,241 & 12,982 & 14,014 & 52,660 \\
-    Go         & 167,288 & 7,325  & 8,122  & 28,120 \\
-    \midrule
-    Total      & 908,224 & 44,689 & 52,561 & 183,295 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Statistics of the CodeSearchNet splits. Codebase denotes the size of the language-specific retrieval corpus used for validation and testing.}
-  \label{tab:dataset_stats}
-\end{table}
+We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go; detailed split statistics are provided in Appendix Table~\ref{tab:dataset_stats}. At test time, each query is evaluated against the complete language-specific retrieval corpus. We use mean reciprocal rank (MRR) as the primary metric because it is sensitive to the position of the first relevant result, and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10) to measure retrieval coverage. All metrics are reported as percentages.
+% 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对；详细的数据划分统计见附录表~\ref{tab:dataset_stats}。测试时，每个查询都在相应语言的完整检索语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，因为它对首个相关结果的位置敏感；同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）以衡量检索覆盖率。所有指标均以百分比表示。
 
 \paragraph{Implementation and controlled comparisons.}
 Our primary experiments use CoCoSoDa~\citep{CoCoSoDa} as the encoder and adopt the training configuration of UA-HN~\citep{AAAIUA}. The initial retriever, \method{}-Global, and \method{}-Rerank are evaluated on identical data splits and retrieval corpora using the same metric implementation. In the candidate-selection controls, we fix the refinement schedule and the number of additional candidates per query, and vary only the selection strategy: a randomly sampled unpaired code snippet (Random), a fixed pre-mined hard negative (Static HN), or a high-ranked unpaired candidate mined by the frozen initial retriever (failure candidate; FC). Under the same candidate budget, this controlled design isolates the effect of candidate selection from that of additional optimization.
@@ -149,13 +127,13 @@ The reported results in the upper block place \method{} in the context of prior 
 \subsection{Controlled Effect of Candidate Selection}
 \label{sec:candidate_controls}
 
-Table~\ref{tab:candidate_controls} isolates the effect of candidate selection under a fixed budget of one additional unpaired candidate per training query. All three refinement conditions use the same optimization schedule and are evaluated with global retrieval only. Random sampling and Static HN yield MRR values of 79.72 and 79.67, respectively, neither of which improves over the unrefined checkpoint (79.77). In contrast, FC reaches 80.12 MRR and improves R@1 by 0.83 points. Under this matched setting, high-ranked candidates mined by the retriever provide a more effective refinement signal than either random sampling or static hard-negative mining.
-% 中文：表~\ref{tab:candidate_controls} 在每个训练查询增加一个未配对候选的固定预算下，单独考察候选选择的作用。三个细化条件采用相同的优化日程，并且都只使用全局检索进行评测。Random 和 Static HN 的 MRR 分别为 79.72 和 79.67，均未超过未细化检查点（79.77）。相比之下，FC 达到 80.12 MRR，并使 R@1 提升 0.83 个点。在这一协议一致的设置下，由检索器挖掘的高排名候选比随机采样或静态困难负例挖掘提供了更有效的细化信号。
+Table~\ref{tab:candidate_controls} isolates the effect of candidate selection under a fixed budget of one additional unpaired candidate per training query. All budget-matched refinement conditions use the same optimization schedule and are evaluated with global retrieval only. Random sampling and Static HN yield MRR values of 79.72 and 79.67, respectively, neither of which improves over the unrefined checkpoint (79.77). Under the same budget, retriever-mined FC reaches 80.12 MRR and improves R@1 by 0.83 points. The final FC configuration is shown separately for reference and reaches 80.57 MRR.
+% 中文：表~\ref{tab:candidate_controls} 在每个训练查询增加一个未配对候选的固定预算下，单独考察候选选择的作用。所有预算一致的细化条件采用相同的优化日程，并且都只使用全局检索进行评测。Random 和 Static HN 的 MRR 分别为 79.72 和 79.67，均未超过未细化检查点（79.77）。在相同预算下，检索器挖掘的 FC 达到 80.12 MRR，并使 R@1 提升 0.83 个点。表中另列最终 FC 配置作为参照，其 MRR 达到 80.57。
 
-\begin{table}[t]
+\begin{table*}[t]
   \centering
   \small
-  \setlength{\tabcolsep}{4.0pt}
+  \setlength{\tabcolsep}{8.0pt}
   \begin{tabular}{lrrrrr}
     \toprule
     Candidate strategy & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
@@ -163,91 +141,44 @@ Table~\ref{tab:candidate_controls} isolates the effect of candidate selection un
     No refinement & 79.77 & 70.72 & 91.28 & 95.10 & -- \\
     Random        & 79.72 & 70.72 & 91.15 & 95.00 & -0.05 \\
     Static HN     & 79.67 & 70.65 & 91.05 & 94.88 & -0.10 \\
-    Retriever-mined FC & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
+    Retriever-mined FC (control) & 80.12 & 71.55 & 91.02 & 94.58 & +0.35 \\
+    \midrule
+    Retriever-mined FC (final) & \textbf{80.57} & \textbf{71.90} & \textbf{91.52} & \textbf{95.17} & \textbf{+0.80} \\
     \bottomrule
   \end{tabular}
-  \caption{Budget-matched comparison of candidate-selection strategies. Each refinement condition uses one additional unpaired candidate per training query and is evaluated using global retrieval only.}
+  \caption{Candidate-selection comparison under global retrieval. The first four rows form the budget-matched control with one additional unpaired candidate per training query; the final row reports the selected full configuration.}
+  % 中文表注：仅使用全局检索时的候选选择比较。前四行为每个训练查询增加一个未配对候选的预算一致对照；最后一行报告选定的完整配置。
   \label{tab:candidate_controls}
-\end{table}
+\end{table*}
 
-The budget-matched control also reveals a trade-off across retrieval cutoffs. Although FC improves MRR and R@1, it reduces R@10 by 0.52 points in the one-candidate setting. The gain from FC is therefore concentrated at the top of the ranked list and does not extend uniformly to deeper cutoffs. Under the final FC configuration, \method{}-Global reaches 80.57 MRR while recovering R@10 to 95.17.
-% 中文：预算一致的对照还揭示了不同检索截断位置之间的权衡。尽管 FC 提升了 MRR 和 R@1，但在单候选设置下，R@10 下降了 0.52 个点。因此，FC 的收益主要集中在排序列表顶部，并没有一致延伸到更深的截断位置。在最终 FC 配置下，\method{}-Global 达到 80.57 MRR，同时将 R@10 恢复到 95.17。
+The budget-matched control also reveals a cutoff-dependent trade-off: FC improves MRR and R@1 but reduces R@10 by 0.52 points. The selected full configuration recovers R@10 to 95.17 while preserving the top-rank gain. Section~\ref{sec:refinement_robustness} further examines the sensitivity of this configuration to the retained candidate depth.
+% 中文：预算一致的对照还揭示了依赖检索截断位置的权衡：FC 提高了 MRR 和 R@1，但使 R@10 下降 0.52 个点。选定的完整配置将 R@10 恢复到 95.17，同时保留了排序顶部的收益。第~\ref{sec:refinement_robustness} 节进一步分析该配置对保留候选深度的敏感性。
 
 \subsection{Separating Refinement and Reranking Effects}
 \label{sec:training_inference_control}
 
-Because the MaxSim reranker can be applied to either the initial or refined checkpoint, Table~\ref{tab:training_inference_control} presents a \(2\times2\) comparison that crosses the training configuration with the inference procedure. Within each inference condition, the initial and refined checkpoints are evaluated on identical data splits and retrieval corpora using the same scoring function. The same validation-only selection procedure is used for all reranking hyperparameters. For the pending UA-HN reranking condition, \(K\) and \(\alpha\) will therefore be selected on the validation data before test-set evaluation. Once complete, this comparison will quantify both the effect of refinement under global retrieval and the incremental effect of MaxSim reranking for each training configuration.
-% 中文：由于 MaxSim 重排器既可以应用于初始检查点，也可以应用于细化后的检查点，表~\ref{tab:training_inference_control} 给出了训练配置与推理方式交叉的 \(2\times2\) 比较。在每一种推理条件下，初始检查点与细化检查点均在完全相同的数据划分和检索语料库上，使用同一评分函数进行评测。所有重排超参数都采用相同的仅基于验证集的选择流程。因此，对于尚未完成的 UA-HN 重排条件，\(K\) 和 \(\alpha\) 将先在验证集上选择，再进行测试集评测。完成后，该比较将同时量化全局检索条件下的细化效应，以及各训练配置下 MaxSim 重排带来的增量效应。
+Because the MaxSim reranker can be applied to either the initial or refined checkpoint, Table~\ref{tab:training_inference_control} crosses the training configuration with the inference procedure. Within each inference condition, both checkpoints are evaluated on identical data splits and retrieval corpora using the same scoring function. Reranking hyperparameters are selected independently on validation data for each training configuration and then fixed for testing. The matched initial-retriever reranking row is reserved until this protocol is complete; it is necessary to distinguish gains from failure-candidate refinement from gains obtainable through generic top-\(K\) reranking alone.
+% 中文：由于 MaxSim 重排器既可以应用于初始检查点，也可以应用于细化后的检查点，表~\ref{tab:training_inference_control} 将训练配置与推理方式进行交叉比较。在每一种推理条件下，两个检查点均在完全相同的数据划分和检索语料库上，使用同一评分函数评测。对于每种训练配置，重排超参数都先在验证集上独立选择，再固定用于测试。协议一致的初始检索器重排行将在该流程完成后填写；这一对照对于区分失败候选细化的增益与通用前 \(K\) 重排本身可获得的增益是必要的。
 
 \begin{table*}[t]
   \centering
-  \scriptsize
-  \setlength{\tabcolsep}{4.2pt}
-  \begin{tabular}{llccrrrrrr}
+  \small
+  \setlength{\tabcolsep}{5.2pt}
+  \begin{tabular}{llrrrrl}
     \toprule
-    Training configuration & Inference & \(K\) & \(\alpha\) & MRR & R@1 & R@5 & R@10 & ms/query & Peak MiB \\
+    Training configuration & Inference & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR [95\% CI] \\
     \midrule
-    UA-HN & Global retrieval & -- & -- & 79.77 & 70.72 & 91.28 & 95.10 & \pending & \pending \\
-    UA-HN & MaxSim fusion & \pending & \pending & \pending & \pending & \pending & \pending & \pending & \pending \\
+    UA-HN & Global retrieval & 79.77 & 70.72 & 91.28 & 95.10 & -- \\
+    UA-HN & MaxSim fusion & \pending & \pending & \pending & \pending & \pending \\
     \midrule
-    Failure-candidate refinement & Global retrieval & -- & -- & 80.57 & 71.90 & 91.52 & 95.17 & \pending & \pending \\
-    Failure-candidate refinement & MaxSim fusion & 20 & 0.5 & 81.06 & 72.64 & 91.68 & 95.11 & 26.04 & 3,063 \\
+    Failure-candidate refinement & Global retrieval & 80.57 & 71.90 & 91.52 & 95.17 & +0.80 [0.66, 0.95] \\
+    Failure-candidate refinement & MaxSim fusion & 81.06 & 72.64 & 91.68 & 95.11 & +1.29 [1.11, 1.47] \\
     \bottomrule
   \end{tabular}
-  \caption{\(2\times2\) comparison of refinement training and inference-time reranking. Retrieval metrics are macro-averaged over the six languages; latency and peak GPU memory are measured on JavaScript. \pending{} denotes measurements reserved for the incomplete matched control.}
-  % 中文表注：该表交叉比较细化训练与推理阶段重排。效果指标为六语言宏平均；延迟和峰值显存在 JavaScript 上测量。\pending{} 表示尚未完成的协议一致对照所预留的测量位置。
+  \caption{\(2\times2\) comparison of refinement training and inference-time reranking. Retrieval metrics are macro-averaged over the six languages. Confidence intervals are obtained by stratified paired bootstrap over test queries relative to the locally evaluated UA-HN row. \pending{} denotes the incomplete matched reranking control.}
+  % 中文表注：该表交叉比较细化训练与推理阶段重排，效果指标为六语言宏平均。置信区间通过测试查询上的分层配对 bootstrap 获得，并以本地评测的 UA-HN 行为参照。\pending{} 表示尚未完成的协议一致重排对照。
   \label{tab:training_inference_control}
 \end{table*}
-
-\subsection{Sensitivity to Refinement Hyperparameters}
-\label{sec:refinement_sensitivity}
-
-The two training-side hyperparameters most directly tied to the proposed refinement mechanism are the failure-candidate loss weight \(\lambda_f\) and the retained candidate-pool size \(m\). We vary one factor at a time on JavaScript using \(\lambda_f\in\{0.25,0.35,0.45,0.55,0.65\}\) and \(m\in\{2,4,8,16,32\}\), while keeping the final refinement protocol unchanged. Figure~\ref{fig:refinement_sensitivity} will report global-retrieval MRR so that inference-time reranking does not confound the training-side comparison. The default configuration is \(\lambda_f=0.45\) and \(m=8\). We do not treat the cache depth \(M=32\) as a separate sensitivity variable because it only bounds the stored pool when \(m\leq M\); the per-update candidate budget remains fixed at \(r=1\). The FC temperature is tied to the initial contrastive temperature at 0.03 rather than tuned independently.
-% 中文：与本文细化机制最直接相关的两个训练侧超参数是失败候选损失权重 \(\lambda_f\) 和保留候选池大小 \(m\)。我们在 JavaScript 上采用单因素变化方式，分别考察 \(\lambda_f\in\{0.25,0.35,0.45,0.55,0.65\}\) 与 \(m\in\{2,4,8,16,32\}\)，同时保持最终细化协议不变。图~\ref{fig:refinement_sensitivity} 将报告仅使用全局检索时的 MRR，从而避免推理阶段重排干扰训练侧比较。默认配置为 \(\lambda_f=0.45\)、\(m=8\)。我们不把缓存深度 \(M=32\) 作为单独的敏感性变量，因为当 \(m\leq M\) 时，它只限制缓存中保存的候选池大小；每次更新使用的候选预算固定为 \(r=1\)。FC 温度直接设为与初始对比学习温度相同的 0.03，而不进行独立调参。
-
-\begin{figure*}[t]
-  \centering
-  % Replace the empty panels with audited JavaScript results from the final
-  % no-auxiliary-loss protocol. Do not reuse the legacy K=50/LI artifacts.
-  \begin{tikzpicture}
-    \begin{groupplot}[
-      group style={group size=2 by 1, horizontal sep=1.4cm},
-      width=0.43\textwidth,
-      height=0.22\textwidth,
-      grid=major,
-      tick label style={font=\scriptsize},
-      label style={font=\small},
-      title style={font=\small},
-      ylabel={Global MRR (\%)},
-      ymin=0,
-      ymax=1,
-      ytick=\empty
-    ]
-      \nextgroupplot[
-        title={(a) Failure-candidate weight},
-        xlabel={\(\lambda_f\)},
-        xmin=0.2,
-        xmax=0.7,
-        xtick={0.25,0.35,0.45,0.55,0.65}
-      ]
-      \node[font=\small, text=gray] at (rel axis cs:0.5,0.55) {Audited results pending};
-      \draw[dashed] (axis cs:0.45,0) -- (axis cs:0.45,1);
-
-      \nextgroupplot[
-        title={(b) Retained candidate depth},
-        xlabel={\(m\)},
-        xmin=0,
-        xmax=34,
-        xtick={2,4,8,16,32}
-      ]
-      \node[font=\small, text=gray] at (rel axis cs:0.5,0.55) {Audited results pending};
-      \draw[dashed] (axis cs:8,0) -- (axis cs:8,1);
-    \end{groupplot}
-  \end{tikzpicture}
-  \caption{Planned sensitivity analysis of the two method-specific training hyperparameters on JavaScript. Each panel varies one hyperparameter while holding the other settings fixed; dashed lines mark the default values. Result curves will be added after the final-protocol runs pass provenance checks.}
-  % 中文表注：计划在 JavaScript 上分析两个方法特有训练超参数的敏感性。每个子图只改变一个超参数，其余设置保持不变；虚线表示默认取值。最终协议下的运行通过来源核验后再填入结果曲线。
-  \label{fig:refinement_sensitivity}
-\end{figure*}
 
 \subsection{Rank-Conditioned Retrieval Behavior}
 \label{sec:rank_analysis}
@@ -276,83 +207,81 @@ We partition all 52,561 test queries according to the rank of the gold code snip
 The transition counts reveal behavior that is obscured by aggregate MRR. Compared with the initial retriever, \method{}-Rerank improves the rank of the gold code for 7,121 queries and worsens it for 5,741 queries. It moves the gold code to rank 1 for 2,644 queries for which it was not initially top-ranked, but demotes the gold code for 1,624 queries that were initially correct at rank 1. Accordingly, MRR decreases by 2.47 points within the initial-rank-1 stratum. The overall improvement therefore reflects substantial corrections on initially misranked queries, partially offset by regressions on some initially correct rankings. A confidence-aware gating mechanism could potentially mitigate these regressions.
 % 中文：排名转移计数揭示了总体 MRR 所掩盖的行为。与初始检索器相比，\method{}-Rerank 使 7,121 个查询的正确代码排名上升，同时使 5,741 个查询的排名下降。对于 2,644 个正确代码原本不在首位的查询，它将正确代码提升至第 1 位；但对于 1,624 个正确代码原本位于第 1 位的查询，它也使正确代码发生后移。因此，在初始排名为 1 的分组中，MRR 下降了 2.47 个点。总体提升由对初始错误排序查询的大幅修复构成，但部分收益被一些初始正确排序上的回退所抵消。未来可探索置信度感知的门控机制以缓解这些回退。
 
-\subsection{Semantic Profile of Retriever-Mined Candidates}
-\label{sec:candidate_annotation}
+\subsection{Refinement Robustness and Transferability}
+\label{sec:refinement_robustness}
 
-An unpaired candidate is not necessarily semantically irrelevant because CodeSearchNet provides only one gold code snippet per query. We therefore design a human evaluation involving two independent annotators. The annotation scheme distinguishes valid alternative implementations, semantically related but functionally different code, local semantic mismatches, irrelevant candidates, and uncertain cases. Table~\ref{tab:candidate_annotation} will report the category distribution, statistics for initial ranks and rank changes, and inter-annotator agreement measured by Cohen's \(\kappa\). Until this analysis is complete, we refer to these examples as unpaired candidates without assuming that they are semantically incorrect.
-% 中文：未配对候选并不一定在语义上无关，因为 CodeSearchNet 每个查询只提供一个正确代码片段。因此，我们设计了由两名独立标注者参与的人工评测。标注方案将候选区分为有效替代实现、语义相关但功能不同的代码、局部语义不匹配、无关候选和不确定样本。表~\ref{tab:candidate_annotation} 将报告类别分布、初始排名与排名变化的统计信息，以及由 Cohen's \(\kappa\) 衡量的标注者间一致性。在该分析完成之前，我们将这些样本称为未配对候选，而不假定它们在语义上一定错误。
+Figure~\ref{fig:refinement_robustness} jointly examines robustness to the two training-side choices most directly tied to failure-candidate refinement and transfer across encoder backbones. Panels~(a) and~(b) vary the failure-candidate loss weight \(\lambda_f\) and retained candidate depth \(m\), respectively, on JavaScript while holding the remaining protocol fixed; global-retrieval MRR is used to avoid confounding the training-side comparison with reranking. Panel~(c) reports within-backbone MRR changes for CoCoSoDa, UniXcoder, and GraphCodeBERT. Expressing transfer as a matched change avoids conflating compatibility with differences in the encoders' absolute performance.
+% 中文：图~\ref{fig:refinement_robustness} 联合考察失败候选细化对两个最直接相关训练设置的稳健性，以及其在不同编码器骨干之间的迁移能力。子图 (a) 和 (b) 分别在 JavaScript 上改变失败候选损失权重 \(\lambda_f\) 与保留候选深度 \(m\)，同时固定其余实验协议；为避免推理阶段重排干扰训练侧比较，指标采用全局检索 MRR。子图 (c) 报告 CoCoSoDa、UniXcoder 和 GraphCodeBERT 各自相对于协议一致初始检索器的 MRR 变化。采用骨干内部的配对差值可以避免把方法兼容性与编码器绝对性能差异混为一谈。
 
-\begin{table*}[t]
+\begin{figure*}[t]
   \centering
-  \small
-  \setlength{\tabcolsep}{7pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    Annotation category & Count & Share (\%) & Mean initial rank & Mean rank change \\
-    \midrule
-    Valid alternative implementation & \pending & \pending & \pending & \pending \\
-    Semantically related but functionally different & \pending & \pending & \pending & \pending \\
-    Local semantic mismatch & \pending & \pending & \pending & \pending \\
-    Irrelevant candidate & \pending & \pending & \pending & \pending \\
-    Uncertain & \pending & \pending & \pending & \pending \\
-    \midrule
-    Total & \pending & 100.0 & -- & -- \\
-    Cohen's \(\kappa\) & \pending & -- & -- & -- \\
-    \bottomrule
-  \end{tabular}
-  \caption{Planned human evaluation of retriever-mined candidates by two independent annotators. Result cells are reserved until annotation and adjudication are complete.}
-  % 中文表注：计划由两名独立标注者对检索器挖掘候选开展人工评测。结果单元格将在标注和分歧裁决完成后填写。
-  \label{tab:candidate_annotation}
-\end{table*}
+  % Replace all placeholders with audited results from the final protocol.
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      group style={group size=3 by 1, horizontal sep=0.9cm},
+      width=0.295\textwidth,
+      height=0.23\textwidth,
+      grid=major,
+      tick label style={font=\scriptsize},
+      label style={font=\scriptsize},
+      title style={font=\small}
+    ]
+      \nextgroupplot[
+        title={(a) FC loss weight},
+        xlabel={\(\lambda_f\)},
+        ylabel={Global MRR (\%)},
+        xmin=0.2,
+        xmax=0.7,
+        ymin=0,
+        ymax=1,
+        xtick={0.25,0.35,0.45,0.55,0.65},
+        ytick=\empty
+      ]
+      \node[font=\scriptsize, text=gray] at (rel axis cs:0.5,0.55) {Results pending};
+      \draw[dashed] (axis cs:0.45,0) -- (axis cs:0.45,1);
 
-\subsection{Statistical Reliability}
-\label{sec:bootstrap}
+      \nextgroupplot[
+        title={(b) Candidate depth},
+        xlabel={Retained depth \(m\)},
+        ylabel={Global MRR (\%)},
+        xmin=0,
+        xmax=34,
+        ymin=0,
+        ymax=1,
+        xtick={2,4,8,16,32},
+        ytick=\empty
+      ]
+      \node[font=\scriptsize, text=gray] at (rel axis cs:0.5,0.55) {Results pending};
+      \draw[dashed] (axis cs:8,0) -- (axis cs:8,1);
 
-Table~\ref{tab:bootstrap} reports 95\% confidence intervals for paired MRR differences relative to the initial retriever. For \method{}-Rerank, the macro-averaged improvement is 1.29 points, with a 95\% confidence interval of \([1.11,1.47]\). The interval excludes zero for every programming language. Because the resampling preserves query-level pairing, these intervals quantify uncertainty due to the finite evaluation sample; they do not establish robustness across independent training runs.
-% 中文：表~\ref{tab:bootstrap} 给出了相对于初始检索器的配对 MRR 差值及其 95\% 置信区间。\method{}-Rerank 的宏平均提升为 1.29 个点，95\% 置信区间为 \([1.11,1.47]\)，且每种编程语言对应的区间均不包含零。由于重采样保留了查询级配对关系，这些区间衡量的是有限评测样本带来的不确定性，不能证明不同独立训练运行之间的稳健性。
+      \nextgroupplot[
+        title={(c) Encoder transfer},
+        ybar,
+        bar width=6pt,
+        ylabel={\(\Delta\) macro MRR},
+        symbolic x coords={CoCoSoDa,UniXcoder,GraphCodeBERT},
+        xtick={CoCoSoDa,UniXcoder,GraphCodeBERT},
+        x tick label style={font=\tiny,rotate=20,anchor=east},
+        ymin=-0.5,
+        ymax=2.0,
+        ytick=\empty
+      ]
+      \node[font=\scriptsize, text=gray] at (rel axis cs:0.5,0.55) {Results pending};
+    \end{groupplot}
+  \end{tikzpicture}
+  \caption{Sensitivity and transferability of failure-candidate refinement. Panels (a) and (b) vary one method-specific training hyperparameter at a time on JavaScript; dashed lines mark the default values \(\lambda_f=0.45\) and \(m=8\). Panel (c) will report the absolute MRR-point changes of \method{}-Global and \method{}-Rerank relative to the matched initial retriever for each encoder backbone.}
+  % 中文图注：失败候选细化的敏感性与迁移能力。子图 (a) 和 (b) 在 JavaScript 上每次只改变一个方法特有训练超参数；虚线表示默认值 \(\lambda_f=0.45\) 和 \(m=8\)。子图 (c) 将报告每个编码器骨干下 \method{}-Global 和 \method{}-Rerank 相对于协议一致初始检索器的绝对 MRR 点数变化。
+  \label{fig:refinement_robustness}
+\end{figure*}
 
-\begin{table}[t]
-  \centering
-  \scriptsize
-  \setlength{\tabcolsep}{2.5pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    Language & Initial & Global \(\Delta\) [95\% CI] & Rerank & Rerank \(\Delta\) [95\% CI] \\
-    \midrule
-    Java & 77.20 & +0.94 [0.68, 1.19] & 78.57 & +1.37 [1.07, 1.66] \\
-    JavaScript & 77.72 & +0.64 [0.20, 1.08] & 78.95 & +1.23 [0.68, 1.78] \\
-    Ruby & 82.16 & +0.68 [0.12, 1.26] & 83.51 & +1.35 [0.64, 2.10] \\
-    Python & 77.17 & +0.78 [0.51, 1.05] & 78.30 & +1.13 [0.82, 1.44] \\
-    PHP & 71.91 & +1.20 [0.90, 1.50] & 73.58 & +1.68 [1.36, 1.99] \\
-    Go & 92.43 & +0.60 [0.39, 0.80] & 93.41 & +0.98 [0.76, 1.20] \\
-    \midrule
-    Macro & 79.77 & +0.80 [0.66, 0.95] & 81.06 & +1.29 [1.11, 1.47] \\
-    \bottomrule
-  \end{tabular}
-  \caption{MRR scores and paired bootstrap differences relative to the initial retriever. Confidence intervals quantify query-sampling uncertainty for the fixed checkpoints trained with seed 123456.}
-  \label{tab:bootstrap}
-\end{table}
+\subsection{Additional Reliability and Semantic Analyses}
+\label{sec:additional_analyses}
 
-Query-level resampling does not capture variation introduced by retraining. We therefore reserve a matched three-seed comparison in Table~\ref{tab:seed_stability}. For each seed, the initial retriever, global refinement, and reranked system will share the same data, candidate-generation procedure, and evaluation pipeline. The table will report both the individual macro-averaged MRR values and the across-seed mean and standard deviation; no training-seed stability claim will be made until these runs are complete.
-% 中文：查询级重采样不能反映重新训练带来的变化。因此，我们在表~\ref{tab:seed_stability} 中预留了三个配对随机种子的比较。对于每个种子，初始检索器、全局细化系统和重排系统将共享相同的数据、候选生成流程与评测流程。该表将同时报告各随机种子的宏平均 MRR，以及跨种子的均值和标准差；在这些运行完成前，本文不会声称训练随机种子层面的稳定性。
+The paired bootstrap results in Table~\ref{tab:bootstrap} provide a complementary estimate of evaluation uncertainty. Relative to the fixed initial-retriever checkpoint, \method{}-Global improves macro-averaged MRR by 0.80 points with a 95\% confidence interval of \([0.66,0.95]\), while \method{}-Rerank improves it by 1.29 points with an interval of \([1.11,1.47]\). The per-language intervals are reported in the appendix because they elaborate, rather than replace, the matched aggregate comparison in Table~\ref{tab:training_inference_control}.
+% 中文：表~\ref{tab:bootstrap} 中的配对 bootstrap 结果为评测不确定性提供了补充估计。相对于固定的初始检索器检查点，\method{}-Global 的宏平均 MRR 提升 0.80 个点，95\% 置信区间为 \([0.66,0.95]\)；\method{}-Rerank 提升 1.29 个点，区间为 \([1.11,1.47]\)。逐语言区间放在附录中，因为它们是对表~\ref{tab:training_inference_control} 中协议一致总体比较的展开，而不是对该比较的替代。
 
-\begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{3.6pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    System & 123456 & 2027 & 2028 & Mean \(\pm\) SD \\
-    \midrule
-    Initial retriever & 79.77 & \pending & \pending & \pending \\
-    \method{}-Global & 80.57 & \pending & \pending & \pending \\
-    \method{}-Rerank & 81.06 & \pending & \pending & \pending \\
-    \bottomrule
-  \end{tabular}
-  \caption{Planned matched-seed reliability analysis using six-language macro-averaged MRR. All systems within a seed are evaluated under the same local protocol.}
-  % 中文表注：计划开展的配对随机种子可靠性分析，指标为六语言宏平均 MRR。同一种子内的所有系统均采用相同的本地协议进行评测。
-  \label{tab:seed_stability}
-\end{table}
+CodeSearchNet supplies one paired code snippet per query, so a high-ranked unpaired candidate need not be semantically irrelevant. Appendix Table~\ref{tab:candidate_annotation} therefore reserves a two-annotator analysis that separates valid alternatives, related but functionally different code, local semantic mismatches, irrelevant candidates, and uncertain cases, together with Cohen's \(\kappa\). Until adjudication is complete, we use the label \emph{unpaired candidate} without assuming semantic incorrectness. Appendix Table~\ref{tab:seed_stability} separately reserves the matched three-seed results needed to quantify retraining variability.
+% 中文：CodeSearchNet 每个查询只提供一个配对代码片段，因此高排名未配对候选不一定在语义上无关。附录表~\ref{tab:candidate_annotation} 预留了由两名标注者开展的分析，将样本区分为有效替代实现、语义相关但功能不同的代码、局部语义不匹配、无关候选和不确定样本，并报告 Cohen's \(\kappa\)。在分歧裁决完成前，我们使用“未配对候选”这一称谓，而不假定其语义一定错误。附录表~\ref{tab:seed_stability} 则另行预留协议一致的三个随机种子结果，用于衡量重新训练带来的变异。
 
 \subsection{Reranking Hyperparameters and Efficiency}
 \label{sec:efficiency}
@@ -424,53 +353,125 @@ The latency measurement therefore reflects the complete inference path rather th
 The final efficiency report will additionally include the one-time GPU-hours required for FC mining and refinement. These offline costs are kept separate from per-query inference latency because they affect model preparation rather than deployment-time throughput.
 % 中文：最终效率报告还将补充 FC 挖掘和细化训练所需的一次性 GPU 小时。由于这些离线成本影响的是模型准备过程，而不是部署阶段的查询吞吐量，因此将其与每查询推理延迟分开报告。
 
-\subsection{Transfer Across Encoder Backbones}
-\label{sec:backbone_transfer}
-
-To assess transfer across encoder architectures, we apply the same refinement objective to CoCoSoDa, UniXcoder, and GraphCodeBERT while keeping the training recipe and the primary validation-selected reranking configuration fixed. Figure~\ref{fig:backbone_transfer} reports the change in six-language macro-averaged MRR relative to the matched locally evaluated initial retriever for each backbone. Expressing transfer as a within-backbone difference avoids conflating compatibility with the substantially different absolute performance levels of the encoders. Only runs that pass checkpoint-provenance, candidate-cache, and evaluation-configuration checks will be included.
-% 中文：为考察方法在不同编码器架构之间的迁移能力，我们将相同的细化目标应用于 CoCoSoDa、UniXcoder 和 GraphCodeBERT，同时固定训练流程以及在主要验证实验中选定的重排配置。图~\ref{fig:backbone_transfer} 报告每种骨干相对于协议一致本地初始检索器的六语言宏平均 MRR 变化。采用骨干内部差值可以避免把方法兼容性与不同编码器本身差异较大的绝对性能混为一谈。只有通过检查点来源、候选缓存和评测配置核验的运行才会纳入图中。
-
-\begin{figure*}[t]
-  \centering
-  % Replace the placeholder with audited absolute MRR-point gains. The two
-  % bars for each backbone should be ReFCode-Global and ReFCode-Rerank gains
-  % over that backbone's locally evaluated initial retriever.
-  \begin{tikzpicture}
-    \begin{axis}[
-      width=0.88\textwidth,
-      height=0.28\textwidth,
-      ybar,
-      bar width=16pt,
-      ylabel={\(\Delta\) macro MRR (points)},
-      symbolic x coords={CoCoSoDa,UniXcoder,GraphCodeBERT},
-      xtick={CoCoSoDa,UniXcoder,GraphCodeBERT},
-      ymin=-0.5,
-      ymax=2.0,
-      grid=major,
-      tick label style={font=\small},
-      label style={font=\small},
-      legend style={at={(0.5,-0.20)}, anchor=north, legend columns=2, draw=none, font=\small}
-    ]
-      \addlegendimage{ybar,fill=gray!35,draw=black}
-      \addlegendentry{\method{}-Global}
-      \addlegendimage{ybar,fill=gray!75,draw=black}
-      \addlegendentry{\method{}-Rerank}
-      \node[font=\small, text=gray] at (rel axis cs:0.5,0.55) {Audited transfer results pending};
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Planned transfer evaluation across encoder backbones. Each bar will show the absolute MRR-point change relative to the matched locally evaluated initial retriever for the same backbone; reported values from the corresponding encoder papers are not mixed into this controlled comparison.}
-  % 中文表注：计划开展的跨编码器骨干迁移评测。每个柱形将表示相对于同一骨干下协议一致本地初始检索器的绝对 MRR 点数变化；相应编码器论文中报告的数值不与该受控比较混合。
-  \label{fig:backbone_transfer}
-\end{figure*}
-
-This experiment evaluates compatibility rather than a new ranking among backbone models. Accordingly, transfer claims will be based on the direction and consistency of the within-backbone gains, not on cross-backbone differences in absolute MRR.
-% 中文：该实验评估的是方法兼容性，而不是重新比较不同骨干模型的性能排名。因此，迁移结论将依据各骨干内部增益的方向与一致性，而不是不同骨干绝对 MRR 之间的差异。
-
 \section*{Limitations}
 
 Our evidence is currently limited to CodeSearchNet, a single audited training seed, and one fully evaluated primary encoder configuration. The paired bootstrap intervals capture query-sampling uncertainty but not variation across independent training runs. Until the matched UA-HN+MaxSim control is complete, evidence specific to the refinement stage comes from the comparison under global retrieval; the final reranked score represents the performance of the combined refinement-and-reranking system. Moreover, CodeSearchNet provides only one gold code snippet per query. Some high-ranked unpaired candidates may therefore constitute valid alternative implementations, and their prevalence cannot be estimated until the planned annotation study is complete. Finally, although the reranker introduces no additional trainable parameters, it incurs additional inference latency, and the pending transfer experiments do not yet establish robustness across encoder architectures.
 % 中文：当前证据仅覆盖 CodeSearchNet、一个经过审计的训练随机种子，以及一种已完成全部评测的主要编码器配置。配对 bootstrap 区间能够刻画查询采样带来的不确定性，但不能反映独立训练运行之间的变化。在协议一致的 UA-HN+MaxSim 对照完成之前，细化阶段本身的证据来自全局检索条件下的比较；最终重排分数代表细化与重排组合系统的整体性能。此外，CodeSearchNet 每个查询只提供一个正确代码片段。因此，部分高排名未配对候选可能是有效的替代实现，在计划中的人工标注研究完成前无法估计其占比。最后，尽管重排器不引入额外的可训练参数，但它会增加推理延迟；尚未完成的迁移实验也还不能证明该方法在不同编码器架构上的稳健性。
 
 \bibliography{custom}
+
+\appendix
+
+\section{Dataset and Reproducibility Details}
+\label{app:experimental_details}
+
+Table~\ref{tab:dataset_stats} reports the fixed CodeSearchNet splits used throughout the experiments. The codebase column denotes the language-specific corpus against which every validation or test query is ranked.
+% 中文：表~\ref{tab:dataset_stats} 给出了全部实验采用的固定 CodeSearchNet 数据划分。Codebase 列表示每个验证或测试查询执行排序时所使用的对应语言检索语料库。
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4.2pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Language & Train & Valid & Test & Codebase \\
+    \midrule
+    Java       & 164,923 & 5,183  & 10,955 & 40,347 \\
+    JavaScript & 58,025  & 3,885  & 3,291  & 13,981 \\
+    Ruby       & 24,927  & 1,400  & 1,261  & 4,360 \\
+    Python     & 251,820 & 13,914 & 14,918 & 43,827 \\
+    PHP        & 241,241 & 12,982 & 14,014 & 52,660 \\
+    Go         & 167,288 & 7,325  & 8,122  & 28,120 \\
+    \midrule
+    Total      & 908,224 & 44,689 & 52,561 & 183,295 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Statistics of the CodeSearchNet splits. Codebase denotes the size of the language-specific retrieval corpus used for validation and testing.}
+  % 中文表注：CodeSearchNet 数据划分统计。Codebase 表示验证和测试时使用的对应语言检索语料库规模。
+  \label{tab:dataset_stats}
+\end{table}
+
+\paragraph{Pipeline audit.}
+We verify data-split isolation, candidate-cache validity, checkpoint provenance, validation-only model selection, and test-set evaluation configurations before admitting a local result. There is no exact overlap in URLs, repositories, or normalized code across the training, validation, and test partitions, and the paired code is present in the retrieval corpus for every validation and test query. Each FC cache contains 32 unique candidates with valid training-corpus indices and excludes both the paired example and candidates sharing its URL. Reconstructing model selection from the stored validation results independently yields the same reranking configuration, \(K=20\) and \(\alpha=0.5\).
+% 中文：在纳入本地结果前，我们核验数据划分隔离、候选缓存有效性、检查点来源、仅基于验证集的模型选择，以及测试集评测配置。训练集、验证集和测试集之间不存在 URL、代码仓库或规范化代码的精确重叠；每个验证和测试查询的配对代码都存在于检索语料库中。每个 FC 缓存包含 32 个唯一且训练语料库索引有效的候选，并排除配对样本以及与其 URL 相同的候选。根据保存的验证集结果独立重建模型选择过程后，得到相同的重排配置，即 \(K=20\)、\(\alpha=0.5\)。
+
+\section{Semantic Profile of Retriever-Mined Candidates}
+\label{app:candidate_annotation}
+
+An unpaired candidate is not necessarily semantically irrelevant because CodeSearchNet supplies only one paired code snippet per query. We therefore reserve a human evaluation involving two independent annotators. The scheme distinguishes valid alternative implementations, semantically related but functionally different code, local semantic mismatches, irrelevant candidates, and uncertain cases. Table~\ref{tab:candidate_annotation} will report the category distribution, initial-rank and rank-change statistics, and inter-annotator agreement measured by Cohen's \(\kappa\).
+% 中文：由于 CodeSearchNet 每个查询只提供一个配对代码片段，未配对候选不一定在语义上无关。因此，我们预留了由两名独立标注者参与的人工评测。标注方案区分有效替代实现、语义相关但功能不同的代码、局部语义不匹配、无关候选和不确定样本。表~\ref{tab:candidate_annotation} 将报告类别分布、初始排名与排名变化统计，以及由 Cohen's \(\kappa\) 衡量的标注者间一致性。
+
+\begin{table*}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{7pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Annotation category & Count & Share (\%) & Mean initial rank & Mean rank change \\
+    \midrule
+    Valid alternative implementation & \pending & \pending & \pending & \pending \\
+    Semantically related but functionally different & \pending & \pending & \pending & \pending \\
+    Local semantic mismatch & \pending & \pending & \pending & \pending \\
+    Irrelevant candidate & \pending & \pending & \pending & \pending \\
+    Uncertain & \pending & \pending & \pending & \pending \\
+    \midrule
+    Total & \pending & 100.0 & -- & -- \\
+    Cohen's \(\kappa\) & \pending & -- & -- & -- \\
+    \bottomrule
+  \end{tabular}
+  \caption{Planned human evaluation of retriever-mined candidates by two independent annotators. Result cells are reserved until annotation and adjudication are complete.}
+  % 中文表注：计划由两名独立标注者对检索器挖掘候选开展人工评测。结果单元格将在标注和分歧裁决完成后填写。
+  \label{tab:candidate_annotation}
+\end{table*}
+
+\section{Statistical Reliability}
+\label{app:statistical_reliability}
+
+Table~\ref{tab:bootstrap} expands the aggregate intervals in Table~\ref{tab:training_inference_control} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs.
+% 中文：表~\ref{tab:bootstrap} 按编程语言展开表~\ref{tab:training_inference_control} 中的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。
+
+\begin{table}[t]
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{2.5pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Language & Initial & Global \(\Delta\) [95\% CI] & Rerank & Rerank \(\Delta\) [95\% CI] \\
+    \midrule
+    Java & 77.20 & +0.94 [0.68, 1.19] & 78.57 & +1.37 [1.07, 1.66] \\
+    JavaScript & 77.72 & +0.64 [0.20, 1.08] & 78.95 & +1.23 [0.68, 1.78] \\
+    Ruby & 82.16 & +0.68 [0.12, 1.26] & 83.51 & +1.35 [0.64, 2.10] \\
+    Python & 77.17 & +0.78 [0.51, 1.05] & 78.30 & +1.13 [0.82, 1.44] \\
+    PHP & 71.91 & +1.20 [0.90, 1.50] & 73.58 & +1.68 [1.36, 1.99] \\
+    Go & 92.43 & +0.60 [0.39, 0.80] & 93.41 & +0.98 [0.76, 1.20] \\
+    \midrule
+    Macro & 79.77 & +0.80 [0.66, 0.95] & 81.06 & +1.29 [1.11, 1.47] \\
+    \bottomrule
+  \end{tabular}
+  \caption{MRR scores and paired bootstrap differences relative to the initial retriever. Confidence intervals quantify query-sampling uncertainty for the fixed checkpoints trained with seed 123456.}
+  % 中文表注：相对于初始检索器的 MRR 与配对 bootstrap 差值。置信区间衡量使用随机种子 123456 训练的固定检查点上的查询采样不确定性。
+  \label{tab:bootstrap}
+\end{table}
+
+Query-level resampling does not capture variation introduced by retraining. Table~\ref{tab:seed_stability} therefore reserves a matched three-seed comparison in which the initial retriever, global refinement, and reranked system share the same data, candidate-generation procedure, and evaluation pipeline within each seed. No training-seed stability claim will be made until these runs are complete.
+% 中文：查询级重采样不能反映重新训练带来的变化。因此，表~\ref{tab:seed_stability} 预留了三个配对随机种子的比较；同一种子内，初始检索器、全局细化系统和重排系统共享相同的数据、候选生成流程与评测流程。在这些运行完成前，本文不会声称训练随机种子层面的稳定性。
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{3.6pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    System & 123456 & 2027 & 2028 & Mean \(\pm\) SD \\
+    \midrule
+    Initial retriever & 79.77 & \pending & \pending & \pending \\
+    \method{}-Global & 80.57 & \pending & \pending & \pending \\
+    \method{}-Rerank & 81.06 & \pending & \pending & \pending \\
+    \bottomrule
+  \end{tabular}
+  \caption{Planned matched-seed reliability analysis using six-language macro-averaged MRR. All systems within a seed are evaluated under the same local protocol.}
+  % 中文表注：计划开展的配对随机种子可靠性分析，指标为六语言宏平均 MRR。同一种子内的所有系统均采用相同的本地协议进行评测。
+  \label{tab:seed_stability}
+\end{table}
 
 \end{document}
