@@ -152,8 +152,8 @@ Only candidates inside the top-\(K\) set are reordered; all remaining corpus ite
 \section{Experiments}
 \label{sec:experiments}
 
-We evaluate \method{} along three complementary dimensions. First, we benchmark its retrieval effectiveness against representative code-search systems and the matched initial retriever, and examine its transfer across encoder architectures. Second, budget-matched candidate-selection controls and a \(2\times2\) training--inference comparison disentangle the gains attributable to retriever-mined candidates from those due to continued optimization or generic top-\(K\) reranking. Third, paired bootstrap confidence intervals, analyses stratified by initial rank, and latency and peak-memory measurements characterize query-sampling uncertainty, ranking behavior, and computational overhead.
-% 中文：我们从三个相互补充的维度评估 \method{}。首先，将其检索效果与具有代表性的代码搜索系统及协议一致的初始检索器进行比较，并考察其在不同编码器架构之间的迁移能力。其次，通过预算一致的候选选择对照以及 \(2\times2\) 训练—推理比较，区分检索器挖掘候选带来的收益、继续优化产生的影响以及通用前 \(K\) 重排的增益。最后，结合配对 bootstrap 置信区间、按初始排名分层的分析以及延迟和峰值显存测量，刻画查询采样不确定性、排序行为和计算开销。
+Our evaluation first establishes retrieval effectiveness under a matched six-language protocol. We then isolate the contributions of failure-calibrated refinement, candidate selection, and MaxSim reranking, before examining where ranking changes occur, whether the pipeline can be instantiated with different encoder architectures, and how top-\(K\) reranking trades effectiveness for inference cost. Paired bootstrap intervals complement these analyses by quantifying query-sampling uncertainty for the fixed checkpoints.
+% 中文：我们的评测首先在协议一致的六语言设置下验证总体检索效果；随后分别考察失败校准细化、候选选择和 MaxSim 重排的贡献，并进一步分析排名变化发生的位置、完整流程能否在不同编码器架构上实例化，以及前 \(K\) 重排在检索效果与推理开销之间的权衡。配对 bootstrap 区间则用于补充衡量固定检查点上的查询采样不确定性。
 
 \subsection{Experimental Setup}
 \label{sec:experimental_setup}
@@ -186,18 +186,18 @@ We conduct experiments on the standard six-language CodeSearchNet benchmark~\cit
 \end{table}
 
 \paragraph{Implementation and controlled comparisons.}
-Our primary experiments use CoCoSoDa~\citep{CoCoSoDa} as the encoder and adopt the training configuration of UA-HN~\citep{AAAIUA}. The initial retriever, \method{}-Global, and \method{}-Rerank are evaluated on identical data splits and retrieval corpora using the same metric implementation. In the candidate-selection controls, we fix the refinement schedule and the number of additional candidates per query, and vary only the selection strategy: a randomly sampled unpaired code snippet (Random), a fixed pre-mined hard negative (Static HN), or a high-ranked unpaired candidate mined by the frozen initial retriever (failure candidate; FC). Under the same candidate budget, this controlled design isolates the effect of candidate selection from that of additional optimization.
-% 中文：主要实验采用 CoCoSoDa~\citep{CoCoSoDa} 作为编码器，并沿用 UA-HN~\citep{AAAIUA} 的训练配置。初始检索器、\method{}-Global 和 \method{}-Rerank 均在完全相同的数据划分和检索语料库上，使用同一套指标实现进行评测。在候选选择对照中，我们固定细化训练日程以及每个查询新增候选的数量，仅改变选择策略：随机采样的未配对代码片段（Random）、固定的预挖掘困难负例（Static HN），或由冻结初始检索器挖掘的高排名未配对候选（失败候选；FC）。这一受控设计在相同候选预算下，将候选选择的作用与额外优化的影响区分开来。
+The primary setting uses a CoCoSoDa encoder~\citep{CoCoSoDa} and the UA-HN training configuration~\citep{AAAIUA} for the initial retriever. The initial retriever, \method{}-Global, and \method{}-Rerank are evaluated on identical data splits and retrieval corpora with the same metric implementation. In the candidate-selection comparison, we hold the initialization, three-epoch refinement schedule, and one-candidate-per-query budget fixed, and vary only whether the added candidate is random, statically pre-mined, or harvested from the frozen retriever's high-ranked results. This design separates the effect of model-conditioned candidate selection from that of additional optimization.
+% 中文：主要设置使用 CoCoSoDa 编码器~\citep{CoCoSoDa}，并采用 UA-HN~\citep{AAAIUA} 的训练配置构建初始检索器。初始检索器、\method{}-Global 和 \method{}-Rerank 均在相同的数据划分与检索语料库上使用同一指标实现进行评测。在候选选择比较中，我们固定初始化方式、三轮细化日程以及每查询一个附加候选的预算，仅改变新增候选是随机采样、静态预挖掘，还是从冻结检索器的高排名结果中获得。该设计将模型条件化候选选择的作用与额外优化的作用区分开来。
 
 \paragraph{Training and model selection.}
 We train the initial retriever for 10 epochs with a batch size of 128, a learning rate of \(8\times10^{-6}\), and a contrastive temperature of 0.03. To construct the FC pool, we freeze the validation-selected checkpoint and perform retrieval over the training corpus. After removing the paired code snippet and any candidate that shares its URL, we retain the 32 highest-ranked candidates (\(M=32\)). During refinement, we restrict this pool to the top eight candidates (\(m=8\)) and sample one candidate per query at each update (\(r=1\)). We train the refinement stage for three epochs with a batch size of 128, a learning rate of \(5\times10^{-6}\), an FC loss weight of 0.45, and an FC temperature of 0.03. The refinement objective operates exclusively on global query--code representations; neither CTRD nor a token-level local-interaction loss is used during training.
 % 中文：初始检索器训练 10 个 epoch，批量大小为 128，学习率为 \(8\times10^{-6}\)，对比学习温度为 0.03。构造 FC 候选池时，我们冻结由验证集选定的检查点，并在训练语料库上执行检索。移除配对代码片段以及与其 URL 相同的所有候选后，保留排名最高的 32 个候选（\(M=32\)）。细化阶段将候选池限制为前 8 个候选（\(m=8\)），并在每次更新时为每个查询采样 1 个候选（\(r=1\)）。细化训练进行 3 个 epoch，批量大小为 128，学习率为 \(5\times10^{-6}\)，FC 损失权重为 0.45，FC 温度为 0.03。细化目标仅作用于全局查询—代码表示；训练过程中既不使用 CTRD，也不使用词元级局部交互损失。
 
-At inference time, \method{}-Global performs standard dual-encoder retrieval over the full corpus. The optional reranker computes a parameter-free token-level MaxSim score only for the top-\(K\) candidates returned by global retrieval. It combines the per-query standardized global score \(\widetilde{s}_g\) and MaxSim score \(\widetilde{s}_m\) as \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\). We select \(K=20\) and \(\alpha=0.5\) by maximizing macro-averaged MRR across the six validation sets, and fix both hyperparameters before test-set evaluation. Model checkpoints are likewise selected exclusively according to validation performance. Unless otherwise stated, all locally evaluated results use random seed 123456 and are obtained on a single NVIDIA H20 GPU.
+At inference time, \method{}-Global performs standard dual-encoder retrieval over the full corpus. The optional reranker computes a token-level MaxSim score only for the top-\(K\) candidates returned by global retrieval, without introducing additional trainable parameters. It combines the per-query standardized global score \(\widetilde{s}_g\) and MaxSim score \(\widetilde{s}_m\) as \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\). We select \(K=20\) and \(\alpha=0.5\) by maximizing macro-averaged MRR across the six validation sets, and fix both hyperparameters before test-set evaluation. Model checkpoints are likewise selected exclusively according to validation performance. Unless otherwise stated, all locally evaluated results use random seed 123456 and are obtained on a single NVIDIA H20 GPU.
 % 中文：推理时，\method{}-Global 在完整语料库上执行标准双编码器检索。可选重排器仅对全局检索返回的前 \(K\) 个候选计算无额外训练参数的词元级 MaxSim 分数。它按照 \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\) 融合逐查询标准化后的全局分数 \(\widetilde{s}_g\) 与 MaxSim 分数 \(\widetilde{s}_m\)。我们通过最大化六个验证集上的宏平均 MRR，选择 \(K=20\) 和 \(\alpha=0.5\)，并在测试集评测前固定这两个超参数。模型检查点同样完全依据验证集表现选择。除非另有说明，所有本地评测结果均使用随机种子 123456，并在单张 NVIDIA H20 GPU 上获得。
 
-For the GraphCodeBERT instantiation, we preserve its data-flow-aware input representation and use maximum lengths of 128 natural-language tokens, 256 code tokens, and 64 data-flow nodes. The initial retriever is trained for 10 epochs with batch size 32 and learning rate \(2\times10^{-5}\); the three-epoch refinement uses batch size 128 and learning rate \(5\times10^{-6}\), with the same \(M=32\), \(m=8\), \(r=1\), and \(\lambda_f=0.45\) as the primary experiment. MaxSim is computed over lexical tokens and excludes data-flow nodes, so structural nodes do not spuriously participate in token matching.
-% 中文：在 GraphCodeBERT 实例化中，我们保留其数据流感知输入表示，并将自然语言、代码和数据流节点的最大长度分别设为 128、256 和 64。初始检索器训练 10 个 epoch，批量大小为 32，学习率为 \(2\times10^{-5}\)；三轮细化采用 128 的批量大小和 \(5\times10^{-6}\) 的学习率，并沿用主要实验中的 \(M=32\)、\(m=8\)、\(r=1\) 与 \(\lambda_f=0.45\)。MaxSim 仅在词法词元上计算并排除数据流节点，从而避免结构节点不当地参与词元匹配。
+The encoder-instantiation experiments preserve the same harvesting, refinement, and reranking design. In the GraphCodeBERT setting, data-flow-aware inputs are retained, while MaxSim is restricted to lexical tokens and excludes data-flow nodes. Encoder-specific input lengths and optimization settings are reported in Appendix~\ref{app:experimental_details}.
+% 中文：编码器实例化实验保持相同的候选挖掘、细化与重排设计。在 GraphCodeBERT 设置中保留数据流感知输入，但 MaxSim 仅作用于词法词元并排除数据流节点。各编码器特定的输入长度与优化设置见附录~\ref{app:experimental_details}。
 
 \paragraph{Uncertainty estimates.}
 We estimate 95\% confidence intervals for paired MRR differences using a stratified paired bootstrap over test queries. Because the bootstrap keeps the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variability across independent training runs.
@@ -254,6 +254,7 @@ The reported results in the upper block place \method{} in the context of prior 
 \subsection{Component and Candidate-Selection Analysis}
 \label{sec:component_analysis}
 
+\paragraph{Component contributions.}
 Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim reranking under a shared inference configuration (\(K=20\), \(\alpha=0.5\)). Applied directly to the initial retriever, MaxSim raises MRR from 79.77 to 80.36. Failure-calibrated refinement without reranking reaches 80.57, and combining the two components yields the best MRR of 81.06. Thus, refinement contributes 0.80 points under global retrieval, while MaxSim adds a further 0.49 points after refinement; the improvement of the complete system cannot be attributed to reranking alone.
 % 中文：表~\ref{tab:ablation} 在统一的推理配置（\(K=20\)、\(\alpha=0.5\)）下交叉比较失败候选细化与 MaxSim 重排。MaxSim 直接应用于初始检索器时，将 MRR 从 79.77 提升到 80.36；不使用重排的失败校准细化达到 80.57；两者结合后取得最高的 81.06 MRR。因此，全局检索条件下的细化贡献了 0.80 个点，而在细化模型上加入 MaxSim 又带来 0.49 个点；完整系统的收益不能仅归因于重排。
 
@@ -304,36 +305,55 @@ Table~\ref{tab:candidate_controls} examines whether the benefit of refinement de
   \label{tab:candidate_controls}
 \end{table*}
 
-The gains are concentrated at the top of the ranking: failure-candidate selection raises R@1 but slightly reduces R@5 and R@10. This trade-off motivates the separate analysis of reranking depth in Figure~\ref{fig:reranking_sensitivity}; a rank-conditioned account of corrected and regressed queries is provided in Appendix~\ref{app:rank_analysis}.
-% 中文：收益主要集中在排名列表顶部：失败候选选择提高了 R@1，但 R@5 和 R@10 略有下降。这一权衡引出图~\ref{fig:reranking_sensitivity} 中对重排深度的独立分析；附录~\ref{app:rank_analysis} 进一步按初始排名分析被修复与发生回退的查询。
+\paragraph{Rank-conditioned behavior.}
+Figure~\ref{fig:refinement_robustness}(a) conditions the MRR change on the paired code's rank under the initial retriever. The largest gains occur when the paired code initially appears at ranks 2--10: Global refinement adds 8.89 MRR points, and reranking increases the gain to 11.32 points. Improvements remain positive but smaller for ranks 11--50 and beyond 50. Conversely, MRR falls by 2.12 and 2.47 points, respectively, among queries that initially place the paired code at rank 1. The aggregate gain therefore reflects substantial correction of near-top misrankings, partially offset by regressions on some initially correct rankings. Appendix~\ref{app:rank_analysis} provides the query counts and transition statistics.
+% 中文：图~\ref{fig:refinement_robustness}(a) 根据配对代码在初始检索器下的排名报告 MRR 变化。当配对代码初始位于第 2--10 名时，收益最大：Global 细化提升 8.89 个 MRR 点，加入重排后增益扩大到 11.32 个点。初始排名为第 11--50 名或 50 名以后时，改进仍为正但幅度较小。相反，对于配对代码初始位于第 1 名的查询，Global 与 Rerank 的 MRR 分别下降 2.12 和 2.47 个点。因此，总体收益主要来自对接近顶部的错误排序进行大幅修复，但部分收益被初始正确排序上的回退抵消。附录~\ref{app:rank_analysis} 给出查询数量和排名转移统计。
 
-\subsection{Refinement Robustness and Transferability}
+\subsection{Robustness and Encoder Compatibility}
 \label{sec:refinement_robustness}
 
-The training-side sensitivity study varies the two quantities that determine the strength and breadth of failure-candidate supervision. We evaluate \(\lambda_f\in\{0.25,0.45,0.65\}\) and \(m\in\{2,8,32\}\), changing one quantity at a time around the default \((\lambda_f,m)=(0.45,8)\). Every setting is trained independently for all six languages, and Figure~\ref{fig:refinement_robustness}(a--b) is reserved for six-language macro Global MRR. Reporting global retrieval here isolates training-side sensitivity from the MaxSim configuration.
-% 中文：训练侧敏感性分析考察决定失败候选监督强度与覆盖范围的两个量。我们评测 \(\lambda_f\in\{0.25,0.45,0.65\}\) 和 \(m\in\{2,8,32\}\)，每次仅改变一个量，并以 \((\lambda_f,m)=(0.45,8)\) 为默认配置。每个设置均在六种语言上独立训练；图~\ref{fig:refinement_robustness}(a--b) 预留用于报告六语言宏平均 Global MRR。此处采用全局检索指标，以将训练侧敏感性与 MaxSim 配置区分开来。
+The training-side sensitivity study varies the two quantities that determine the strength and breadth of failure-candidate supervision. We evaluate \(\lambda_f\in\{0.25,0.45,0.65\}\) and \(m\in\{2,8,32\}\), changing one quantity at a time around the default \((\lambda_f,m)=(0.45,8)\). Every setting is trained independently for all six languages, and Figure~\ref{fig:refinement_robustness}(b--c) is reserved for six-language macro Global MRR. Reporting global retrieval here isolates training-side sensitivity from the MaxSim configuration.
+% 中文：训练侧敏感性分析考察决定失败候选监督强度与覆盖范围的两个量。我们评测 \(\lambda_f\in\{0.25,0.45,0.65\}\) 和 \(m\in\{2,8,32\}\)，每次仅改变一个量，并以 \((\lambda_f,m)=(0.45,8)\) 为默认配置。每个设置均在六种语言上独立训练；图~\ref{fig:refinement_robustness}(b--c) 预留用于报告六语言宏平均 Global MRR。此处采用全局检索指标，以将训练侧敏感性与 MaxSim 配置区分开来。
 
-To examine architectural compatibility, we instantiate the same harvesting, refinement, and reranking pipeline with CoCoSoDa, UniXcoder~\citep{UniXcoder}, and the data-flow-aware GraphCodeBERT~\citep{GraphCodeBERT}. Their refined global retrievers attain 80.10, 75.96, and 72.82 macro MRR, respectively; MaxSim reranking increases the corresponding scores to 80.62, 76.64, and 73.97. The reranking improvement is positive in every setting, ranging from 0.52 to 1.15 points. Figure~\ref{fig:refinement_robustness}(c) summarizes the aggregate scores, and Appendix~\ref{app:encoder_instantiations} reports the language-level results.
-% 中文：为考察架构兼容性，我们分别使用 CoCoSoDa、UniXcoder~\citep{UniXcoder} 和数据流感知的 GraphCodeBERT~\citep{GraphCodeBERT} 实例化相同的候选挖掘、细化和重排流程。三种设置下，细化后的全局检索器分别达到 80.10、75.96 和 72.82 的宏平均 MRR；加入 MaxSim 重排后，对应分数提升至 80.62、76.64 和 73.97。每种设置中的重排增益均为正，范围为 0.52 至 1.15 个点。图~\ref{fig:refinement_robustness}(c) 汇总总体结果，附录~\ref{app:encoder_instantiations} 报告逐语言结果。
+To examine architectural compatibility, we instantiate the same harvesting, refinement, and reranking pipeline with CoCoSoDa, UniXcoder~\citep{UniXcoder}, and the data-flow-aware GraphCodeBERT~\citep{GraphCodeBERT}. Their refined global retrievers attain 80.10, 75.96, and 72.82 macro MRR, respectively; MaxSim reranking increases the corresponding scores to 80.62, 76.64, and 73.97. The reranking improvement is positive in every setting, ranging from 0.52 to 1.15 points. Figure~\ref{fig:refinement_robustness}(d) summarizes the aggregate scores, and Appendix~\ref{app:encoder_instantiations} reports the language-level results.
+% 中文：为考察架构兼容性，我们分别使用 CoCoSoDa、UniXcoder~\citep{UniXcoder} 和数据流感知的 GraphCodeBERT~\citep{GraphCodeBERT} 实例化相同的候选挖掘、细化和重排流程。三种设置下，细化后的全局检索器分别达到 80.10、75.96 和 72.82 的宏平均 MRR；加入 MaxSim 重排后，对应分数提升至 80.62、76.64 和 73.97。每种设置中的重排增益均为正，范围为 0.52 至 1.15 个点。图~\ref{fig:refinement_robustness}(d) 汇总总体结果，附录~\ref{app:encoder_instantiations} 报告逐语言结果。
 
-The baseline entries for these encoders in Table~\ref{tab:main_results} are taken from their original papers rather than reproduced by the same local pipeline. We therefore do not interpret the gaps between those rows and Figure~\ref{fig:refinement_robustness}(c) as controlled refinement gains. These experiments establish end-to-end compatibility with multiple encoder architectures and a consistent within-checkpoint reranking benefit; matched estimates of the refinement effect would additionally require local test evaluation of each corresponding initial checkpoint.
-% 中文：表~\ref{tab:main_results} 中这些编码器的基线条目取自各自原论文，并非由相同的本地流程复现。因此，我们不将这些行与图~\ref{fig:refinement_robustness}(c) 之间的差值解释为受控的细化增益。这组实验能够说明完整流程与多种编码器架构兼容，并在同一细化检查点内表现出一致的重排收益；若要估计严格匹配的细化效果，还需要对各设置相应的初始检查点进行本地测试集评测。
+The baseline entries for these encoders in Table~\ref{tab:main_results} are taken from their original papers rather than reproduced by the same local pipeline. We therefore do not interpret the gaps between those rows and Figure~\ref{fig:refinement_robustness}(d) as controlled refinement gains. These experiments establish end-to-end compatibility with multiple encoder architectures and a consistent within-checkpoint reranking benefit; matched estimates of the refinement effect would additionally require local test evaluation of each corresponding initial checkpoint.
+% 中文：表~\ref{tab:main_results} 中这些编码器的基线条目取自各自原论文，并非由相同的本地流程复现。因此，我们不将这些行与图~\ref{fig:refinement_robustness}(d) 之间的差值解释为受控的细化增益。这组实验能够说明完整流程与多种编码器架构兼容，并在同一细化检查点内表现出一致的重排收益；若要估计严格匹配的细化效果，还需要对各设置相应的初始检查点进行本地测试集评测。
 
 \begin{figure*}[t]
   \centering
   % Replace the two sensitivity placeholders after the corresponding runs are audited.
   \begin{tikzpicture}
     \begin{groupplot}[
-      group style={group size=3 by 1, horizontal sep=0.9cm},
-      width=0.295\textwidth,
-      height=0.23\textwidth,
+      group style={group size=2 by 2, horizontal sep=1.35cm, vertical sep=1.35cm},
+      width=0.42\textwidth,
+      height=0.245\textwidth,
       grid=major,
       tick label style={font=\scriptsize},
       label style={font=\scriptsize},
       title style={font=\small}
     ]
       \nextgroupplot[
-        title={(a) FC loss weight},
+        title={(a) Initial-rank strata},
+        ybar,
+        bar width=6pt,
+        xlabel={Initial rank},
+        ylabel={\(\Delta\) MRR points},
+        xtick={1,2,3,4},
+        xticklabels={1,2--10,11--50,\(>50\)},
+        ymin=-3,
+        ymax=12.5,
+        legend style={font=\tiny,at={(0.98,0.98)},anchor=north east,draw=none}
+      ]
+      \addplot[fill=gray!25, draw=black] coordinates {(1,-2.12) (2,8.89) (3,2.34) (4,0.32)};
+      \addlegendentry{Global}
+      \addplot[fill=gray!75, draw=black] coordinates {(1,-2.47) (2,11.32) (3,3.66) (4,0.33)};
+      \addlegendentry{Rerank}
+      \draw[black, thin] (axis cs:0.5,0) -- (axis cs:4.5,0);
+
+      \nextgroupplot[
+        title={(b) FC loss weight},
         xlabel={\(\lambda_f\)},
         ylabel={Global MRR (\%)},
         xmin=0.2,
@@ -347,7 +367,7 @@ The baseline entries for these encoders in Table~\ref{tab:main_results} are take
       \draw[dashed] (axis cs:0.45,79.5) -- (axis cs:0.45,81.0);
 
       \nextgroupplot[
-        title={(b) Candidate depth},
+        title={(c) Candidate depth},
         xlabel={Retained depth \(m\)},
         ylabel={Global MRR (\%)},
         xmin=0,
@@ -361,9 +381,7 @@ The baseline entries for these encoders in Table~\ref{tab:main_results} are take
       \draw[dashed] (axis cs:8,79.5) -- (axis cs:8,81.0);
 
       \nextgroupplot[
-        title={(c) Encoder instantiations},
-        ybar,
-        bar width=5pt,
+        title={(d) Encoder instantiations},
         ylabel={Macro MRR (\%)},
         symbolic x coords={CoCoSoDa,UniXcoder,GraphCodeBERT},
         xtick=data,
@@ -373,14 +391,14 @@ The baseline entries for these encoders in Table~\ref{tab:main_results} are take
         legend style={font=\tiny,at={(0.5,-0.38)},anchor=north,legend columns=2},
         enlarge x limits=0.25
       ]
-      \addplot[fill=gray!25, draw=black] coordinates {(CoCoSoDa,80.10) (UniXcoder,75.96) (GraphCodeBERT,72.82)};
+      \addplot[only marks, mark=square*, mark size=2.8pt, gray!65!black] coordinates {(CoCoSoDa,80.10) (UniXcoder,75.96) (GraphCodeBERT,72.82)};
       \addlegendentry{Global}
-      \addplot[fill=gray!75, draw=black] coordinates {(CoCoSoDa,80.62) (UniXcoder,76.64) (GraphCodeBERT,73.97)};
+      \addplot[only marks, mark=*, mark size=3pt, black] coordinates {(CoCoSoDa,80.62) (UniXcoder,76.64) (GraphCodeBERT,73.97)};
       \addlegendentry{Rerank}
     \end{groupplot}
   \end{tikzpicture}
-  \caption{Training-side sensitivity and encoder compatibility. Panels (a) and (b) reserve six-language macro Global MRR for the audited \(\lambda_f\) and \(m\) sweeps; dashed lines mark the default values. Panel (c) reports locally evaluated absolute MRR for three refined encoder instantiations before and after reranking. Values across encoders describe compatibility, not controlled gains over the reported rows in Table~\ref{tab:main_results}.}
-  % 中文图注：训练侧敏感性与编码器兼容性。子图 (a) 和 (b) 预留用于填入经审计的 \(\lambda_f\) 与 \(m\) 六语言宏平均 Global MRR，虚线表示默认取值。子图 (c) 报告三种细化编码器实例在重排前后的本地评测绝对 MRR。不同编码器的数值用于描述兼容性，而不是相对于表~\ref{tab:main_results} 中论文报告行的受控增益。
+  \caption{Ranking behavior, training-side sensitivity, and encoder compatibility. Panel (a) reports micro-averaged MRR-point changes over test queries, conditioned on the paired code's initial rank. Panels (b) and (c) reserve six-language macro Global MRR for the audited \(\lambda_f\) and \(m\) sweeps; dashed lines mark the defaults. Panel (d) reports locally evaluated absolute MRR for three refined encoder instantiations before and after reranking. Cross-encoder values describe compatibility, not controlled gains over the reported rows in Table~\ref{tab:main_results}.}
+  % 中文图注：排名行为、训练侧敏感性与编码器兼容性。子图 (a) 报告测试查询上的微平均 MRR 点数变化，并按配对代码的初始排名分组。子图 (b) 和 (c) 预留用于填入经审计的 \(\lambda_f\) 与 \(m\) 六语言宏平均 Global MRR，虚线表示默认值。子图 (d) 报告三种细化编码器实例在重排前后的本地评测绝对 MRR。跨编码器数值用于描述兼容性，而不是相对于表~\ref{tab:main_results} 中论文报告行的受控增益。
   \label{fig:refinement_robustness}
 \end{figure*}
 
@@ -473,6 +491,10 @@ We verify data-split isolation, candidate-cache validity, checkpoint provenance,
 The GraphCodeBERT run is subjected to the same corpus-coverage and candidate-cache checks. All six validation and test sets have complete gold-code coverage, strict checkpoint loading succeeds, gradients remain finite in the integration test, and data-flow nodes are excluded from MaxSim. These checks are completed before aggregating the language-level test files.
 % 中文：GraphCodeBERT 运行同样经过语料库覆盖率和候选缓存检查。六种语言的验证集与测试集均具有完整的正确代码覆盖；严格检查点加载成功；集成测试中的梯度保持有限；数据流节点也被排除在 MaxSim 计算之外。完成这些检查后，我们才汇总逐语言测试文件。
 
+\paragraph{GraphCodeBERT configuration.}
+We preserve the encoder's data-flow-aware representation and use maximum lengths of 128 natural-language tokens, 256 code tokens, and 64 data-flow nodes. Its initial retriever is trained for 10 epochs with batch size 32 and learning rate \(2\times10^{-5}\). The three-epoch refinement uses batch size 128 and learning rate \(5\times10^{-6}\), together with \(M=32\), \(m=8\), \(r=1\), \(\lambda_f=0.45\), and \(\tau_f=0.03\). Reranking uses \(K=20\) and \(\alpha=0.5\), and excludes special, padding, and data-flow nodes from MaxSim.
+% 中文：我们保留 GraphCodeBERT 的数据流感知表示，并将自然语言、代码和数据流节点的最大长度分别设为 128、256 和 64。其初始检索器训练 10 个 epoch，批量大小为 32，学习率为 \(2\times10^{-5}\)。三轮细化采用 128 的批量大小和 \(5\times10^{-6}\) 的学习率，并设置 \(M=32\)、\(m=8\)、\(r=1\)、\(\lambda_f=0.45\) 与 \(\tau_f=0.03\)。重排使用 \(K=20\)、\(\alpha=0.5\)，并在 MaxSim 中排除特殊词元、填充词元和数据流节点。
+
 \section{Rank-Conditioned Retrieval Behavior}
 \label{app:rank_analysis}
 
@@ -504,8 +526,8 @@ The transition counts reveal behavior that is obscured by aggregate MRR. Compare
 \section{Encoder Instantiations}
 \label{app:encoder_instantiations}
 
-Table~\ref{tab:encoder_results} gives the six-language results underlying Figure~\ref{fig:refinement_robustness}(c). MaxSim improves MRR for every language under all three encoder settings. These are paired comparisons between the global and reranked outputs of each refined checkpoint; they do not estimate the effect of refinement relative to the corresponding initial retriever.
-% 中文：表~\ref{tab:encoder_results} 给出图~\ref{fig:refinement_robustness}(c) 所依据的六语言结果。在三种编码器设置下，MaxSim 均在每种语言上提高 MRR。这些数值是每个细化检查点的全局检索与重排输出之间的配对比较，并不估计细化相对于相应初始检索器的效果。
+Table~\ref{tab:encoder_results} gives the six-language results underlying Figure~\ref{fig:refinement_robustness}(d). MaxSim improves MRR for every language under all three encoder settings. These are paired comparisons between the global and reranked outputs of each refined checkpoint; they do not estimate the effect of refinement relative to the corresponding initial retriever.
+% 中文：表~\ref{tab:encoder_results} 给出图~\ref{fig:refinement_robustness}(d) 所依据的六语言结果。在三种编码器设置下，MaxSim 均在每种语言上提高 MRR。这些数值是每个细化检查点的全局检索与重排输出之间的配对比较，并不估计细化相对于相应初始检索器的效果。
 
 \begin{table*}[t]
   \centering
