@@ -69,8 +69,8 @@ Standard objectives draw negatives from the current minibatch, random sampling, 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/figure1_problem_definition.pdf}
-  \caption{Problem setting motivating \method{}. The paired code \(c^+\) can remain within the retrieved top-\(K\) yet rank below a high-scoring unpaired candidate \(c^-\), producing a Retrieved-but-Mis-ranked Case.}
-  % 中文图注：\method{} 的问题设定。配对代码 \(c^+\) 可能仍位于检索得到的前 \(K\) 个候选内，却排在高分未配对候选 \(c^-\) 之后，从而形成“已检索但排序错误案例”。
+  \caption{A Retrieved-but-Mis-ranked Case and its correction by \method{}. Left: a high-scoring unpaired candidate \(c^-\) outranks the paired code \(c^+\), although \(c^+\) remains within the retrieved top-\(K\). Right: failure-calibrated refinement increases the positive--negative score margin and promotes \(c^+\) above \(c^-\). Here, \emph{unpaired} refers to the benchmark annotation and does not imply that \(c^-\) is semantically invalid.}
+  % 中文图注：一个“已检索但排序错误案例”及 \method{} 对它的修正。左：高分未配对候选 \(c^-\) 排在配对代码 \(c^+\) 之前，但 \(c^+\) 仍位于检索结果的前 \(K\) 名内。右：失败校准细化增大正负样本的得分间隔，并将 \(c^+\) 提升至 \(c^-\) 之前。这里的“未配对”仅指基准标注关系，并不意味着 \(c^-\) 在语义上无效。
   \label{fig:problem_setting}
 \end{figure}
 
