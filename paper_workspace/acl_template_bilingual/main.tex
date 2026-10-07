@@ -356,8 +356,8 @@ Appendix~\ref{app:component_details} reports all four metrics for every language
 Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.35 points and R@1 by 0.83 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
 % 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.35 和 0.83 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
 
-The corresponding language-level MRR values are provided in Appendix~\ref{app:candidate_details}.
-% 中文：相应的逐语言 MRR 见附录~\ref{app:candidate_details}。
+The corresponding language-level results are provided in Appendix~\ref{app:candidate_details}.
+% 中文：相应的逐语言结果见附录~\ref{app:candidate_details}。
 
 \begin{table*}[t]
   \centering
@@ -654,31 +654,57 @@ Table~\ref{tab:component_language_details} expands the four component configurat
 \subsection{Candidate-Selection Results by Language}
 \label{app:candidate_details}
 
-Table~\ref{tab:candidate_language_details} reports the language-level MRR underlying the budget-matched candidate comparison. Retriever-mined failure candidates give the highest MRR in every language except PHP, where they tie the random strategy after rounding. The random and static controls fluctuate around the initial retriever and do not improve the six-language macro average. These results support the candidate-selection mechanism without implying that every individual query or recall cutoff improves.
-% 中文：表~\ref{tab:candidate_language_details} 报告预算匹配候选对照所依据的逐语言 MRR。检索器挖掘的失败候选在除 PHP 外的每种语言上均取得最高 MRR；在 PHP 上，它与随机策略在四舍五入后持平。随机与静态对照围绕初始检索器上下波动，且没有提高六语言宏平均。该结果支持候选选择机制，但不意味着每个查询或每个召回截断点都得到改善。
+Table~\ref{tab:candidate_language_details} reports all four language-level metrics underlying the budget-matched candidate comparison. Retriever-mined failure candidates give the highest MRR in every language except PHP, where they tie the random strategy after rounding. The random and static controls fluctuate around the initial retriever and do not improve the six-language macro MRR. The recall columns also show that the mined candidates primarily improve top-rank ordering rather than retrieval coverage: their macro R@1 increases, whereas R@5 and R@10 decrease. These results support the candidate-selection mechanism without implying that every individual query or recall cutoff improves.
+% 中文：表~\ref{tab:candidate_language_details} 报告预算匹配候选对照所依据的全部四项逐语言指标。检索器挖掘的失败候选在除 PHP 外的每种语言上均取得最高 MRR；在 PHP 上，它与随机策略在四舍五入后持平。随机与静态对照围绕初始检索器上下波动，且没有提高六语言宏平均 MRR。召回列还表明，挖掘候选主要改善顶部排序而不是检索覆盖率：其宏平均 R@1 上升，而 R@5 与 R@10 下降。该结果支持候选选择机制，但不意味着每个查询或每个召回截断点都得到改善。
 
-\begin{table}[t]
+\begin{table*}[t]
   \centering
   \scriptsize
-  \setlength{\tabcolsep}{3.2pt}
-  \begin{tabular}{lrrrr}
+  \setlength{\tabcolsep}{5.0pt}
+  \begin{tabular}{llrrrr}
     \toprule
-    Language & Initial & Random & Static & Failure candidate \\
+    Language & Metric & Initial & Random & Static & Failure candidate \\
     \midrule
-    Ruby       & 82.16 & 82.20 & 82.40 & \textbf{82.70} \\
-    JavaScript & 77.72 & 77.50 & 77.40 & \textbf{78.20} \\
-    Go         & 92.43 & 92.50 & 92.50 & \textbf{92.80} \\
-    Python     & 77.17 & 77.20 & 77.10 & \textbf{77.40} \\
-    Java       & 77.20 & 77.00 & 77.00 & \textbf{77.70} \\
-    PHP        & \textbf{71.91} & 71.90 & 71.60 & 71.90 \\
+    Ruby       & MRR  & 82.16 & 82.20 & 82.40 & \textbf{82.70} \\
+               & R@1  & 72.88 & 73.00 & 73.40 & \textbf{73.80} \\
+               & R@5  & \textbf{94.85} & 94.70 & 94.50 & 94.60 \\
+               & R@10 & 96.99 & \textbf{97.00} & 96.90 & 96.60 \\
     \midrule
-    Macro      & 79.77 & 79.72 & 79.67 & \textbf{80.12} \\
+    JavaScript & MRR  & 77.72 & 77.50 & 77.40 & \textbf{78.20} \\
+               & R@1  & 67.43 & 67.30 & 67.00 & \textbf{68.40} \\
+               & R@5  & \textbf{90.64} & 90.50 & 90.40 & 90.40 \\
+               & R@10 & \textbf{95.44} & 95.20 & 95.00 & 94.90 \\
+    \midrule
+    Go         & MRR  & 92.43 & 92.50 & 92.50 & \textbf{92.80} \\
+               & R@1  & 88.51 & 88.60 & 88.60 & \textbf{89.20} \\
+               & R@5  & 97.22 & 97.20 & \textbf{97.30} & \textbf{97.30} \\
+               & R@10 & \textbf{98.40} & 98.30 & 98.30 & 98.20 \\
+    \midrule
+    Python     & MRR  & 77.17 & 77.20 & 77.10 & \textbf{77.40} \\
+               & R@1  & 67.03 & 67.10 & 66.90 & \textbf{67.70} \\
+               & R@5  & 89.94 & \textbf{90.00} & 89.80 & 89.70 \\
+               & R@10 & 94.42 & \textbf{94.50} & 94.30 & 94.00 \\
+    \midrule
+    Java       & MRR  & 77.20 & 77.00 & 77.00 & \textbf{77.70} \\
+               & R@1  & 67.24 & 67.10 & 67.10 & \textbf{68.50} \\
+               & R@5  & \textbf{89.86} & 89.60 & 89.60 & 89.40 \\
+               & R@10 & \textbf{94.10} & 93.90 & 93.90 & 93.50 \\
+    \midrule
+    PHP        & MRR  & \textbf{71.91} & 71.90 & 71.60 & 71.90 \\
+               & R@1  & 61.23 & 61.20 & 60.90 & \textbf{61.70} \\
+               & R@5  & \textbf{85.20} & 84.90 & 84.70 & 84.70 \\
+               & R@10 & \textbf{91.23} & 91.10 & 90.90 & 90.30 \\
+    \midrule
+    Macro      & MRR  & 79.77 & 79.72 & 79.67 & \textbf{80.12} \\
+               & R@1  & 70.72 & 70.72 & 70.65 & \textbf{71.55} \\
+               & R@5  & \textbf{91.28} & 91.15 & 91.05 & 91.02 \\
+               & R@10 & \textbf{95.10} & 95.00 & 94.88 & 94.58 \\
     \bottomrule
   \end{tabular}
-  \caption{Language-level MRR (\%) for the candidate-selection control. The three refinement variants use one additional candidate per query and global retrieval only. Candidate-run files record per-language metrics to three decimal places before conversion to percentages.}
-  % 中文表注：候选选择对照的逐语言 MRR（\%）。三种细化变体均为每个查询使用一个附加候选，并且只采用全局检索。候选实验文件先以三位小数记录逐语言指标，再转换为百分比。
+  \caption{Complete language-level results (\%) for the candidate-selection control. The three refinement variants use one additional candidate per query and global retrieval only. Candidate-run files record per-language metrics to three decimal places before conversion to percentages.}
+  % 中文表注：候选选择对照的完整逐语言结果（\%）。三种细化变体均为每个查询使用一个附加候选，并且只采用全局检索。候选实验文件先以三位小数记录逐语言指标，再转换为百分比。
   \label{tab:candidate_language_details}
-\end{table}
+\end{table*}
 
 \section{Retrieval Behavior by Initial Paired-Code Rank}
 \label{app:rank_analysis}
