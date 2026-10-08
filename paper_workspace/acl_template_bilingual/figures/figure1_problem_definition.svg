@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="85mm" height="50.560344827586206mm" viewBox="0 0 1160 690">
+<svg xmlns="http://www.w3.org/2000/svg" width="85mm" height="52.758620689655174mm" viewBox="0 0 1160 720">
 <defs>
   <marker id="green-head" markerWidth="18" markerHeight="18" refX="17" refY="9" orient="auto" markerUnits="userSpaceOnUse">
     <path d="M0,0 L18,9 L0,18 z" fill="#6DA74C"/>
@@ -17,7 +17,7 @@
     <path d="M0,0 L13,6.5 L0,13 z" fill="#E67926"/>
   </marker>
 </defs>
-  <rect x="0" y="0" width="1160" height="690" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+  <rect x="0" y="0" width="1160" height="720" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0"/>
   <path d="M 480 175 C 535.0 174 563.6 195 590.0 208 C 629.6 230 651.6 232 700 230" fill="none" stroke="#FFFFFF" stroke-width="24.36" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
   <path d="M 480 175 C 535.0 174 563.6 195 590.0 208 C 629.6 230 651.6 232 700 230" fill="none" stroke="#E67926" stroke-width="13.919999999999998" stroke-linecap="round" stroke-linejoin="round" opacity="0.76"/>
   <path d="M 480 335 C 535.0 315 557.0 248 590.0 208 C 629.6 184 651.6 175 700 175" fill="none" stroke="#FFFFFF" stroke-width="24.36" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
@@ -90,27 +90,27 @@
   <circle cx="480" cy="335" r="8.12" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.06"/>
   <circle cx="700" cy="175" r="8.12" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.06"/>
   <circle cx="700" cy="230" r="8.12" fill="#FFE2CB" stroke="#E67926" stroke-width="4.06"/>
-  <line x1="590.0" y1="218" x2="590.0" y2="408" stroke="#79B89B" stroke-width="4.64" stroke-linecap="round" stroke-dasharray="8.1 8.1" opacity="0.68"/>
+  <line x1="590.0" y1="218" x2="590.0" y2="436" stroke="#79B89B" stroke-width="4.64" stroke-linecap="round" stroke-dasharray="8.1 8.1" opacity="0.68"/>
   <circle cx="590.0" cy="208" r="10.44" fill="#EAF5F0" stroke="#79B89B" stroke-width="4.64"/>
-  <rect x="150.8" y="408" width="858.4" height="148" rx="27.839999999999996" fill="#EAF5F0" stroke="#79B89B" stroke-width="4.64"/>
-  <text x="580.0" y="450" fill="#17232C" font-family="Comic Neue" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">Failure-Calibrated Refinement</text>
-  <text x="580.0" y="494" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="italic" text-anchor="middle">Δᵢ = s(qᵢ,c⁺) − s(qᵢ,c⁻)</text>
-  <rect x="400.20000000000005" y="510" width="134.56" height="38.279999999999994" rx="19.139999999999997" fill="#FFE2CB" stroke="#E67926" stroke-width="3.4799999999999995"/>
-  <text x="467.48" y="538.71" fill="#E67926" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">&lt; 0</text>
-  <line x1="554.48" y1="529.14" x2="605.52" y2="529.14" stroke="#79B89B" stroke-width="4.64" stroke-linecap="round" marker-end="url(#teal-head)"/>
-  <rect x="622.92" y="510" width="134.56" height="38.279999999999994" rx="19.139999999999997" fill="#DDF1D2" stroke="#6DA74C" stroke-width="3.4799999999999995"/>
-  <text x="690.1999999999999" y="538.71" fill="#6DA74C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">&gt; 0</text>
-  <rect x="58.0" y="568" width="1044.0" height="102" rx="26.68" fill="#FFFFFF" stroke="#B8C0C5" stroke-width="2.9" stroke-dasharray="8.1 7.0" opacity="0.98"/>
-  <rect x="167.852" y="592.692" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 185.6 600)"/>
-  <rect x="180.38" y="593.736" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 185.6 600)"/>
-  <text x="222.72" y="613.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Paired code</text>
-  <circle cx="602.272" cy="590.604" r="3.9672" fill="#E67926" stroke="#E67926" stroke-width="0"/>
-  <line x1="610.624" y1="590.604" x2="629.416" y2="590.604" stroke="#E67926" stroke-width="4.176" stroke-linecap="round"/>
-  <line x1="603.316" y1="600" x2="626.2840000000001" y2="600" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.75"/>
-  <line x1="603.316" y1="609.396" x2="622.1080000000001" y2="609.396" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.55"/>
-  <text x="653.08" y="613.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Failure Candidate</text>
-  <line x1="441.96000000000004" y1="632.604" x2="462.84000000000003" y2="632.604" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
-  <line x1="441.96000000000004" y1="642.0" x2="458.66400000000004" y2="642.0" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
-  <line x1="441.96000000000004" y1="651.396" x2="454.48800000000006" y2="651.396" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
-  <text x="489.52000000000004" y="655.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Other candidate</text>
+  <rect x="150.8" y="436" width="858.4" height="148" rx="27.839999999999996" fill="#EAF5F0" stroke="#79B89B" stroke-width="4.64"/>
+  <text x="580.0" y="478" fill="#17232C" font-family="Comic Neue" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">Failure-Calibrated Refinement</text>
+  <text x="580.0" y="522" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="italic" text-anchor="middle">Δᵢ = s(qᵢ,c⁺) − s(qᵢ,c⁻)</text>
+  <rect x="400.20000000000005" y="538" width="134.56" height="38.279999999999994" rx="19.139999999999997" fill="#FFE2CB" stroke="#E67926" stroke-width="3.4799999999999995"/>
+  <text x="467.48" y="566.71" fill="#E67926" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">&lt; 0</text>
+  <line x1="554.48" y1="557.14" x2="605.52" y2="557.14" stroke="#79B89B" stroke-width="4.64" stroke-linecap="round" marker-end="url(#teal-head)"/>
+  <rect x="622.92" y="538" width="134.56" height="38.279999999999994" rx="19.139999999999997" fill="#DDF1D2" stroke="#6DA74C" stroke-width="3.4799999999999995"/>
+  <text x="690.1999999999999" y="566.71" fill="#6DA74C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">&gt; 0</text>
+  <rect x="58.0" y="596" width="1044.0" height="102" rx="26.68" fill="#FFFFFF" stroke="#B8C0C5" stroke-width="2.9" stroke-dasharray="8.1 7.0" opacity="0.98"/>
+  <rect x="167.852" y="620.692" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 185.6 628)"/>
+  <rect x="180.38" y="621.736" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 185.6 628)"/>
+  <text x="222.72" y="641.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Paired code</text>
+  <circle cx="602.272" cy="618.604" r="3.9672" fill="#E67926" stroke="#E67926" stroke-width="0"/>
+  <line x1="610.624" y1="618.604" x2="629.416" y2="618.604" stroke="#E67926" stroke-width="4.176" stroke-linecap="round"/>
+  <line x1="603.316" y1="628" x2="626.2840000000001" y2="628" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.75"/>
+  <line x1="603.316" y1="637.396" x2="622.1080000000001" y2="637.396" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.55"/>
+  <text x="653.08" y="641.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Failure Candidate</text>
+  <line x1="441.96000000000004" y1="660.604" x2="462.84000000000003" y2="660.604" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="441.96000000000004" y1="670.0" x2="458.66400000000004" y2="670.0" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="441.96000000000004" y1="679.396" x2="454.48800000000006" y2="679.396" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <text x="489.52000000000004" y="683.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Other candidate</text>
 </svg>
