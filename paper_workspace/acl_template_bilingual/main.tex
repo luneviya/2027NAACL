@@ -564,8 +564,8 @@ The latency measurement therefore reflects the complete inference path rather th
 Failure-candidate mining and refinement are one-time offline preparation stages and therefore do not enter the per-query latency measurement. The reported online cost includes query encoding, global search, and token-level rescoring for every query.
 % 中文：失败候选挖掘与细化训练均为一次性的离线模型准备阶段，因此不计入每查询延迟。本文报告的在线成本包含每个查询的查询编码、全局搜索和词元级重新计分。
 
-Appendix~\ref{app:reranking_details} tabulates the latency decomposition and memory footprint for every evaluated reranking depth.
-% 中文：附录~\ref{app:reranking_details} 列出每个已评测重排深度的延迟分解与显存占用。
+Appendix~\ref{app:reranking_details} reports the exact validation grid, language-level test results at each reranking depth, and the corresponding latency decomposition and memory footprint.
+% 中文：附录~\ref{app:reranking_details} 报告完整验证网格、各重排深度下的逐语言测试结果，以及相应的延迟分解与显存占用。
 
 
 \section{Conclusion}
@@ -591,6 +591,44 @@ We verify data-split isolation, candidate-cache validity, checkpoint provenance,
 
 The GraphCodeBERT run is subjected to the same corpus-coverage and candidate-cache checks. All six validation and test sets have complete gold-code coverage, strict checkpoint loading succeeds, gradients remain finite in the integration test, and data-flow nodes are excluded from MaxSim. These checks are completed before aggregating the language-level test files.
 % 中文：GraphCodeBERT 运行同样经过语料库覆盖率和候选缓存检查。六种语言的验证集与测试集均具有完整的正确代码覆盖；严格检查点加载成功；集成测试中的梯度保持有限；数据流节点也被排除在 MaxSim 计算之外。完成这些检查后，我们才汇总逐语言测试文件。
+
+\paragraph{Primary configuration.}
+Table~\ref{tab:primary_configuration} consolidates the training, harvesting, and inference settings for the primary CoCoSoDa-based evaluation. Initial-retriever and refinement checkpoints are selected by validation MRR. Reranking hyperparameters are selected from the complete validation grid reported in Table~\ref{tab:reranking_validation_grid} and are fixed before test evaluation.
+% 中文：表~\ref{tab:primary_configuration} 汇总了基于 CoCoSoDa 的主要评测所采用的训练、挖掘与推理配置。初始检索器与细化检查点均根据验证集 MRR 选择；重排超参数从表~\ref{tab:reranking_validation_grid} 给出的完整验证网格中选择，并在测试集评测前固定。
+
+\begin{table*}[t]
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{5.0pt}
+  \begin{tabular}{p{0.16\textwidth}p{0.25\textwidth}p{0.52\textwidth}}
+    \toprule
+    Stage & Setting & Value \\
+    \midrule
+    Initial retriever & Encoder and input lengths & CoCoSoDa; 128 query tokens and 256 code tokens \\
+    Initial retriever & Optimization & 10 epochs; batch size 128; learning rate \(8\times10^{-6}\); contrastive temperature 0.03 \\
+    Initial retriever & Base objective & UA-HN configuration with 4 uncertainty samples, intra-modal weight 1.0, KL weight \(10^{-5}\), and BM25 hard-negative weight 1.0 \\
+    Initial retriever & Static hard negative & Retrieve the top 500 cosine-similar training queries, rerank them with BM25, and select BM25 rank 50 after excluding self and same-URL examples \\
+    Initial retriever & Optimizer and selection & AdamW; weight decay 0.01; linear schedule; 0 warmup steps; gradient clipping at 1.0; validation-MRR checkpoint selection \\
+    \midrule
+    FC harvesting & Retrieval and filtering & Full training-code corpus; exclude the paired code and candidates sharing its URL \\
+    FC harvesting & Candidate pool & Retain \(M=32\) candidates per query \\
+    \midrule
+    Refinement & Optimization & 3 epochs; batch size 128; learning rate \(5\times10^{-6}\); the same optimizer schedule and checkpoint-selection metric \\
+    Refinement & Preserved base-loss settings & 1 uncertainty sample, intra-modal weight 1.0, and KL weight \(10^{-5}\) \\
+    Refinement & FC configuration & \(m=8\), \(r=1\), \(\lambda_f=0.45\), and \(\tau_f=0.03\) \\
+    Refinement & Training objective & Global representations only; no CTRD or token-level local-interaction training loss \\
+    \midrule
+    Reranking & Validation grid & \(K\in\{10,20,50,100\}\), \(\alpha\in\{0,0.25,0.5,0.75,1\}\) \\
+    Reranking & Selected setting & \(K=20\), \(\alpha=0.5\); query-wise standardization before Global--Local Score Fusion \\
+    Reranking & Evaluation & Evaluation batch size 128; reranking batch size 64; FP16 token-level scoring \\
+    \midrule
+    Shared & Reproducibility & Seed 123456; single NVIDIA H20 GPU; FP32 training \\
+    \bottomrule
+  \end{tabular}
+  \caption{Complete configuration for the primary locally evaluated setting. Validation data select training checkpoints and reranking hyperparameters; test data are used only for final reporting.}
+  % 中文表注：主要本地评测设置的完整配置。训练检查点与重排超参数均由验证集选择，测试集仅用于最终结果报告。
+  \label{tab:primary_configuration}
+\end{table*}
 
 \paragraph{Encoder-instantiation configurations.}
 Table~\ref{tab:encoder_training_config} records the encoder-specific training configurations used to produce the local results in Appendix~\ref{app:encoder_instantiations}. The initial checkpoints serve as internal starting points for harvesting and refinement; because they were not evaluated on the test sets under a unified protocol, the encoder result tables retain the corresponding published baselines as separately marked reference values.
@@ -869,8 +907,51 @@ Within each locally evaluated refinement checkpoint, MaxSim raises MRR for every
 \section{Reranking Selection and Efficiency Details}
 \label{app:reranking_details}
 
-The validation grid in Figure~\ref{fig:reranking_sensitivity}(a) contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Selection uses the six-language macro validation MRR only; the test set is not consulted. Table~\ref{tab:reranking_efficiency_details} complements the figure with the measured online-time decomposition for the four reranking depths after fixing \(\alpha=0.5\). Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because the corpus representations are precomputed.
-% 中文：图~\ref{fig:reranking_sensitivity}(a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合。模型选择仅依据六语言宏平均验证 MRR，不使用测试集。表~\ref{tab:reranking_efficiency_details} 在固定 \(\alpha=0.5\) 后，进一步列出四个重排深度的实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示会预先计算，离线代码编码时间不计入其中。
+The validation grid in Figure~\ref{fig:reranking_sensitivity}(a) contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding numerical values. Selection uses the six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
+% 中文：图~\ref{fig:reranking_sensitivity}(a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合，表~\ref{tab:reranking_validation_grid} 给出相应的精确数值。模型选择仅依据六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4.0pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    \(\alpha\) & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
+    \midrule
+    0    & 81.334 & 81.157 & 81.037 & 80.997 \\
+    0.25 & 81.826 & 81.804 & 81.777 & 81.768 \\
+    0.50 & 82.165 & \textbf{82.219} & 82.210 & 82.203 \\
+    0.75 & 82.152 & 82.167 & 82.168 & 82.169 \\
+    1.00 & 81.861 & 81.861 & 81.861 & 81.861 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Complete six-language macro validation MRR (\%) for reranking selection. The bold cell is the validation-selected setting; no test results are used in this selection.}
+  % 中文表注：用于重排选择的完整六语言宏平均验证集 MRR（\%）。粗体单元格为验证集选定配置；该选择过程不使用测试集结果。
+  \label{tab:reranking_validation_grid}
+\end{table}
+
+\begin{table*}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{8.0pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Language & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
+    \midrule
+    Ruby       & 83.461 & 83.515 & 83.466 & 83.426 \\
+    JavaScript & 78.930 & 78.949 & 78.785 & 78.814 \\
+    Go         & 93.388 & 93.410 & 93.419 & 93.426 \\
+    Python     & 78.272 & 78.305 & 78.292 & 78.273 \\
+    Java       & 78.542 & 78.569 & 78.568 & 78.583 \\
+    PHP        & 73.615 & 73.585 & 73.574 & 73.539 \\
+    \midrule
+    Macro      & 81.035 & \textbf{81.055} & 81.017 & 81.010 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Language-level held-out test MRR (\%) at \(\alpha=0.5\). The bold macro score corresponds to the setting selected on validation data; language-level test values do not participate in model selection.}
+  % 中文表注：\(\alpha=0.5\) 时的逐语言留出测试集 MRR（\%）。粗体宏平均分数对应验证集选定配置；逐语言测试结果不参与模型选择。
+  \label{tab:reranking_depth_language}
+\end{table*}
 
 \begin{table*}[t]
   \centering
