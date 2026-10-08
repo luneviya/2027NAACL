@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="85mm" height="50.560344827586206mm" viewBox="0 0 1160 690">
+<defs>
+  <marker id="green-head" markerWidth="18" markerHeight="18" refX="17" refY="9" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L18,9 L0,18 z" fill="#6DA74C"/>
+  </marker>
+  <marker id="orange-head" markerWidth="18" markerHeight="18" refX="17" refY="9" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L18,9 L0,18 z" fill="#E67926"/>
+  </marker>
+  <marker id="teal-head" markerWidth="15" markerHeight="15" refX="14" refY="7.5" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L15,7.5 L0,15 z" fill="#79B89B"/>
+  </marker>
+
+  <marker id="micro-green" markerWidth="13" markerHeight="13" refX="12" refY="6.5" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L13,6.5 L0,13 z" fill="#6DA74C"/>
+  </marker>
+  <marker id="micro-orange" markerWidth="13" markerHeight="13" refX="12" refY="6.5" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L13,6.5 L0,13 z" fill="#E67926"/>
+  </marker>
+</defs>
+  <rect x="0" y="0" width="1160" height="690" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+  <path d="M 480 175 C 535.0 174 563.6 195 590.0 208 C 629.6 230 651.6 232 700 230" fill="none" stroke="#FFFFFF" stroke-width="24.36" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+  <path d="M 480 175 C 535.0 174 563.6 195 590.0 208 C 629.6 230 651.6 232 700 230" fill="none" stroke="#E67926" stroke-width="13.919999999999998" stroke-linecap="round" stroke-linejoin="round" opacity="0.76"/>
+  <path d="M 480 335 C 535.0 315 557.0 248 590.0 208 C 629.6 184 651.6 175 700 175" fill="none" stroke="#FFFFFF" stroke-width="24.36" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+  <path d="M 480 335 C 535.0 315 557.0 248 590.0 208 C 629.6 184 651.6 175 700 175" fill="none" stroke="#6DA74C" stroke-width="13.919999999999998" stroke-linecap="round" stroke-linejoin="round" opacity="0.80"/>
+  <text x="275.0" y="66" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="middle">Initial retrieval for qᵢ</text>
+  <text x="905.0" y="66" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">Refined ranking</text>
+  <text x="81.6" y="114" fill="#3E7FA7" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">top-K</text>
+  <rect x="292.4" y="82" width="150.79999999999998" height="46.4" rx="23.2" fill="#FFE2CB" stroke="#E67926" stroke-width="4.06"/>
+  <text x="367.79999999999995" y="115.408" fill="#E67926" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">Δᵢ &lt; 0</text>
+  <rect x="829.6" y="82" width="150.79999999999998" height="46.4" rx="23.2" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.06"/>
+  <text x="905.0" y="115.408" fill="#6DA74C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">Δᵢ &gt; 0</text>
+  <circle cx="35.2" cy="175" r="23.2" fill="#FFE2CB" stroke="#E67926" stroke-width="4.64" opacity="1"/>
+  <text x="35.2" y="187.87" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle" opacity="1">1</text>
+  <rect x="70" y="151.8" width="410" height="46.4" rx="23.2" fill="#FFE2CB" stroke="#E67926" stroke-width="4.64" opacity="1"/>
+  <text x="262.7" y="187.76" fill="#17232C" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="italic" text-anchor="middle" opacity="1">c⁻</text>
+  <circle cx="431.512" cy="165.60399999999998" r="3.9672" fill="#E67926" stroke="#E67926" stroke-width="0"/>
+  <line x1="439.86400000000003" y1="165.60399999999998" x2="458.656" y2="165.60399999999998" stroke="#E67926" stroke-width="4.176" stroke-linecap="round"/>
+  <line x1="432.55600000000004" y1="175" x2="455.524" y2="175" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.75"/>
+  <line x1="432.55600000000004" y1="184.39600000000002" x2="451.348" y2="184.39600000000002" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.55"/>
+  <circle cx="35.2" cy="230" r="23.2" fill="#F1F3F4" stroke="#B8C0C5" stroke-width="4.64" opacity="0.72"/>
+  <text x="35.2" y="242.87" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle" opacity="0.72">2</text>
+  <rect x="70" y="206.8" width="410" height="46.4" rx="23.2" fill="#F1F3F4" stroke="#B8C0C5" stroke-width="4.64" opacity="0.72"/>
+  <text x="262.7" y="242.76" fill="#17232C" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="italic" text-anchor="middle" opacity="0.72">cⱼ</text>
+  <line x1="433.6" y1="220.60399999999998" x2="454.48" y2="220.60399999999998" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="433.6" y1="230.0" x2="450.30400000000003" y2="230.0" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="433.6" y1="239.39600000000002" x2="446.12800000000004" y2="239.39600000000002" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <circle cx="35.2" cy="268.4" r="3.4799999999999995" fill="#B8C0C5" stroke="#B8C0C5" stroke-width="0"/>
+  <circle cx="35.2" cy="280" r="3.4799999999999995" fill="#B8C0C5" stroke="#B8C0C5" stroke-width="0"/>
+  <circle cx="35.2" cy="291.6" r="3.4799999999999995" fill="#B8C0C5" stroke="#B8C0C5" stroke-width="0"/>
+  <text x="275.0" y="292.32" fill="#6D7880" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="normal" text-anchor="middle">⋯</text>
+  <circle cx="35.2" cy="335" r="23.2" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.64" opacity="1"/>
+  <text x="35.2" y="347.87" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle" opacity="1">k</text>
+  <rect x="70" y="311.8" width="410" height="46.4" rx="23.2" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.64" opacity="1"/>
+  <text x="262.7" y="347.76" fill="#17232C" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="italic" text-anchor="middle" opacity="1">c⁺</text>
+  <rect x="426.29200000000003" y="327.692" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 444.04 335)"/>
+  <rect x="438.82" y="328.736" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 444.04 335)"/>
+  <circle cx="665.2" cy="175" r="23.2" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.64" opacity="1"/>
+  <text x="665.2" y="187.87" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle" opacity="1">1</text>
+  <rect x="700" y="151.8" width="410" height="46.4" rx="23.2" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.64" opacity="1"/>
+  <text x="892.7" y="187.76" fill="#17232C" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="italic" text-anchor="middle" opacity="1">c⁺</text>
+  <rect x="1056.292" y="167.692" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 1074.04 175)"/>
+  <rect x="1068.82" y="168.736" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 1074.04 175)"/>
+  <circle cx="665.2" cy="230" r="23.2" fill="#FFE2CB" stroke="#E67926" stroke-width="4.64" opacity="1"/>
+  <text x="665.2" y="242.87" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle" opacity="1">2</text>
+  <rect x="700" y="206.8" width="410" height="46.4" rx="23.2" fill="#FFE2CB" stroke="#E67926" stroke-width="4.64" opacity="1"/>
+  <text x="892.7" y="242.76" fill="#17232C" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="italic" text-anchor="middle" opacity="1">c⁻</text>
+  <circle cx="1061.512" cy="220.60399999999998" r="3.9672" fill="#E67926" stroke="#E67926" stroke-width="0"/>
+  <line x1="1069.864" y1="220.60399999999998" x2="1088.656" y2="220.60399999999998" stroke="#E67926" stroke-width="4.176" stroke-linecap="round"/>
+  <line x1="1062.556" y1="230" x2="1085.524" y2="230" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.75"/>
+  <line x1="1062.556" y1="239.39600000000002" x2="1081.348" y2="239.39600000000002" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.55"/>
+  <circle cx="665.2" cy="285" r="23.2" fill="#F1F3F4" stroke="#B8C0C5" stroke-width="4.64" opacity="0.72"/>
+  <text x="665.2" y="297.87" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle" opacity="0.72">3</text>
+  <rect x="700" y="261.8" width="410" height="46.4" rx="23.2" fill="#F1F3F4" stroke="#B8C0C5" stroke-width="4.64" opacity="0.72"/>
+  <text x="892.7" y="297.76" fill="#17232C" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="italic" text-anchor="middle" opacity="0.72">cⱼ</text>
+  <line x1="1063.6" y1="275.604" x2="1084.48" y2="275.604" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="1063.6" y1="285.0" x2="1080.3039999999999" y2="285.0" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="1063.6" y1="294.396" x2="1076.128" y2="294.396" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <circle cx="665.2" cy="323.4" r="3.4799999999999995" fill="#B8C0C5" stroke="#B8C0C5" stroke-width="0"/>
+  <circle cx="665.2" cy="335" r="3.4799999999999995" fill="#B8C0C5" stroke="#B8C0C5" stroke-width="0"/>
+  <circle cx="665.2" cy="346.6" r="3.4799999999999995" fill="#B8C0C5" stroke="#B8C0C5" stroke-width="0"/>
+  <text x="905.0" y="347.32" fill="#6D7880" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="normal" text-anchor="middle">⋯</text>
+  <circle cx="665.2" cy="385" r="23.2" fill="#F1F3F4" stroke="#B8C0C5" stroke-width="4.64" opacity="0.72"/>
+  <text x="665.2" y="397.87" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle" opacity="0.72">K</text>
+  <rect x="700" y="361.8" width="410" height="46.4" rx="23.2" fill="#F1F3F4" stroke="#B8C0C5" stroke-width="4.64" opacity="0.72"/>
+  <text x="892.7" y="397.76" fill="#17232C" font-family="DejaVu Sans" font-size="44" font-weight="700" font-style="italic" text-anchor="middle" opacity="0.72">cₖ</text>
+  <line x1="1063.6" y1="375.604" x2="1084.48" y2="375.604" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="1063.6" y1="385.0" x2="1080.3039999999999" y2="385.0" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="1063.6" y1="394.396" x2="1076.128" y2="394.396" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <circle cx="480" cy="175" r="8.12" fill="#FFE2CB" stroke="#E67926" stroke-width="4.06"/>
+  <circle cx="480" cy="335" r="8.12" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.06"/>
+  <circle cx="700" cy="175" r="8.12" fill="#DDF1D2" stroke="#6DA74C" stroke-width="4.06"/>
+  <circle cx="700" cy="230" r="8.12" fill="#FFE2CB" stroke="#E67926" stroke-width="4.06"/>
+  <line x1="590.0" y1="218" x2="590.0" y2="408" stroke="#79B89B" stroke-width="4.64" stroke-linecap="round" stroke-dasharray="8.1 8.1" opacity="0.68"/>
+  <circle cx="590.0" cy="208" r="10.44" fill="#EAF5F0" stroke="#79B89B" stroke-width="4.64"/>
+  <rect x="150.8" y="408" width="858.4" height="148" rx="27.839999999999996" fill="#EAF5F0" stroke="#79B89B" stroke-width="4.64"/>
+  <text x="580.0" y="450" fill="#17232C" font-family="Comic Neue" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">Failure-Calibrated Refinement</text>
+  <text x="580.0" y="494" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="italic" text-anchor="middle">Δᵢ = s(qᵢ,c⁺) − s(qᵢ,c⁻)</text>
+  <rect x="400.20000000000005" y="510" width="134.56" height="38.279999999999994" rx="19.139999999999997" fill="#FFE2CB" stroke="#E67926" stroke-width="3.4799999999999995"/>
+  <text x="467.48" y="538.71" fill="#E67926" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">&lt; 0</text>
+  <line x1="554.48" y1="529.14" x2="605.52" y2="529.14" stroke="#79B89B" stroke-width="4.64" stroke-linecap="round" marker-end="url(#teal-head)"/>
+  <rect x="622.92" y="510" width="134.56" height="38.279999999999994" rx="19.139999999999997" fill="#DDF1D2" stroke="#6DA74C" stroke-width="3.4799999999999995"/>
+  <text x="690.1999999999999" y="538.71" fill="#6DA74C" font-family="DejaVu Sans" font-size="39" font-weight="700" font-style="normal" text-anchor="middle">&gt; 0</text>
+  <rect x="58.0" y="568" width="1044.0" height="102" rx="26.68" fill="#FFFFFF" stroke="#B8C0C5" stroke-width="2.9" stroke-dasharray="8.1 7.0" opacity="0.98"/>
+  <rect x="167.852" y="592.692" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 185.6 600)"/>
+  <rect x="180.38" y="593.736" width="24.012" height="13.572000000000001" rx="6.264" fill="none" stroke="#6DA74C" stroke-width="3.3408" transform="rotate(-31 185.6 600)"/>
+  <text x="222.72" y="613.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Paired code</text>
+  <circle cx="602.272" cy="590.604" r="3.9672" fill="#E67926" stroke="#E67926" stroke-width="0"/>
+  <line x1="610.624" y1="590.604" x2="629.416" y2="590.604" stroke="#E67926" stroke-width="4.176" stroke-linecap="round"/>
+  <line x1="603.316" y1="600" x2="626.2840000000001" y2="600" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.75"/>
+  <line x1="603.316" y1="609.396" x2="622.1080000000001" y2="609.396" stroke="#E67926" stroke-width="3.132" stroke-linecap="round" opacity="0.55"/>
+  <text x="653.08" y="613.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Failure Candidate</text>
+  <line x1="441.96000000000004" y1="632.604" x2="462.84000000000003" y2="632.604" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="441.96000000000004" y1="642.0" x2="458.66400000000004" y2="642.0" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <line x1="441.96000000000004" y1="651.396" x2="454.48800000000006" y2="651.396" stroke="#6D7880" stroke-width="3.132" stroke-linecap="round" opacity="0.72"/>
+  <text x="489.52000000000004" y="655.65" fill="#17232C" font-family="DejaVu Sans" font-size="39" font-weight="600" font-style="normal" text-anchor="start">Other candidate</text>
+</svg>
