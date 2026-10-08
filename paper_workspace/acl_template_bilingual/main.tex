@@ -65,8 +65,8 @@ Standard objectives draw negatives from the current minibatch, random sampling, 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/figure1_problem_definition.pdf}
-  \caption{A Retrieved-but-Mis-ranked Case corrected by \method{}. The initial retriever places a high-scoring unpaired candidate \(c^-\) above the paired code \(c^+\) within the top-\(K\); refinement increases their score margin and promotes \(c^+\). Here, \emph{unpaired} denotes benchmark pairing rather than semantic invalidity.}
-  % 中文图注：\method{} 修正一个“已检索但排序错误案例”。初始检索器在前 \(K\) 名内将高分未配对候选 \(c^-\) 排在配对代码 \(c^+\) 之前；细化增大二者的得分间隔并提升 \(c^+\)。“未配对”表示基准配对关系，而非语义无效。
+  \caption{A Retrieved-but-Mis-ranked Case. For query \(q_i\), the initial retriever ranks a high-scoring unpaired Failure Candidate \(c^-\) above the paired code \(c^+\) within the top-\(K\); failure-calibrated refinement reverses their score margin and ordering. Here, \emph{unpaired} denotes benchmark pairing rather than semantic invalidity.}
+  % 中文图注：一个“已检索但排序错误案例”。对于查询 \(q_i\)，初始检索器在前 \(K\) 名内将高分未配对失败候选 \(c^-\) 排在配对代码 \(c^+\) 之前；失败校准细化逆转二者的分数间隔与排序。“未配对”表示基准配对关系，而非语义无效。
   \label{fig:problem_setting}
 \end{figure}
 
@@ -308,8 +308,8 @@ Table~\ref{tab:main_results} compares retrieval performance across the six CodeS
     \textbf{\method{}-Rerank}\localrun{} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \second{73.6} & \best{81.1} \textbf{(+1.3)} \\
     \bottomrule
   \end{tabular*}
-  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. Bold and underlined scores indicate the best and second-best results, respectively. \reported{} marks values reported in the cited papers, and \localrun{} marks results obtained with our local evaluation pipeline using seed 123456. Shaded rows denote our variants; bold values in parentheses are absolute MRR-point improvements over the locally evaluated initial retriever.}
-  % 中文表注：结果保留一位小数；分数的粗体和下划线分别表示每列第一名和第二名。阴影行是本文的两个变体，Avg. 列中加粗的括号数值表示相对于本地评测初始检索器的绝对 MRR 点数提升。
+  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. \reported{} denotes published results and \localrun{} local evaluation; gains in parentheses are relative to the locally evaluated initial retriever. Bold and underlined values mark the best and second-best scores, respectively, and shading identifies \method{} variants.}
+  % 中文表注：CodeSearchNet 上的 MRR（\%），结果保留一位小数。\reported{} 表示论文报告结果，\localrun{} 表示本地评测；括号中的增益均以本地评测的初始检索器为参照。粗体和下划线分别表示第一名和第二名，阴影行表示 \method{} 变体。
   \label{tab:main_results}
 \end{table*}
 
@@ -342,8 +342,8 @@ Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim rerank
     \method{}-Rerank & \checkmark & \checkmark & \textbf{81.06} & \textbf{72.64} & \textbf{91.68} & 95.11 & \textbf{+1.29} \\
     \bottomrule
   \end{tabular}
-  \caption{Component analysis of failure-candidate (FC) refinement and inference-time MaxSim fusion. A check mark denotes an enabled component. Both reranked configurations use \(K=20\) and \(\alpha=0.5\); metrics are macro-averaged over the six languages, and \(\Delta\)MRR is relative to the initial retriever.}
-  % 中文表注：失败候选（FC）细化与推理阶段 MaxSim 融合的组件分析。勾号表示启用相应组件。两个重排配置均使用 \(K=20\)、\(\alpha=0.5\)；指标为六语言宏平均，\(\Delta\)MRR 以初始检索器为参照。
+  \caption{Component analysis of FC refinement and MaxSim. A check mark denotes an enabled component; reranked configurations use \(K=20\) and \(\alpha=0.5\). Metrics are six-language macro averages, with \(\Delta\)MRR relative to the initial retriever.}
+  % 中文表注：FC 细化与 MaxSim 的组件分析。勾号表示启用相应组件；重排配置使用 \(K=20\)、\(\alpha=0.5\)。指标为六语言宏平均，\(\Delta\)MRR 以初始检索器为参照。
   \label{tab:ablation}
 \end{table*}
 
@@ -397,27 +397,27 @@ Because the corresponding initial checkpoints were not evaluated locally on the 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.98\textwidth]{figures/figure3_encoder_compatibility.pdf}
-  \caption{Language-level and macro MRR for the three encoder instantiations. Published values are shown only as contextual references; Global and Rerank are local evaluations, and each pair compares the outputs of the same refined checkpoint before and after MaxSim.}
-  % 中文图注：三种编码器实例的逐语言及宏平均 MRR。论文报告值仅作为背景参照；Global 与 Rerank 为本地评测，每组柱比较同一细化检查点在 MaxSim 前后的输出。
+  \caption{Language-level and macro MRR across three encoder instantiations. Published\reported{} values provide literature context rather than matched baselines. Each Global--Rerank pair compares the same locally refined checkpoint before and after MaxSim.}
+  % 中文图注：三种编码器实例的逐语言及宏平均 MRR。论文报告值\reported{}用于提供文献背景，而非协议一致的基线。每组 Global--Rerank 比较同一本地细化检查点在 MaxSim 前后的结果。
   \label{fig:encoder_compatibility}
 \end{figure*}
 
 \subsection{Reranking Effectiveness and Efficiency}
 \label{sec:efficiency}
 
-Figure~\ref{fig:reranking_sensitivity} separates validation-based hyperparameter selection from held-out test evaluation. Panel~(a) shows the complete \(K\times\alpha\) validation grid as MRR changes relative to global retrieval for each language and their macro average. The maximum macro-averaged validation MRR is obtained at \(K=20\) and \(\alpha=0.5\); both values are then fixed before evaluating the test set. Panel~(b) shows the corresponding language-level and macro effectiveness--latency trade-off. The selected configuration reaches a test macro MRR of 81.06 at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 yields no further macro MRR improvement but raises latency to 46.64 and 85.19 ms, respectively. At 19.04 ms per query, \(K=10\) provides a lower-latency alternative with a macro MRR of 81.03.
-% 中文：图~\ref{fig:reranking_sensitivity} 将基于验证集的超参数选择与留出测试集评测明确分开。子图 (a) 以相对于全局检索的 MRR 变化展示每种语言及其宏平均的完整 \(K\times\alpha\) 验证网格；宏平均验证 MRR 在 \(K=20\)、\(\alpha=0.5\) 时达到最高，随后在测试集评测前固定这两个取值。子图 (b) 展示相应的逐语言及宏平均检索效果—延迟权衡。最终选定的配置在 JavaScript 上以每查询 26.04 毫秒的延迟取得 81.06 的测试宏平均 MRR。将 \(K\) 增至 50 或 100 并未进一步提高宏平均 MRR，却分别将延迟增加到 46.64 和 85.19 毫秒。\(K=10\) 则以每查询 19.04 毫秒取得 81.03 的宏平均 MRR，可作为延迟更低的选择。
+Figure~\ref{fig:reranking_sensitivity} separates validation-based hyperparameter selection from held-out test evaluation. The left panel shows the complete \(K\times\alpha\) validation grid as MRR changes relative to global retrieval for each language and their macro average. The maximum macro-averaged validation MRR is obtained at \(K=20\) and \(\alpha=0.5\); both values are then fixed before evaluating the test set. The right panel shows the corresponding language-level and macro effectiveness--latency trade-off. The selected configuration reaches a test macro MRR of 81.06 at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 yields no further macro MRR improvement but raises latency to 46.64 and 85.19 ms, respectively. At 19.04 ms per query, \(K=10\) provides a lower-latency alternative with a macro MRR of 81.03.
+% 中文：图~\ref{fig:reranking_sensitivity} 将基于验证集的超参数选择与留出测试集评测明确分开。左图以相对于全局检索的 MRR 变化展示每种语言及其宏平均的完整 \(K\times\alpha\) 验证网格；宏平均验证 MRR 在 \(K=20\)、\(\alpha=0.5\) 时达到最高，随后在测试集评测前固定这两个取值。右图展示相应的逐语言及宏平均检索效果—延迟权衡。最终选定的配置在 JavaScript 上以每查询 26.04 毫秒的延迟取得 81.06 的测试宏平均 MRR。将 \(K\) 增至 50 或 100 并未进一步提高宏平均 MRR，却分别将延迟增加到 46.64 和 85.19 毫秒。\(K=10\) 则以每查询 19.04 毫秒取得 81.03 的宏平均 MRR，可作为延迟更低的选择。
 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.98\textwidth]{figures/figure4_reranking_selection_efficiency.pdf}
-  \caption{Reranking selection and inference efficiency. Panel (a) reports validation \(\Delta\)MRR over Global for each language and the macro average across all evaluated \((K,\alpha)\) pairs; the ringed macro cell marks the selected configuration. Panel (b) reports language-level and macro test \(\Delta\)MRR against JavaScript inference latency after fixing \(\alpha=0.5\). Local-interaction scores are computed for every query, and all configurations have a peak GPU memory footprint of 3,063 MiB.}
-  % 中文图注：重排配置选择与推理效率。子图 (a) 报告全部候选 \((K,\alpha)\) 组合在每种语言及宏平均上的验证集 \(\Delta\)MRR（相对于 Global），圆环标出的宏平均单元格为选定配置。子图 (b) 在固定 \(\alpha=0.5\) 后，展示逐语言及宏平均测试集 \(\Delta\)MRR 与 JavaScript 推理延迟之间的关系。每个查询都实际计算局部交互分数，所有配置的峰值显存占用均为 3,063 MiB。
+  \caption{Reranking selection and inference efficiency. Left: validation \(\Delta\)MRR over Global across the \(K\times\alpha\) grid; the ring marks the setting selected by macro-averaged MRR. Right: held-out test \(\Delta\)MRR versus JavaScript inference latency at \(\alpha=0.5\).}
+  % 中文图注：重排配置选择与推理效率。左图：\(K\times\alpha\) 网格上相对于 Global 的验证集 \(\Delta\)MRR，圆环标出按宏平均 MRR 选定的设置。右图：\(\alpha=0.5\) 时留出测试集 \(\Delta\)MRR 与 JavaScript 推理延迟的关系。
   \label{fig:reranking_sensitivity}
 \end{figure*}
 
-The latency measurement therefore reflects the complete inference path rather than an oracle-assisted estimate: reranking is executed for every query regardless of whether the gold code snippet appears among the top-\(K\) candidates.
-% 中文：因此，延迟测量反映完整的推理流程，而不是借助正确答案信息得到的理想化估计：无论正确代码片段是否出现在前 \(K\) 个候选中，每个查询都会执行重排。
+The latency measurement therefore reflects the complete inference path rather than an oracle-assisted estimate: reranking is executed for every query regardless of whether the gold code snippet appears among the top-\(K\) candidates. Every evaluated configuration has a peak GPU memory footprint of 3,063 MiB.
+% 中文：因此，延迟测量反映完整的推理流程，而不是借助正确答案信息得到的理想化估计：无论正确代码片段是否出现在前 \(K\) 个候选中，每个查询都会执行重排。所有评测配置的峰值 GPU 显存占用均为 3,063 MiB。
 
 Failure-candidate mining and refinement are one-time offline preparation stages and therefore do not enter the per-query latency measurement. The reported online cost includes query encoding, global search, and token-level rescoring for every query.
 % 中文：失败候选挖掘与细化训练均为一次性的离线模型准备阶段，因此不计入每查询延迟。本文报告的在线成本包含每个查询的查询编码、全局搜索和词元级重新计分。
@@ -661,8 +661,8 @@ Table~\ref{tab:candidate_language_details} reports all four language-level metri
                & R@10 & \textbf{95.10} & 95.00 & 94.88 & 94.58 \\
     \bottomrule
   \end{tabular}
-  \caption{Complete language-level results (\%) for the candidate-selection control. The three refinement variants use one additional candidate per query and global retrieval only. Candidate-run files record per-language metrics to three decimal places before conversion to percentages.}
-  % 中文表注：候选选择对照的完整逐语言结果（\%）。三种细化变体均为每个查询使用一个附加候选，并且只采用全局检索。候选实验文件先以三位小数记录逐语言指标，再转换为百分比。
+  \caption{Complete language-level results (\%) for the candidate-selection control. Each refinement variant uses one additional candidate per query and global retrieval only.}
+  % 中文表注：候选选择对照的完整逐语言结果（\%）。每种细化变体均为每个查询使用一个附加候选，并且只采用全局检索。
   \label{tab:candidate_language_details}
 \end{table*}
 
@@ -809,8 +809,8 @@ Within each locally evaluated refinement checkpoint, MaxSim raises MRR for every
 \section{Reranking Selection and Efficiency Details}
 \label{app:reranking_details}
 
-The validation grid in Figure~\ref{fig:reranking_sensitivity}(a) contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding numerical values. Selection uses the six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
-% 中文：图~\ref{fig:reranking_sensitivity}(a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合，表~\ref{tab:reranking_validation_grid} 给出相应的精确数值。模型选择仅依据六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
+The validation grid in the left panel of Figure~\ref{fig:reranking_sensitivity} contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding numerical values. Selection uses the six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
+% 中文：图~\ref{fig:reranking_sensitivity} 左侧的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合，表~\ref{tab:reranking_validation_grid} 给出相应的精确数值。模型选择仅依据六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
 
 \begin{table}[!t]
   \centering
@@ -870,8 +870,8 @@ The validation grid in Figure~\ref{fig:reranking_sensitivity}(a) contains all 20
     100 & 81.010 & 0.70 & 0.22 & 84.27 & 85.19 \\
     \bottomrule
   \end{tabular}
-  \caption{Effectiveness and measured online latency at \(\alpha=0.5\). MRR is macro-averaged over the six test languages; latency is measured on JavaScript with one NVIDIA H20. Every row has a peak GPU memory footprint of 3,063 MiB, and every query is reranked without gold-aware skipping.}
-  % 中文表注：\(\alpha=0.5\) 时的效果与实测在线延迟。MRR 为六个测试语言的宏平均；延迟在单张 NVIDIA H20 上使用 JavaScript 测得。每行的峰值显存占用均为 3,063 MiB，且所有查询都执行重排，不使用正确答案感知的跳过策略。
+  \caption{Effectiveness and measured online latency at \(\alpha=0.5\). MRR is macro-averaged over the six test languages; latency is measured on JavaScript with one NVIDIA H20. All settings peak at 3,063 MiB.}
+  % 中文表注：\(\alpha=0.5\) 时的效果与实测在线延迟。MRR 为六个测试语言的宏平均；延迟在单张 NVIDIA H20 上使用 JavaScript 测得。所有设置的峰值显存占用均为 3,063 MiB。
   \label{tab:reranking_efficiency_details}
 \end{table*}
 
