@@ -18,20 +18,6 @@
 \usepackage{colortbl}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{tikz}
-\usepackage{pgfplots}
-\usepgfplotslibrary{groupplots}
-\definecolor{globalblue}{HTML}{4C78A8}
-\definecolor{rerankorange}{HTML}{F58518}
-\pgfplotsset{
-  compat=1.18,
-  colormap={refblue}{
-    rgb255(0cm)=(247,251,255);
-    rgb255(1cm)=(198,219,239);
-    rgb255(2cm)=(107,174,214);
-    rgb255(3cm)=(76,120,168)
-  }
-}
 
 \newcommand{\method}{\textsc{ReFCode}}
 \newcommand{\reported}{\textsuperscript{\textdagger}}
@@ -393,115 +379,23 @@ Because the corresponding initial checkpoints were not evaluated locally on the 
 
 \begin{figure*}[t]
   \centering
-  \begin{tikzpicture}
-    \begin{axis}[
-      width=0.72\textwidth,
-      height=0.30\textwidth,
-      ybar,
-      bar width=13pt,
-      ylabel={Macro MRR (\%)},
-      symbolic x coords={CoCoSoDa,UniXcoder,GraphCodeBERT},
-      xtick=data,
-      ymin=70,
-      ymax=82,
-      ymajorgrids,
-      enlarge x limits=0.22,
-      tick label style={font=\small},
-      label style={font=\small},
-      legend style={font=\small,at={(0.5,-0.20)},anchor=north,legend columns=2,draw=none},
-      nodes near coords,
-      nodes near coords style={font=\scriptsize},
-      every node near coord/.append style={/pgf/number format/fixed,/pgf/number format/precision=2}
-    ]
-      \addplot[fill=globalblue!55, draw=globalblue] coordinates {(CoCoSoDa,80.10) (UniXcoder,75.96) (GraphCodeBERT,72.82)};
-      \addlegendentry{Global}
-      \addplot[fill=rerankorange!65, draw=rerankorange!80!black] coordinates {(CoCoSoDa,80.62) (UniXcoder,76.64) (GraphCodeBERT,73.97)};
-      \addlegendentry{Rerank}
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Locally evaluated absolute MRR for three refined encoder instantiations before and after MaxSim reranking. Each pair compares the global and reranked outputs of the same refined checkpoint.}
-  % 中文图注：三种细化编码器实例在 MaxSim 重排前后的本地评测绝对 MRR。每组柱比较同一细化检查点的全局输出与重排输出。
+  \includegraphics[width=0.98\textwidth]{figures/figure3_encoder_compatibility.pdf}
+  \caption{Language-level and macro MRR for the three encoder instantiations. Published values are shown only as contextual references; Global and Rerank are local evaluations, and each pair compares the outputs of the same refined checkpoint before and after MaxSim.}
+  % 中文图注：三种编码器实例的逐语言及宏平均 MRR。论文报告值仅作为背景参照；Global 与 Rerank 为本地评测，每组柱比较同一细化检查点在 MaxSim 前后的输出。
   \label{fig:encoder_compatibility}
 \end{figure*}
 
 \subsection{Reranking Effectiveness and Efficiency}
 \label{sec:efficiency}
 
-Figure~\ref{fig:reranking_sensitivity} separates validation-based hyperparameter selection from held-out test evaluation. Panel~(a) visualizes the complete \(K\times\alpha\) validation grid as a heatmap. The maximum macro-averaged validation MRR is obtained at \(K=20\) and \(\alpha=0.5\); both values are then fixed before evaluating the test set. Panel~(b) shows the resulting effectiveness--latency trade-off. The selected configuration reaches a test MRR of 81.06 at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 yields no further MRR improvement but raises latency to 46.64 and 85.19 ms, respectively. At 19.04 ms per query, \(K=10\) provides a lower-latency alternative with an MRR of 81.03.
-% 中文：图~\ref{fig:reranking_sensitivity} 将基于验证集的超参数选择与留出测试集评测明确分开。子图 (a) 使用热力图展示完整的 \(K\times\alpha\) 验证网格；宏平均验证 MRR 在 \(K=20\)、\(\alpha=0.5\) 时达到最高，随后在测试集评测前固定这两个取值。子图 (b) 展示相应的检索效果—延迟权衡。最终选定的配置在 JavaScript 上以每查询 26.04 毫秒的延迟取得 81.06 的测试 MRR。将 \(K\) 增至 50 或 100 并未进一步提高 MRR，却分别将延迟增加到 46.64 和 85.19 毫秒。\(K=10\) 则以每查询 19.04 毫秒取得 81.03 MRR，可作为延迟更低的选择。
+Figure~\ref{fig:reranking_sensitivity} separates validation-based hyperparameter selection from held-out test evaluation. Panel~(a) shows the complete \(K\times\alpha\) validation grid as MRR changes relative to global retrieval for each language and their macro average. The maximum macro-averaged validation MRR is obtained at \(K=20\) and \(\alpha=0.5\); both values are then fixed before evaluating the test set. Panel~(b) shows the corresponding language-level and macro effectiveness--latency trade-off. The selected configuration reaches a test macro MRR of 81.06 at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 yields no further macro MRR improvement but raises latency to 46.64 and 85.19 ms, respectively. At 19.04 ms per query, \(K=10\) provides a lower-latency alternative with a macro MRR of 81.03.
+% 中文：图~\ref{fig:reranking_sensitivity} 将基于验证集的超参数选择与留出测试集评测明确分开。子图 (a) 以相对于全局检索的 MRR 变化展示每种语言及其宏平均的完整 \(K\times\alpha\) 验证网格；宏平均验证 MRR 在 \(K=20\)、\(\alpha=0.5\) 时达到最高，随后在测试集评测前固定这两个取值。子图 (b) 展示相应的逐语言及宏平均检索效果—延迟权衡。最终选定的配置在 JavaScript 上以每查询 26.04 毫秒的延迟取得 81.06 的测试宏平均 MRR。将 \(K\) 增至 50 或 100 并未进一步提高宏平均 MRR，却分别将延迟增加到 46.64 和 85.19 毫秒。\(K=10\) 则以每查询 19.04 毫秒取得 81.03 的宏平均 MRR，可作为延迟更低的选择。
 
 \begin{figure*}[t]
   \centering
-  \begin{tikzpicture}
-    \begin{groupplot}[
-      group style={group size=2 by 1, horizontal sep=2.2cm},
-      width=0.39\textwidth,
-      height=0.27\textwidth,
-      tick label style={font=\scriptsize},
-      label style={font=\small},
-      title style={font=\small},
-      legend style={font=\scriptsize, draw=none}
-    ]
-      \nextgroupplot[
-        title={(a) Validation selection},
-        xlabel={Reranking depth \(K\)},
-        ylabel={Fusion weight \(\alpha\)},
-        xtick={0,1,2,3},
-        xticklabels={10,20,50,100},
-        ytick={0,1,2,3,4},
-        yticklabels={0,0.25,0.5,0.75,1},
-        xmin=-0.5,
-        xmax=3.5,
-        ymin=-0.5,
-        ymax=4.5,
-        axis on top,
-        point meta min=80.99,
-        point meta max=82.22,
-        colormap name=refblue,
-        colorbar,
-        colorbar style={
-          ylabel={Validation MRR (\%)},
-          yticklabel style={font=\tiny},
-          ylabel style={font=\scriptsize}
-        }
-      ]
-      \addplot[
-        matrix plot*,
-        mesh/cols=4,
-        point meta=explicit,
-        nodes near coords={\pgfmathprintnumber[fixed,precision=2]{\pgfplotspointmeta}},
-        every node near coord/.append style={font=\tiny}
-      ] coordinates {
-        (0,0) [81.334] (1,0) [81.157] (2,0) [81.037] (3,0) [80.997]
-        (0,1) [81.826] (1,1) [81.804] (2,1) [81.777] (3,1) [81.768]
-        (0,2) [82.165] (1,2) [82.219] (2,2) [82.210] (3,2) [82.203]
-        (0,3) [82.152] (1,3) [82.167] (2,3) [82.168] (3,3) [82.169]
-        (0,4) [81.861] (1,4) [81.861] (2,4) [81.861] (3,4) [81.861]
-      };
-      \draw[black, very thick] (axis cs:0.5,1.5) rectangle (axis cs:1.5,2.5);
-
-      \nextgroupplot[
-        title={(b) Held-out effectiveness--latency trade-off},
-        xlabel={Total latency (ms/query)},
-        ylabel={Test macro MRR (\%)},
-        xmin=14,
-        xmax=90,
-        ymin=80.5,
-        ymax=81.1,
-        grid=major
-      ]
-      \addplot[globalblue, densely dotted] coordinates {(14,80.571) (90,80.571)};
-      \node[font=\scriptsize, anchor=south west] at (axis cs:14,80.571) {Global retrieval};
-      \addplot[rerankorange!85!black, thick, mark=*] coordinates {(19.04,81.035) (26.04,81.055) (46.64,81.017) (85.19,81.010)};
-      \addplot[only marks, mark=star, mark size=4pt, black] coordinates {(26.04,81.055)};
-      \node[font=\scriptsize, anchor=south east] at (axis cs:19.04,81.035) {\(K=10\)};
-      \node[font=\scriptsize, anchor=south west] at (axis cs:26.04,81.055) {\(K=20\)};
-      \node[font=\scriptsize, anchor=north west] at (axis cs:46.64,81.017) {\(K=50\)};
-      \node[font=\scriptsize, anchor=south east] at (axis cs:85.19,81.010) {\(K=100\)};
-    \end{groupplot}
-  \end{tikzpicture}
-  \caption{Reranking hyperparameters and inference efficiency. Panel (a) reports six-language macro-averaged validation MRR for every evaluated \((K,\alpha)\) pair; the outlined cell marks the selected configuration. Panel (b) reports test MRR against JavaScript inference latency after fixing \(\alpha=0.5\); the dotted line marks global retrieval without reranking. Local-interaction scores are computed for every query, and all configurations have a peak GPU memory footprint of 3,063 MiB.}
-  % 中文表注：重排超参数与推理效率。子图 (a) 报告每个候选 \((K,\alpha)\) 组合在六语言验证集上的宏平均 MRR，边框标出的单元格表示选定配置。子图 (b) 在固定 \(\alpha=0.5\) 后，展示测试 MRR 与 JavaScript 推理延迟之间的关系；点线表示不使用重排的全局检索。每个查询都实际计算局部交互分数，所有配置的峰值显存占用均为 3,063 MiB。
+  \includegraphics[width=0.98\textwidth]{figures/figure4_reranking_selection_efficiency.pdf}
+  \caption{Reranking selection and inference efficiency. Panel (a) reports validation \(\Delta\)MRR over Global for each language and the macro average across all evaluated \((K,\alpha)\) pairs; the ringed macro cell marks the selected configuration. Panel (b) reports language-level and macro test \(\Delta\)MRR against JavaScript inference latency after fixing \(\alpha=0.5\). Local-interaction scores are computed for every query, and all configurations have a peak GPU memory footprint of 3,063 MiB.}
+  % 中文图注：重排配置选择与推理效率。子图 (a) 报告全部候选 \((K,\alpha)\) 组合在每种语言及宏平均上的验证集 \(\Delta\)MRR（相对于 Global），圆环标出的宏平均单元格为选定配置。子图 (b) 在固定 \(\alpha=0.5\) 后，展示逐语言及宏平均测试集 \(\Delta\)MRR 与 JavaScript 推理延迟之间的关系。每个查询都实际计算局部交互分数，所有配置的峰值显存占用均为 3,063 MiB。
   \label{fig:reranking_sensitivity}
 \end{figure*}
 
