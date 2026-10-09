@@ -758,112 +758,62 @@ Within each locally evaluated refinement checkpoint, MaxSim raises MRR for every
 \begin{table*}[!t]
   \centering
   \scriptsize
-  \setlength{\tabcolsep}{3.2pt}
-  \begin{tabular}{llrrrrrr}
+  \setlength{\tabcolsep}{1.5pt}
+  \renewcommand{\arraystretch}{0.92}
+  \begin{tabular}{l*{12}{r}}
     \toprule
-    & & \multicolumn{3}{c}{CoCoSoDa} & \multicolumn{3}{c}{UniXcoder} \\
-    \cmidrule(lr){3-5}\cmidrule(lr){6-8}
-    Language & Metric & Published\reported{} & Global\localrun{} & Rerank\localrun{} & Published\reported{} & Global\localrun{} & Rerank\localrun{} \\
+    \multicolumn{13}{c}{\textbf{CoCoSoDa}} \\
+    \cmidrule(lr){1-13}
+    & \multicolumn{3}{c}{MRR} & \multicolumn{3}{c}{R@1} & \multicolumn{3}{c}{R@5} & \multicolumn{3}{c}{R@10} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
+    Language & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} \\
     \midrule
-    Ruby       & MRR  & 81.80 & 83.06 & 83.10 & 74.00 & 76.10 & 76.47 \\
-               & R@1  & 71.90 & 74.15 & 74.07 & 64.20 & 68.04 & 68.28 \\
-               & R@5  & 94.70 & 95.00 & 94.61 & 86.00 & 86.44 & 86.76 \\
-               & R@10 & 97.30 & 96.99 & 96.75 & 89.80 & 90.09 & 90.56 \\
+    Ruby       & 81.80 & 83.06 & 83.10 & 71.90 & 74.15 & 74.07 & 94.70 & 95.00 & 94.61 & 97.30 & 96.99 & 96.75 \\
+    JavaScript & 76.40 & 77.84 & 78.53 & 66.10 & 67.79 & 68.88 & 89.60 & 90.37 & 90.31 & 94.20 & 94.90 & 94.80 \\
+    Go         & 92.10 & 92.98 & 93.24 & 88.00 & 89.30 & 89.65 & 97.10 & 97.37 & 97.62 & 98.30 & 98.50 & 98.53 \\
+    Python     & 75.70 & 77.32 & 78.02 & 66.50 & 67.54 & 68.43 & 88.80 & 89.70 & 90.14 & 93.00 & 93.74 & 93.98 \\
+    Java       & 76.30 & 77.52 & 78.27 & 61.80 & 67.97 & 69.06 & 85.30 & 89.71 & 89.95 & 90.50 & 93.68 & 93.83 \\
+    PHP        & 70.30 & 71.89 & 72.56 & 59.80 & 61.58 & 62.42 & 83.40 & 84.67 & 85.21 & 89.70 & 90.42 & 90.74 \\
+    Macro      & 78.77 & 80.10 & 80.62 & 69.02 & 71.39 & 72.08 & 89.82 & 91.14 & 91.31 & 93.83 & 94.70 & 94.77 \\
     \midrule
-    JavaScript & MRR  & 76.40 & 77.84 & 78.53 & 68.40 & 69.79 & 70.84 \\
-               & R@1  & 66.10 & 67.79 & 68.88 & 59.10 & 60.35 & 61.62 \\
-               & R@5  & 89.60 & 90.37 & 90.31 & 80.40 & 81.59 & 82.29 \\
-               & R@10 & 94.20 & 94.90 & 94.80 & 85.40 & 86.60 & 87.03 \\
+    \multicolumn{13}{c}{\textbf{UniXcoder}} \\
     \midrule
-    Go         & MRR  & 92.10 & 92.98 & 93.24 & 91.50 & 92.53 & 92.75 \\
-               & R@1  & 88.00 & 89.30 & 89.65 & 87.50 & 88.92 & 89.17 \\
-               & R@5  & 97.10 & 97.37 & 97.62 & 96.60 & 96.85 & 96.96 \\
-               & R@10 & 98.30 & 98.50 & 98.53 & 98.00 & 97.94 & 98.08 \\
-    \midrule
-    Python     & MRR  & 75.70 & 77.32 & 78.02 & 72.00 & 74.28 & 75.11 \\
-               & R@1  & 66.50 & 67.54 & 68.43 & 61.20 & 64.85 & 65.89 \\
-               & R@5  & 88.80 & 89.70 & 90.14 & 83.80 & 85.90 & 86.57 \\
-               & R@10 & 93.00 & 93.74 & 93.98 & 88.90 & 90.06 & 90.47 \\
-    \midrule
-    Java       & MRR  & 76.30 & 77.52 & 78.27 & 72.60 & 74.31 & 75.20 \\
-               & R@1  & 61.80 & 67.97 & 69.06 & 61.80 & 65.20 & 66.30 \\
-               & R@5  & 85.30 & 89.71 & 89.95 & 85.30 & 85.63 & 86.25 \\
-               & R@10 & 90.50 & 93.68 & 93.83 & 90.50 & 89.67 & 90.13 \\
-    \midrule
-    PHP        & MRR  & 70.30 & 71.89 & 72.56 & 67.60 & 68.76 & 69.44 \\
-               & R@1  & 59.80 & 61.58 & 62.42 & 57.20 & 58.95 & 59.65 \\
-               & R@5  & 83.40 & 84.67 & 85.21 & 80.00 & 80.86 & 81.55 \\
-               & R@10 & 89.70 & 90.42 & 90.74 & 86.30 & 86.55 & 86.94 \\
-    \midrule
-    Macro      & MRR  & 78.77 & 80.10 & 80.62 & 74.35 & 75.96 & 76.64 \\
-               & R@1  & 69.02 & 71.39 & 72.08 & 65.17 & 67.72 & 68.48 \\
-               & R@5  & 89.82 & 91.14 & 91.31 & 85.35 & 86.21 & 86.73 \\
-               & R@10 & 93.83 & 94.70 & 94.77 & 89.82 & 90.15 & 90.54 \\
+    Ruby       & 74.00 & 76.10 & 76.47 & 64.20 & 68.04 & 68.28 & 86.00 & 86.44 & 86.76 & 89.80 & 90.09 & 90.56 \\
+    JavaScript & 68.40 & 69.79 & 70.84 & 59.10 & 60.35 & 61.62 & 80.40 & 81.59 & 82.29 & 85.40 & 86.60 & 87.03 \\
+    Go         & 91.50 & 92.53 & 92.75 & 87.50 & 88.92 & 89.17 & 96.60 & 96.85 & 96.96 & 98.00 & 97.94 & 98.08 \\
+    Python     & 72.00 & 74.28 & 75.11 & 61.20 & 64.85 & 65.89 & 83.80 & 85.90 & 86.57 & 88.90 & 90.06 & 90.47 \\
+    Java       & 72.60 & 74.31 & 75.20 & 61.80 & 65.20 & 66.30 & 85.30 & 85.63 & 86.25 & 90.50 & 89.67 & 90.13 \\
+    PHP        & 67.60 & 68.76 & 69.44 & 57.20 & 58.95 & 59.65 & 80.00 & 80.86 & 81.55 & 86.30 & 86.55 & 86.94 \\
+    Macro      & 74.35 & 75.96 & 76.64 & 65.17 & 67.72 & 68.48 & 85.35 & 86.21 & 86.73 & 89.82 & 90.15 & 90.54 \\
     \bottomrule
   \end{tabular}
-  \caption{Complete encoder-instantiation results (\%) for CoCoSoDa and UniXcoder. \reported{} marks results reported by CoCoSoDa~\citep{CoCoSoDa}; \localrun{} marks local evaluation of a refined checkpoint.}
-  % 中文表注：CoCoSoDa 与 UniXcoder 编码器实例的完整结果（\%）。\reported{} 表示 CoCoSoDa~\citep{CoCoSoDa} 报告的结果；\localrun{} 表示对细化检查点的本地评测。
+  \caption{Complete encoder-instantiation results (\%) for CoCoSoDa and UniXcoder. P\reported{} denotes published results~\citep{CoCoSoDa}; G\localrun{} and R\localrun{} denote local Global and Rerank evaluation.}
+  % 中文表注：CoCoSoDa 与 UniXcoder 编码器实例的完整结果（\%）。P\reported{} 表示论文报告结果~\citep{CoCoSoDa}；G\localrun{} 与 R\localrun{} 分别表示本地 Global 和 Rerank 评测。
   \label{tab:encoder_coco_unix_full}
 \end{table*}
 
 \begin{table*}[!t]
   \centering
   \scriptsize
-  \begin{minipage}[t]{0.47\textwidth}
-    \centering
-    \setlength{\tabcolsep}{2.2pt}
-    \begin{tabular}{llrrr}
-      \toprule
-      Language & Metric & Published\reported{} & Global\localrun{} & Rerank\localrun{} \\
-      \midrule
-      Ruby       & MRR  & 70.30 & 71.86 & 73.46 \\
-                 & R@1  & 60.70 & 62.33 & 64.31 \\
-                 & R@5  & 82.40 & 83.03 & 84.30 \\
-                 & R@10 & 87.20 & 88.18 & 88.26 \\
-      \midrule
-      JavaScript & MRR  & 64.40 & 65.61 & 66.79 \\
-                 & R@1  & 53.80 & 55.79 & 57.28 \\
-                 & R@5  & 77.40 & 77.24 & 78.46 \\
-                 & R@10 & 83.40 & 83.08 & 83.87 \\
-      \midrule
-      Go         & MRR  & 89.70 & 90.98 & 91.57 \\
-                 & R@1  & 85.80 & 86.76 & 87.55 \\
-                 & R@5  & 95.40 & 96.10 & 96.52 \\
-                 & R@10 & 97.20 & 97.49 & 97.71 \\
-      \bottomrule
-    \end{tabular}
-  \end{minipage}\hfill
-  \begin{minipage}[t]{0.47\textwidth}
-    \centering
-    \setlength{\tabcolsep}{2.2pt}
-    \begin{tabular}{llrrr}
-      \toprule
-      Language & Metric & Published\reported{} & Global\localrun{} & Rerank\localrun{} \\
-      \midrule
-      Python     & MRR  & 69.20 & 71.11 & 72.42 \\
-                 & R@1  & 59.40 & 61.53 & 63.06 \\
-                 & R@5  & 81.30 & 82.75 & 83.99 \\
-                 & R@10 & 86.60 & 87.77 & 88.63 \\
-      \midrule
-      Java       & MRR  & 69.10 & 71.29 & 72.54 \\
-                 & R@1  & 59.20 & 61.99 & 63.39 \\
-                 & R@5  & 81.70 & 82.85 & 84.15 \\
-                 & R@10 & 86.50 & 87.57 & 88.33 \\
-      \midrule
-      PHP        & MRR  & 64.90 & 66.06 & 67.05 \\
-                 & R@1  & 54.50 & 55.89 & 57.01 \\
-                 & R@5  & 78.50 & 78.57 & 79.48 \\
-                 & R@10 & 83.20 & 84.51 & 85.31 \\
-      \midrule
-      Macro      & MRR  & 71.27 & 72.82 & 73.97 \\
-                 & R@1  & 62.23 & 64.05 & 65.43 \\
-                 & R@5  & 82.78 & 83.42 & 84.48 \\
-                 & R@10 & 87.35 & 88.10 & 88.69 \\
-      \bottomrule
-    \end{tabular}
-  \end{minipage}
-  \caption{Complete encoder-instantiation results (\%) for GraphCodeBERT. The published column is transcribed from the GraphCodeBERT block in CoCoSoDa's other-pre-trained-models table~\citep{CoCoSoDa}; the other columns are local evaluations of one refined checkpoint before and after MaxSim.}
-  % 中文表注：GraphCodeBERT 编码器实例的完整结果（\%）。论文报告列转录自 CoCoSoDa“其他预训练模型结果”表中的 GraphCodeBERT 部分~\citep{CoCoSoDa}；其余两列是同一细化检查点在 MaxSim 前后的本地评测。
+  \setlength{\tabcolsep}{1.5pt}
+  \renewcommand{\arraystretch}{0.92}
+  \begin{tabular}{l*{12}{r}}
+    \toprule
+    & \multicolumn{3}{c}{MRR} & \multicolumn{3}{c}{R@1} & \multicolumn{3}{c}{R@5} & \multicolumn{3}{c}{R@10} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
+    Language & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} \\
+    \midrule
+    Ruby       & 70.30 & 71.86 & 73.46 & 60.70 & 62.33 & 64.31 & 82.40 & 83.03 & 84.30 & 87.20 & 88.18 & 88.26 \\
+    JavaScript & 64.40 & 65.61 & 66.79 & 53.80 & 55.79 & 57.28 & 77.40 & 77.24 & 78.46 & 83.40 & 83.08 & 83.87 \\
+    Go         & 89.70 & 90.98 & 91.57 & 85.80 & 86.76 & 87.55 & 95.40 & 96.10 & 96.52 & 97.20 & 97.49 & 97.71 \\
+    Python     & 69.20 & 71.11 & 72.42 & 59.40 & 61.53 & 63.06 & 81.30 & 82.75 & 83.99 & 86.60 & 87.77 & 88.63 \\
+    Java       & 69.10 & 71.29 & 72.54 & 59.20 & 61.99 & 63.39 & 81.70 & 82.85 & 84.15 & 86.50 & 87.57 & 88.33 \\
+    PHP        & 64.90 & 66.06 & 67.05 & 54.50 & 55.89 & 57.01 & 78.50 & 78.57 & 79.48 & 83.20 & 84.51 & 85.31 \\
+    Macro      & 71.27 & 72.82 & 73.97 & 62.23 & 64.05 & 65.43 & 82.78 & 83.42 & 84.48 & 87.35 & 88.10 & 88.69 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Complete GraphCodeBERT encoder-instantiation results (\%). P\reported{} denotes published results~\citep{CoCoSoDa}; G\localrun{} and R\localrun{} denote local Global and Rerank evaluation.}
+  % 中文表注：GraphCodeBERT 编码器实例的完整结果（\%）。P\reported{} 表示论文报告结果~\citep{CoCoSoDa}；G\localrun{} 与 R\localrun{} 分别表示本地 Global 和 Rerank 评测。
   \label{tab:encoder_graph_full}
 \end{table*}
 
@@ -875,26 +825,6 @@ Across the local columns, Rerank-minus-Global macro MRR is +0.52 for CoCoSoDa, +
 
 The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding numerical values. Selection uses the six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
 % 中文：图~\ref{fig:reranking_sensitivity} 子图 (a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合，表~\ref{tab:reranking_validation_grid} 给出相应的精确数值。模型选择仅依据六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
-
-\begin{table}[!t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{4.0pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    \(\alpha\) & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
-    \midrule
-    0    & 81.334 & 81.157 & 81.037 & 80.997 \\
-    0.25 & 81.826 & 81.804 & 81.777 & 81.768 \\
-    0.50 & 82.165 & \textbf{82.219} & 82.210 & 82.203 \\
-    0.75 & 82.152 & 82.167 & 82.168 & 82.169 \\
-    1.00 & 81.861 & 81.861 & 81.861 & 81.861 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Complete six-language macro validation MRR (\%) for reranking selection. The bold cell is selected on validation; test results are not used.}
-  % 中文表注：用于重排选择的完整六语言宏平均验证集 MRR（\%）。粗体单元格依据验证集选定；不使用测试集结果。
-  \label{tab:reranking_validation_grid}
-\end{table}
 
 The validation grid distinguishes the roles of the two inference parameters. At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\); at smaller \(\alpha\), changing \(K\) changes both the candidates rescored and the online cost. Once \(\alpha=0.5\) is fixed by validation, the held-out macro scores differ by only 0.045 points across the four depths, while MaxSim latency rises from 18.08 to 84.27 ms per query. The selected \(K=20\) is therefore a validation decision whose cost is reported separately, not a test-set optimum chosen after inspection.
 % 中文：验证网格区分了两个推理参数的作用。当 \(\alpha=1\) 时不使用 MaxSim，因此所有 \(K\) 的分数完全相同；当 \(\alpha\) 较小时，改变 \(K\) 会同时改变被重新计分的候选和在线开销。在验证集将 \(\alpha=0.5\) 固定后，四种深度的留出测试集宏平均分数仅相差 0.045 个点，而 MaxSim 延迟从每查询 18.08 毫秒增至 84.27 毫秒。因此，选取 \(K=20\) 是一个单独报告成本的验证集决策，而不是查看测试结果后选择的最优点。
@@ -910,10 +840,32 @@ Every language-level interval has a positive lower bound for both systems, while
 
 \begin{table*}[!t]
   \centering
-  \begin{minipage}[t]{0.48\textwidth}
+  \captionsetup{skip=2pt}
+  \begin{minipage}[t]{0.485\textwidth}
     \centering
-    \small
-    \setlength{\tabcolsep}{2.7pt}
+    \scriptsize
+    \setlength{\tabcolsep}{2.2pt}
+    \renewcommand{\arraystretch}{0.92}
+    \begin{tabular}{lrrrr}
+      \toprule
+      \(\alpha\) & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
+      \midrule
+      0    & 81.334 & 81.157 & 81.037 & 80.997 \\
+      0.25 & 81.826 & 81.804 & 81.777 & 81.768 \\
+      0.50 & 82.165 & \textbf{82.219} & 82.210 & 82.203 \\
+      0.75 & 82.152 & 82.167 & 82.168 & 82.169 \\
+      1.00 & 81.861 & 81.861 & 81.861 & 81.861 \\
+      \bottomrule
+    \end{tabular}
+    \captionof{table}{Macro validation MRR (\%) over the complete \(K\times\alpha\) grid; bold marks the selected setting.}
+    % 中文表注：完整 \(K\times\alpha\) 网格上的宏平均验证集 MRR（\%）；粗体表示选定配置。
+    \label{tab:reranking_validation_grid}
+  \end{minipage}\hfill%
+  \begin{minipage}[t]{0.485\textwidth}
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{1.8pt}
+    \renewcommand{\arraystretch}{0.92}
     \begin{tabular}{lrrrr}
       \toprule
       Language & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
@@ -928,14 +880,17 @@ Every language-level interval has a positive lower bound for both systems, while
       Macro      & 81.035 & \textbf{81.055} & 81.017 & 81.010 \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{Language-level held-out test MRR (\%) at \(\alpha=0.5\). The bold macro score uses the validation-selected depth; language-level test values do not select it.}
-    % 中文表注：\(\alpha=0.5\) 时的逐语言留出测试集 MRR（\%）。粗体宏平均分数采用验证集选定的深度；逐语言测试值不参与选择。
+    \captionof{table}{Held-out test MRR (\%) by language and depth at \(\alpha=0.5\); bold marks validation-selected \(K\).}
+    % 中文表注：\(\alpha=0.5\) 时按语言和深度报告的留出测试集 MRR（\%）；粗体表示验证集选定的 \(K\)。
     \label{tab:reranking_depth_language}
-  \end{minipage}\hfill
-  \begin{minipage}[t]{0.48\textwidth}
+  \end{minipage}
+
+  \par\vspace{0.45em}
+  \begin{minipage}[t]{0.485\textwidth}
     \centering
-    \small
-    \setlength{\tabcolsep}{2.5pt}
+    \scriptsize
+    \setlength{\tabcolsep}{2.0pt}
+    \renewcommand{\arraystretch}{0.92}
     \begin{tabular}{rrrrrr}
       \toprule
       \(K\) & MRR & Encode & Search & MaxSim & Total \\
@@ -947,16 +902,15 @@ Every language-level interval has a positive lower bound for both systems, while
       100 & 81.010 & 0.70 & 0.22 & 84.27 & 85.19 \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{Effectiveness and measured online latency at \(\alpha=0.5\). MRR is macro-averaged over the six test languages; Encode and Search denote query encoding and global search. Latency is measured on JavaScript with one NVIDIA H20. All settings peak at 3,063 MiB.}
-    % 中文表注：\(\alpha=0.5\) 时的效果与实测在线延迟。MRR 为六个测试语言的宏平均；Encode 与 Search 分别表示查询编码和全局搜索。延迟在单张 NVIDIA H20 上使用 JavaScript 测得。所有设置的峰值显存占用均为 3,063 MiB。
+    \captionof{table}{Macro test MRR and JavaScript online latency at \(\alpha=0.5\); all settings peak at 3,063 MiB.}
+    % 中文表注：\(\alpha=0.5\) 时的宏平均测试 MRR 与 JavaScript 在线延迟；所有配置的峰值显存均为 3,063 MiB。
     \label{tab:reranking_efficiency_details}
-  \end{minipage}
-
-  \vspace{0.75em}
-  \begin{minipage}[t]{0.66\textwidth}
+  \end{minipage}\hfill%
+  \begin{minipage}[t]{0.485\textwidth}
     \centering
-    \small
-    \setlength{\tabcolsep}{3.0pt}
+    \scriptsize
+    \setlength{\tabcolsep}{1.0pt}
+    \renewcommand{\arraystretch}{0.88}
     \begin{tabular}{lrlrl}
       \toprule
       Language & Initial & System & MRR & \(\Delta\) [95\% CI] \\
@@ -978,8 +932,8 @@ Every language-level interval has a positive lower bound for both systems, while
             &       & Rerank & 81.06 & +1.29 [1.11, 1.47] \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{MRR and paired-bootstrap differences relative to the initial retriever. Intervals quantify query-sampling uncertainty for fixed checkpoints trained with seed 123456.}
-    % 中文表注：相对于初始检索器的 MRR 与配对 bootstrap 差值。区间衡量使用随机种子 123456 训练的固定检查点上的查询采样不确定性。
+    \captionof{table}{MRR differences from the initial retriever with paired-bootstrap 95\% CIs for fixed checkpoints.}
+    % 中文表注：固定检查点相对于初始检索器的 MRR 差值及配对 bootstrap 95\% 置信区间。
     \label{tab:bootstrap}
   \end{minipage}
 \end{table*}
