@@ -68,6 +68,7 @@ Standard objectives draw negatives from the current minibatch, random sampling, 
   \caption{A Retrieved-but-Mis-ranked Case. For query \(q_i\), the initial retriever ranks a high-scoring unpaired Failure Candidate \(c^-\) above the paired code \(c^+\) within the top-\(K\); failure-calibrated refinement reverses their score margin and ordering. Here, \emph{unpaired} denotes benchmark pairing rather than semantic invalidity.}
   % 中文图注：一个“已检索但排序错误案例”。对于查询 \(q_i\)，初始检索器在前 \(K\) 名内将高分未配对失败候选 \(c^-\) 排在配对代码 \(c^+\) 之前；失败校准细化逆转二者的分数间隔与排序。“未配对”表示基准配对关系，而非语义无效。
   \label{fig:problem_setting}
+  \vspace{-0.5em}
 \end{figure}
 
 We therefore propose \method{}, a three-stage failure-calibrated contrastive refinement framework. \emph{Failure Candidate Harvesting} freezes the initial retriever and collects its highest-ranked unpaired code after excluding the paired example and candidates sharing its URL. \emph{Failure-Calibrated Contrastive Refinement} adds a separately weighted contrastive loss over these candidates while preserving the base objective. Optional \emph{Dual-Granularity Reranking} applies token-level MaxSim and \emph{Global--Local Score Fusion} within the global top-\(K\). Harvesting and refinement form the training procedure; reranking adds no trainable parameters but incurs inference cost.
@@ -114,6 +115,9 @@ Neural code search learns a shared space in which natural-language queries retri
 Recent systems also strengthen supervision through task-specific negatives and auxiliary relevance objectives~\citep{AAAIUA,HedgeCode}. These approaches improve the encoder or its initial training signal, but construct that signal before the final full-corpus ranking is available. \method{} instead treats a trained initial retriever as a source of supervision: it freezes the model, observes which unpaired snippets receive high scores in corpus retrieval, and refines the same dual-encoder space with those candidates. This staging makes the refinement complementary to pre-training, encoder structure, and the initial loss.
 % 中文：近期系统还通过任务特定负样本和辅助相关性目标强化监督~\citep{AAAIUA,HedgeCode}。这些方法改进编码器或其初始训练信号，但相应信号是在最终全库排序可用之前构造的。\method{} 则将训练完成的初始检索器视为监督来源：冻结模型，观察哪些未配对代码在全库检索中获得高分，再利用这些候选细化同一个双编码器空间。这样的阶段划分使细化能够与预训练、编码器结构及初始损失的改进互为补充。
 
+Preserving independent code representations matters for large-corpus search: a refined index can replace the initial one without changing the retrieval interface. \method{} therefore changes dual-encoder supervision with retrieved rankings while confining richer query--code interaction to optional top-\(K\) reranking.
+% 中文：保留独立的代码表示对于大规模语料库检索十分重要：细化后的索引可以替换初始索引，而无需改变检索接口。因此，\method{} 利用检索排序改变双编码器监督，同时将更丰富的查询—代码交互限制在可选的前 \(K\) 名重排阶段。
+
 \subsection{Hard Negatives and Late Interaction}
 
 Hard-negative mining replaces easy random negatives with candidates that better challenge the representation space. ANCE retrieves negatives from an evolving index, while RocketQA combines large negative pools with denoising~\citep{ANCE,RocketQA}; code-search work also uses uncertainty-aware sampling~\citep{AAAIUA}. These methods primarily make the training distribution more informative. Mining policies also differ in whether candidate identities evolve with the learner: online retrieval can refresh them as training proceeds, whereas model-independent static pools do not adapt to the final retriever's rankings. Failure Candidate Harvesting uses a third arrangement. Its pool is model-specific because the trained initial retriever produces it, yet fixed throughout refinement. The method records query-specific full-corpus rankings and uses the highest-ranked unpaired candidates in a separate refinement stage. Candidate difficulty is therefore defined relative to the behavior of the trained initial retriever, rather than by a model-independent pool alone. Because benchmark pairing does not establish semantic invalidity, ``failure candidate'' denotes the candidate's operational role in refinement, not a semantic label.
@@ -148,6 +152,9 @@ For a competing candidate \(c^-\), define the score margin as \(\mu_\theta(q_i,c
 \end{equation}
 where \(\mathcal{C}\) is the retrieval corpus. Equation~\ref{eq:rank_margin} makes the relevant score comparisons explicit: a negative margin identifies a candidate that already outranks the paired code, while a small positive margin identifies a nearby competitor whose order can be reversed by a modest score change. Both are more informative for refinement than candidates already separated by a large margin. Conventional in-batch or statically mined negatives are selected before the final retriever is observed and need not coincide with these model-specific competitors. \method{} therefore conditions refinement on the ranking behavior of a trained initial retriever, while retaining MRR strictly as an evaluation metric.
 % 中文：其中 \(\mathcal{C}\) 表示检索语料库。式~\ref{eq:rank_margin} 明确了与排序相关的分数比较：负间隔表示某个候选已经排在配对代码之前，较小的正间隔则表示一个只需较小分数变化就可能发生次序逆转的邻近竞争候选。与已经被大间隔分开的候选相比，这两类候选能为细化提供更有针对性的信息。常规批内负例或静态挖掘负例是在最终检索器行为被观察之前选取的，因此未必与这些模型特定的竞争候选一致。基于此，\method{} 根据训练完成的初始检索器所产生的排序行为开展细化，同时严格将 MRR 保留为评测指标。
+
+Competitors are query dependent: a code snippet may rank low for one query yet highly for another. Refinement therefore associates each query with candidates from its own corpus ranking, preserving the link between observed scores and subsequent contrastive comparisons.
+% 中文：竞争候选依赖于具体查询：同一代码片段在一个查询下可能排名较低，却可能在另一个查询下排名很高。因此，细化为每个查询关联其自身语料库排序中的候选，从而保留观测分数与后续对比比较之间的对应关系。
 
 \subsection{Failure Candidate Harvesting}
 \label{sec:failure_harvesting}
