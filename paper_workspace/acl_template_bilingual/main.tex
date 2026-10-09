@@ -902,14 +902,15 @@ The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} conta
 \end{table}
 
 \FloatBarrier
-\begin{table*}[!t]
+\begin{center}
+\begin{minipage}{\columnwidth}
   \centering
-  \small
-  \setlength{\tabcolsep}{6.0pt}
+  \scriptsize
+  \setlength{\tabcolsep}{2.5pt}
   \begin{tabular}{rrrrrr}
     \toprule
-    \(K\) & Test macro MRR & Query encode & Global search & MaxSim & Total latency \\
-    & (\%) & (ms/query) & (ms/query) & (ms/query) & (ms/query) \\
+    \(K\) & MRR & Encode & Search & MaxSim & Total \\
+    & (\%) & \multicolumn{4}{c}{ms/query} \\
     \midrule
     10  & 81.035 & 0.76 & 0.21 & 18.08 & 19.04 \\
     20  & \textbf{81.055} & 0.69 & 0.21 & 25.13 & 26.04 \\
@@ -917,19 +918,20 @@ The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} conta
     100 & 81.010 & 0.70 & 0.22 & 84.27 & 85.19 \\
     \bottomrule
   \end{tabular}
-  \caption{Effectiveness and measured online latency at \(\alpha=0.5\). MRR is macro-averaged over the six test languages; latency is measured on JavaScript with one NVIDIA H20. All settings peak at 3,063 MiB.}
-  % 中文表注：\(\alpha=0.5\) 时的效果与实测在线延迟。MRR 为六个测试语言的宏平均；延迟在单张 NVIDIA H20 上使用 JavaScript 测得。所有设置的峰值显存占用均为 3,063 MiB。
+  \captionof{table}{Effectiveness and measured online latency at \(\alpha=0.5\). MRR is macro-averaged over the six test languages; Encode and Search denote query encoding and global search. Latency is measured on JavaScript with one NVIDIA H20. All settings peak at 3,063 MiB.}
+  % 中文表注：\(\alpha=0.5\) 时的效果与实测在线延迟。MRR 为六个测试语言的宏平均；Encode 与 Search 分别表示查询编码和全局搜索。延迟在单张 NVIDIA H20 上使用 JavaScript 测得。所有设置的峰值显存占用均为 3,063 MiB。
   \label{tab:reranking_efficiency_details}
-\end{table*}
+\end{minipage}
+\end{center}
 
-\FloatBarrier
 \section{Statistical Reliability}
 \label{app:statistical_reliability}
 
 Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in Section~\ref{sec:component_analysis} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs.
 % 中文：表~\ref{tab:bootstrap} 按编程语言展开第~\ref{sec:component_analysis} 节报告的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。
 
-\begin{table}[!t]
+\begin{center}
+\begin{minipage}{\columnwidth}
   \centering
   \scriptsize
   \setlength{\tabcolsep}{1.5pt}
@@ -954,9 +956,10 @@ Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in
           &       & Rerank & 81.06 & +1.29 [1.11, 1.47] \\
     \bottomrule
   \end{tabular}
-  \caption{MRR and paired-bootstrap differences relative to the initial retriever. Intervals quantify query-sampling uncertainty for fixed checkpoints trained with seed 123456.}
+  \captionof{table}{MRR and paired-bootstrap differences relative to the initial retriever. Intervals quantify query-sampling uncertainty for fixed checkpoints trained with seed 123456.}
   % 中文表注：相对于初始检索器的 MRR 与配对 bootstrap 差值。区间衡量使用随机种子 123456 训练的固定检查点上的查询采样不确定性。
   \label{tab:bootstrap}
-\end{table}
+\end{minipage}
+\end{center}
 
 \end{document}
