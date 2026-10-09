@@ -55,8 +55,8 @@ Contrastive code search is commonly trained with in-batch, random, or statically
 \section{Introduction}
 \label{sec:introduction}
 
-Code search maps natural-language intent to executable implementations. Modern systems encode queries and code independently, then rank a corpus by similarity in a shared representation space~\citep{CodeBERT,GraphCodeBERT,UniXcoder}. This dual-encoder design enables efficient full-corpus retrieval, while contrastive pre-training and fine-tuning align paired queries and code~\citep{CodeRetriever,CoCoSoDa}. Its effectiveness, however, depends critically on which unpaired examples define the contrastive competitors.
-% 中文：代码搜索将自然语言意图映射到可执行实现。现代系统分别编码查询与代码，再根据共享表示空间中的相似度对语料库排序~\citep{CodeBERT,GraphCodeBERT,UniXcoder}。这种双编码器设计支持高效的全库检索，对比式预训练与微调则对齐配对查询和代码~\citep{CodeRetriever,CoCoSoDa}。然而，其效果关键取决于哪些未配对样本构成对比竞争项。
+Code search maps natural-language intent to executable implementations and supports program comprehension and reuse~\citep{CodeSearchSurvey}. Modern systems encode queries and code independently, then rank a corpus by similarity in a shared representation space~\citep{CodeBERT,GraphCodeBERT,UniXcoder}. This dual-encoder design enables efficient full-corpus retrieval, while contrastive pre-training and fine-tuning align paired queries and code~\citep{CodeRetriever,CoCoSoDa}. Its effectiveness, however, depends critically on which unpaired examples define the contrastive competitors.
+% 中文：代码搜索将自然语言意图映射到可执行实现，并为程序理解与复用提供支持~\citep{CodeSearchSurvey}。现代系统分别编码查询与代码，再根据共享表示空间中的相似度对语料库排序~\citep{CodeBERT,GraphCodeBERT,UniXcoder}。这种双编码器设计支持高效的全库检索，对比式预训练与微调则对齐配对查询和代码~\citep{CodeRetriever,CoCoSoDa}。然而，其效果关键取决于哪些未配对样本构成对比竞争项。
 
 Standard objectives draw negatives from the current minibatch, random sampling, or static pools independent of the final retriever's rankings. These negatives need not match the candidates that determine inference errors. After training, only corpus items assigned an equal or larger score can outrank the paired code, and these comparisons concentrate among a few high-ranked alternatives. In \emph{Retrieved-but-Mis-ranked Cases}, the paired code is already near the top but remains below one or more competitors. Figure~\ref{fig:problem_setting} illustrates why improving such cases requires supervision from the initial retriever's full-corpus rankings.
 % 中文：标准目标从当前小批量、随机采样或独立于最终检索器排序的静态候选池中获取负样本，但这些负样本未必对应推理时决定错误的候选。训练完成后，只有得分不低于配对代码的语料项才能使其排名后移，而这类比较集中于少量高排名替代候选。在“已检索但排序错误案例”（Retrieved-but-Mis-ranked Cases）中，配对代码已位于顶部附近，却仍排在一个或多个竞争候选之后。图~\ref{fig:problem_setting} 说明了为何改善此类案例需要来自初始检索器全库排序的监督。
@@ -108,22 +108,25 @@ Our contributions are threefold:
 
 \subsection{Neural Code Search}
 
-Neural code search learns a shared space in which natural-language queries retrieve source code. CodeBERT transfers bimodal code--text representations, GraphCodeBERT incorporates data-flow structure, and UniXcoder unifies cross-modal pre-training~\citep{CodeBERT,GraphCodeBERT,UniXcoder}. CodeRetriever and CoCoSoDa further strengthen contrastive representation learning~\citep{CodeRetriever,CoCoSoDa}. Together, these advances establish dual encoders that support offline code indexing and efficient full-corpus retrieval.
-% 中文：神经代码搜索学习一个共享空间，使自然语言查询能够检索源代码。CodeBERT 迁移双模态代码—文本表示，GraphCodeBERT 融入数据流结构，UniXcoder 则统一跨模态预训练~\citep{CodeBERT,GraphCodeBERT,UniXcoder}。CodeRetriever 与 CoCoSoDa 进一步强化对比式表示学习~\citep{CodeRetriever,CoCoSoDa}。这些进展共同奠定了双编码器，使代码能够离线建立索引，并支持高效的全库检索。
+Code search progressed from lexical, structural, and API-aware retrieval~\citep{Sourcerer,Portfolio,CodeHow} to learned query--code representations~\citep{DeepCS,UNIF}. Subsequent systems incorporate overlap, program structure, contextual translation, relevance matching, and cross-domain adaptation~\citep{OCoR,TabCS,TranCS,CSRS,CDCS}. Pre-trained models then provide transferable code--text representations: CodeBERT learns bimodal context, GraphCodeBERT adds data flow, and UniXcoder unifies cross-modal pre-training~\citep{CodeBERT,GraphCodeBERT,UniXcoder}. Syntax-guided and encoder--decoder objectives broaden this line~\citep{SynCoBERT,CodeT5,PLBART}, while UniCoR studies cross-language hybrid retrieval~\citep{UniCoR}.
+% 中文：代码搜索从基于词法、结构和 API 感知的检索方法~\citep{Sourcerer,Portfolio,CodeHow}，发展到学习查询—代码表示的神经方法~\citep{DeepCS,UNIF}。后续系统进一步融合重叠信息、程序结构、上下文翻译、相关性匹配和跨领域适配~\citep{OCoR,TabCS,TranCS,CSRS,CDCS}。预训练模型随后提供可迁移的代码—文本表示：CodeBERT 学习双模态上下文，GraphCodeBERT 引入数据流，UniXcoder 统一跨模态预训练~\citep{CodeBERT,GraphCodeBERT,UniXcoder}。语法引导与编码器—解码器目标扩展了这一方向~\citep{SynCoBERT,CodeT5,PLBART}，UniCoR 则研究跨语言混合检索~\citep{UniCoR}。
 
-Recent systems also strengthen supervision through task-specific negatives and auxiliary relevance objectives~\citep{AAAIUA,HedgeCode}. These approaches improve the encoder or its initial training signal, but construct that signal before the final full-corpus ranking is available. \method{} instead treats a trained initial retriever as a source of supervision: it freezes the model, observes which unpaired snippets receive high scores in corpus retrieval, and refines the same dual-encoder space with those candidates. This staging makes the refinement complementary to pre-training, encoder structure, and the initial loss.
-% 中文：近期系统还通过任务特定负样本和辅助相关性目标强化监督~\citep{AAAIUA,HedgeCode}。这些方法改进编码器或其初始训练信号，但相应信号是在最终全库排序可用之前构造的。\method{} 则将训练完成的初始检索器视为监督来源：冻结模型，观察哪些未配对代码在全库检索中获得高分，再利用这些候选细化同一个双编码器空间。这样的阶段划分使细化能够与预训练、编码器结构及初始损失的改进互为补充。
+Contrastive code representation learning further strengthens retrieval supervision. CodeRetriever and CoCoSoDa align code and text through unimodal, bimodal, and momentum-based objectives~\citep{CodeRetriever,CoCoSoDa}; semantics-preserving transformations and adversarial or augmented views provide additional self-supervision~\citep{Corder,ContraCode,ContraBERT}. These methods improve general representation quality, whereas \method{} reuses the ranking behavior of an already trained retriever to construct a targeted second-stage signal.
+% 中文：对比式代码表示学习进一步强化检索监督。CodeRetriever 与 CoCoSoDa 通过单模态、双模态及基于动量的目标对齐代码与文本~\citep{CodeRetriever,CoCoSoDa}；保持语义的程序变换以及对抗或增强视图则提供额外的自监督信号~\citep{Corder,ContraCode,ContraBERT}。这些方法改善通用表示质量，而 \method{} 利用已经训练完成的检索器所呈现的排序行为，构造有针对性的第二阶段信号。
+
+Recent systems also strengthen supervision through uncertainty, hard-negative mining, fine-tuning-based sampling, and auxiliary relevance objectives~\citep{AAAIUA,CoCoHaNeRe,R2PS,HedgeCode}. These approaches improve the encoder or its initial training signal, but construct that signal before the final full-corpus ranking is available. \method{} instead treats a trained initial retriever as a source of supervision: it freezes the model, observes which unpaired snippets receive high scores in corpus retrieval, and refines the same dual-encoder space with those candidates. This staging makes the refinement complementary to pre-training, encoder structure, and the initial loss.
+% 中文：近期系统还通过不确定性建模、困难负例挖掘、基于微调的采样以及辅助相关性目标强化监督~\citep{AAAIUA,CoCoHaNeRe,R2PS,HedgeCode}。这些方法改进编码器或其初始训练信号，但相应信号是在最终全库排序可用之前构造的。\method{} 则将训练完成的初始检索器视为监督来源：冻结模型，观察哪些未配对代码在全库检索中获得高分，再利用这些候选细化同一个双编码器空间。这样的阶段划分使细化能够与预训练、编码器结构及初始损失的改进互为补充。
 
 Preserving independent code representations matters for large-corpus search: a refined index can replace the initial one without changing the retrieval interface. \method{} therefore changes dual-encoder supervision with retrieved rankings while confining richer query--code interaction to optional top-\(K\) reranking.
 % 中文：保留独立的代码表示对于大规模语料库检索十分重要：细化后的索引可以替换初始索引，而无需改变检索接口。因此，\method{} 利用检索排序改变双编码器监督，同时将更丰富的查询—代码交互限制在可选的前 \(K\) 名重排阶段。
 
 \subsection{Hard Negatives and Late Interaction}
 
-Hard-negative mining replaces easy random negatives with candidates that better challenge the representation space. ANCE retrieves negatives from an evolving index, while RocketQA combines large negative pools with denoising~\citep{ANCE,RocketQA}; code-search work also uses uncertainty-aware sampling~\citep{AAAIUA}. These methods primarily make the training distribution more informative. Mining policies also differ in whether candidate identities evolve with the learner: online retrieval can refresh them as training proceeds, whereas model-independent static pools do not adapt to the final retriever's rankings. Failure Candidate Harvesting uses a third arrangement. Its pool is model-specific because the trained initial retriever produces it, yet fixed throughout refinement. The method records query-specific full-corpus rankings and uses the highest-ranked unpaired candidates in a separate refinement stage. Candidate difficulty is therefore defined relative to the behavior of the trained initial retriever, rather than by a model-independent pool alone. Because benchmark pairing does not establish semantic invalidity, ``failure candidate'' denotes the candidate's operational role in refinement, not a semantic label.
-% 中文：困难负样本挖掘以更能挑战表示空间的候选替代简单随机负样本。ANCE 从持续更新的索引中检索负样本，RocketQA 结合大规模负样本池与去噪~\citep{ANCE,RocketQA}；代码搜索研究也采用不确定性感知采样~\citep{AAAIUA}。这些方法主要用于提高训练分布的信息量。挖掘策略还取决于候选身份是否随学习器演化：在线检索可以在训练过程中刷新候选，而与模型无关的静态候选池不会适应最终检索器的排序。失败候选挖掘采用第三种安排：候选池由训练完成的初始检索器生成，因此具有模型特异性；但在整个细化阶段保持固定。该方法记录针对各查询的全库排序，并在独立细化阶段使用排名最高的未配对候选。因此，候选难度由训练完成的初始检索器的实际行为界定，而不只由与模型无关的候选池决定。由于基准配对关系并不能判定语义无效，“失败候选”描述的是候选在细化中的操作性角色，而不是语义标签。
+Hard-negative mining replaces easy random negatives with candidates that better challenge the representation space. Dense retrieval establishes retrieved-negative training and index-based refresh~\citep{DPR,ANCE,HardNegDR}, while RocketQA combines large negative pools with denoising~\citep{RocketQA}; code-search work also uses uncertainty-aware sampling~\citep{AAAIUA}. These methods primarily make the training distribution more informative. Mining policies also differ in whether candidate identities evolve with the learner: online retrieval can refresh them as training proceeds, whereas model-independent static pools do not adapt to the final retriever's rankings. Failure Candidate Harvesting uses a third arrangement. Its pool is model-specific because the trained initial retriever produces it, yet fixed throughout refinement. The method records query-specific full-corpus rankings and uses the highest-ranked unpaired candidates in a separate refinement stage. Candidate difficulty is therefore defined relative to the behavior of the trained initial retriever, rather than by a model-independent pool alone. Because benchmark pairing does not establish semantic invalidity, ``failure candidate'' denotes the candidate's operational role in refinement, not a semantic label.
+% 中文：困难负样本挖掘以更能挑战表示空间的候选替代简单随机负样本。稠密检索研究建立了基于检索负例的训练方式与索引刷新机制~\citep{DPR,ANCE,HardNegDR}，RocketQA 则结合大规模负样本池与去噪~\citep{RocketQA}；代码搜索研究也采用不确定性感知采样~\citep{AAAIUA}。这些方法主要用于提高训练分布的信息量。挖掘策略还取决于候选身份是否随学习器演化：在线检索可以在训练过程中刷新候选，而与模型无关的静态候选池不会适应最终检索器的排序。失败候选挖掘采用第三种安排：候选池由训练完成的初始检索器生成，因此具有模型特异性；但在整个细化阶段保持固定。该方法记录针对各查询的全库排序，并在独立细化阶段使用排名最高的未配对候选。因此，候选难度由训练完成的初始检索器的实际行为界定，而不只由与模型无关的候选池决定。由于基准配对关系并不能判定语义无效，“失败候选”描述的是候选在细化中的操作性角色，而不是语义标签。
 
-Late interaction complements global retrieval by retaining token representations and aggregating token-wise similarities; ColBERT's MaxSim is representative~\citep{ColBERT}. Applying these interactions throughout a corpus would sacrifice the main efficiency advantage of dual encoders. \method{} instead preserves global representations for training and full-corpus search, then optionally applies MaxSim only within the retrieved top-\(K\). Global--Local Score Fusion combines the standardized scores without additional trainable parameters, while retaining a measurable inference cost.
-% 中文：后期交互通过保留词元表示并聚合逐词元相似度来补充全局检索；ColBERT 的 MaxSim 是代表性形式~\citep{ColBERT}。若在整个语料库范围内应用此类交互，会损失双编码器的主要效率优势。\method{} 在训练与全库搜索中保留全局表示，随后仅在检索得到的前 \(K\) 个候选内可选地应用 MaxSim。全局—局部分数融合在不增加可训练参数的情况下组合标准化分数，同时保留可测量的推理开销。
+Fine-grained code-search models use co-attention and cross-modal features to distinguish closely related snippets~\citep{FcarCS,FineGrainedCS,HedgeCode}. Late interaction offers an efficient alternative by retaining token representations and aggregating token-wise similarities; ColBERT's MaxSim is representative~\citep{ColBERT}. Applying these interactions throughout a corpus would sacrifice the main efficiency advantage of dual encoders. \method{} instead preserves global representations for training and full-corpus search, then optionally applies MaxSim only within the retrieved top-\(K\). Global--Local Score Fusion combines the standardized scores without additional trainable parameters, while retaining a measurable inference cost.
+% 中文：细粒度代码搜索模型利用协同注意力与跨模态特征区分高度相近的代码片段~\citep{FcarCS,FineGrainedCS,HedgeCode}。后期交互则提供一种更高效的选择：它保留词元表示并聚合逐词元相似度，ColBERT 的 MaxSim 是代表性形式~\citep{ColBERT}。若在整个语料库范围内应用此类交互，会损失双编码器的主要效率优势。\method{} 在训练与全库搜索中保留全局表示，随后仅在检索得到的前 \(K\) 个候选内可选地应用 MaxSim。全局—局部分数融合在不增加可训练参数的情况下组合标准化分数，同时保留可测量的推理开销。
 
 \section{Method}
 \label{sec:method}
@@ -369,23 +372,8 @@ Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim rerank
   \caption{Component analysis. Check marks denote enabled components; reranked rows use \(K=20\) and \(\alpha=0.5\). Metrics are six-language macro averages, and \(\Delta\)MRR uses the initial retriever.}
   % 中文表注：组件分析。勾号表示启用相应组件；重排行使用 \(K=20\)、\(\alpha=0.5\)。指标为六语言宏平均，\(\Delta\)MRR 以初始检索器为参照。
   \label{tab:ablation}
-\end{table*}
+  \vspace{0.8em}
 
-The shared configuration permits matched comparisons along both axes without attributing an interaction to the components. MaxSim contributes 0.59 points before and 0.49 points after refinement; refinement contributes 0.80 points without MaxSim and 0.70 points with the shared reranker. Each operation therefore improves its matched counterpart, and the complete configuration has the highest absolute MRR, without implying a statistically validated interaction. Independently selecting reranking parameters for the initial retriever yields the same rounded test MRR of 80.36. Relative to the fixed initial retriever, the 95\% intervals are [0.66, 0.95] for refinement and [1.11, 1.47] for the complete system, quantifying test-query resampling uncertainty. Appendix~\ref{app:component_details} gives every language and metric.
-% 中文：统一配置允许沿表格两个维度进行协议一致的比较，而无需将变化归因于组件交互。MaxSim 在细化前后分别贡献 0.59 和 0.49 个点；细化在不使用 MaxSim 和使用统一重排器时分别贡献 0.80 和 0.70 个点。因此，每种操作都能改善其协议一致对照，完整配置取得最高绝对 MRR，但这并不意味着存在经过统计验证的交互作用。为初始检索器独立选择重排参数后，其测试 MRR 四舍五入后仍为 80.36。相对于固定初始检索器，细化和完整系统的 95\% 区间分别为 [0.66, 0.95] 与 [1.11, 1.47]，衡量测试查询重采样不确定性。附录~\ref{app:component_details} 给出全部逐语言指标。
-
-\paragraph{Candidate-selection control.}
-\label{sec:candidate_controls}
-
-Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.35 points and R@1 by 0.83 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
-% 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.35 和 0.83 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
-
-Random and static selection change macro MRR by \(-0.05\) and \(-0.10\) points, whereas retriever-mined selection changes it by \(+0.35\). Because the schedule and per-query candidate budget are fixed, additional optimization alone does not explain the mined-candidate gain. Its larger R@1 movement, accompanied by small R@5 and R@10 reductions, localizes the effect near the first position rather than broader retrieval coverage. Appendix~\ref{app:candidate_details} provides the language-level results.
-% 中文：随机选择和静态选择分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘候选带来 \(+0.35\) 个点的变化。由于优化日程和每查询候选预算保持固定，单纯增加优化过程不能解释检索器挖掘候选的收益。后者较大的 R@1 变化伴随 R@5 和 R@10 的小幅下降，说明其作用集中在首位附近，而不是扩大整体检索覆盖。逐语言结果见附录~\ref{app:candidate_details}。
-
-\begin{table*}[t]
-  \centering
-  \small
   \setlength{\tabcolsep}{8pt}
   \begin{tabular}{lrrrrr}
     \toprule
@@ -401,6 +389,22 @@ Random and static selection change macro MRR by \(-0.05\) and \(-0.10\) points, 
   % 中文表注：预算一致的候选选择比较，每个查询增加一个候选并采用全局检索。\(\Delta\)MRR 以未细化的初始检索器为参照。
   \label{tab:candidate_controls}
 \end{table*}
+
+% Keep the two controlled analyses together and prevent the later
+% single-column encoder figure from overtaking either table.
+\FloatBarrier
+
+The shared configuration permits matched comparisons along both axes without attributing an interaction to the components. MaxSim contributes 0.59 points before and 0.49 points after refinement; refinement contributes 0.80 points without MaxSim and 0.70 points with the shared reranker. Each operation therefore improves its matched counterpart, and the complete configuration has the highest absolute MRR, without implying a statistically validated interaction. Independently selecting reranking parameters for the initial retriever yields the same rounded test MRR of 80.36. Relative to the fixed initial retriever, the 95\% intervals are [0.66, 0.95] for refinement and [1.11, 1.47] for the complete system, quantifying test-query resampling uncertainty. Appendix~\ref{app:component_details} gives every language and metric.
+% 中文：统一配置允许沿表格两个维度进行协议一致的比较，而无需将变化归因于组件交互。MaxSim 在细化前后分别贡献 0.59 和 0.49 个点；细化在不使用 MaxSim 和使用统一重排器时分别贡献 0.80 和 0.70 个点。因此，每种操作都能改善其协议一致对照，完整配置取得最高绝对 MRR，但这并不意味着存在经过统计验证的交互作用。为初始检索器独立选择重排参数后，其测试 MRR 四舍五入后仍为 80.36。相对于固定初始检索器，细化和完整系统的 95\% 区间分别为 [0.66, 0.95] 与 [1.11, 1.47]，衡量测试查询重采样不确定性。附录~\ref{app:component_details} 给出全部逐语言指标。
+
+\paragraph{Candidate-selection control.}
+\label{sec:candidate_controls}
+
+Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.35 points and R@1 by 0.83 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
+% 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.35 和 0.83 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
+
+Random and static selection change macro MRR by \(-0.05\) and \(-0.10\) points, whereas retriever-mined selection changes it by \(+0.35\). Because the schedule and per-query candidate budget are fixed, additional optimization alone does not explain the mined-candidate gain. Its larger R@1 movement, accompanied by small R@5 and R@10 reductions, localizes the effect near the first position rather than broader retrieval coverage. Appendix~\ref{app:candidate_details} provides the language-level results.
+% 中文：随机选择和静态选择分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘候选带来 \(+0.35\) 个点的变化。由于优化日程和每查询候选预算保持固定，单纯增加优化过程不能解释检索器挖掘候选的收益。后者较大的 R@1 变化伴随 R@5 和 R@10 的小幅下降，说明其作用集中在首位附近，而不是扩大整体检索覆盖。逐语言结果见附录~\ref{app:candidate_details}。
 
 \paragraph{Rank-conditioned behavior.}
 Table~\ref{tab:rank_strata} conditions retrieval behavior on the paired code's rank under the initial retriever. The largest gains occur when the paired code initially appears at ranks 2--10: Global refinement adds 8.89 MRR points, and reranking increases the gain to 11.32 points. Improvements remain positive but smaller for ranks 11--50 and beyond 50. Conversely, MRR falls by 2.12 and 2.47 points, respectively, among queries that initially place the paired code at rank 1. The aggregate gain therefore reflects substantial correction of near-top misrankings, partially offset by regressions on some initially correct rankings. Appendix~\ref{app:rank_analysis} provides the query counts and transition statistics.
@@ -562,6 +566,11 @@ Table~\ref{tab:encoder_training_config} records the encoder-specific training co
 Across all three encoders, harvesting retains \(M=32\) candidates, and refinement uses \(m=8\), \(r=1\), \(\lambda_f=0.45\), and \(\tau_f=0.03\) with global representations only. MaxSim reranking uses \(K=20\) and \(\alpha=0.5\). CoCoSoDa and UniXcoder use evaluation and reranking batch sizes of 128 and 64, respectively; GraphCodeBERT uses 64 and 32. For GraphCodeBERT, special tokens, padding tokens, and data-flow nodes are excluded from MaxSim.
 % 中文：三种编码器均在挖掘时保留 \(M=32\) 个候选，并在细化时设置 \(m=8\)、\(r=1\)、\(\lambda_f=0.45\) 与 \(\tau_f=0.03\)，且只使用全局表示。MaxSim 重排采用 \(K=20\) 和 \(\alpha=0.5\)。CoCoSoDa 与 UniXcoder 的评测和重排批量大小分别为 128 与 64；GraphCodeBERT 分别使用 64 与 32。对于 GraphCodeBERT，MaxSim 会排除特殊词元、填充词元和数据流节点。
 
+The two configuration tables serve different replication scopes. Table~\ref{tab:primary_configuration} specifies the complete primary comparison, including the UA-HN base objective and static-negative construction, whereas Table~\ref{tab:encoder_training_config} records only settings that change across encoder instantiations. Settings stated in the surrounding text are shared and need not be inferred from the result tables.
+% 中文：两张配置表对应不同的复现范围。表~\ref{tab:primary_configuration} 给出主要对照的完整设置，包括 UA-HN 基础目标和静态负例构造；表~\ref{tab:encoder_training_config} 则只记录不同编码器实例之间发生变化的设置。周围正文中列出的设置由各编码器共享，无需从结果表反向推断。
+
+\FloatBarrier
+
 \section{Training-Side Hyperparameter Sensitivity}
 \label{app:parameter_sensitivity}
 
@@ -596,6 +605,11 @@ The \(\lambda_f\) sweep yields macro MRR values between 80.55 and 80.60, a range
   % 中文表注：逐语言报告每次只改变一个训练侧参数时的测试集 Global MRR（\%）。共享配置 \((\lambda_f,m)=(0.45,8)\) 复用主要实验运行。
   \label{tab:parameter_sensitivity}
 \end{table*}
+
+\FloatBarrier
+
+The language-level rows show why the macro averages alone are insufficient for interpreting the sweep. With candidate depth, Ruby is highest at \(m=2\), Python at \(m=32\), and PHP ties at \(m=8\) and \(m=32\); no single depth dominates every language. The loss-weight sweep is similarly shallow. These results indicate limited sensitivity within the tested ranges, not equivalence outside them or stability across retraining seeds.
+% 中文：逐语言结果说明了为何仅凭宏平均不足以解释该参数分析。对于候选深度，Ruby 在 \(m=2\) 时最高，Python 在 \(m=32\) 时最高，PHP 则在 \(m=8\) 与 \(m=32\) 时并列；不存在一个深度在所有语言上占优。损失权重分析同样较为平缓。这些结果只表明模型在已测试范围内的敏感性有限，并不意味着范围之外等价，也不代表跨重新训练随机种子的稳定性。
 
 \section{Detailed Component and Candidate Controls}
 \label{app:component_details}
@@ -709,6 +723,11 @@ Table~\ref{tab:candidate_language_details} reports all four language-level metri
   \end{minipage}
 \end{table*}
 
+\FloatBarrier
+
+The two tables separate different causal comparisons. Table~\ref{tab:component_language_details} asks whether global refinement and MaxSim improve their matched counterparts, whereas Table~\ref{tab:candidate_language_details} holds the added-candidate budget fixed and changes only its source. The latter therefore identifies candidate selection, rather than the mere presence of another optimization term, as the relevant difference. Its recall pattern also cautions against reading the MRR gain as uniformly broader corpus coverage.
+% 中文：两张表对应不同的因果比较。表~\ref{tab:component_language_details} 检验全局细化与 MaxSim 是否改善各自协议一致的对照；表~\ref{tab:candidate_language_details} 固定新增候选预算，只改变候选来源。因此，后者将候选选择而非仅仅增加一个优化项确定为关键差异。其召回率变化模式也提醒我们，不能将 MRR 提升解释为语料库覆盖范围的一致扩大。
+
 \section{Retrieval Behavior by Initial Paired-Code Rank}
 \label{app:rank_analysis}
 
@@ -738,6 +757,8 @@ We partition all 52,561 test queries according to the rank of the gold code snip
 
 The transition counts reveal behavior that is obscured by aggregate MRR. Compared with the initial retriever, \method{}-Rerank improves the rank of the gold code for 7,121 queries and worsens it for 5,741 queries. It moves the gold code to rank 1 for 2,644 queries for which it was not initially top-ranked, but demotes the gold code for 1,624 queries that were initially correct at rank 1. Accordingly, MRR decreases by 2.47 points within the initial-rank-1 stratum. The overall improvement therefore reflects substantial corrections on initially misranked queries, partially offset by regressions on some initially correct rankings.
 % 中文：排名转移计数揭示了总体 MRR 所掩盖的行为。与初始检索器相比，\method{}-Rerank 使 7,121 个查询的正确代码排名上升，同时使 5,741 个查询的排名下降。对于 2,644 个正确代码原本不在首位的查询，它将正确代码提升至第 1 位；但对于 1,624 个正确代码原本位于第 1 位的查询，它也使正确代码发生后移。因此，在初始排名为 1 的分组中，MRR 下降了 2.47 个点。总体提升由对初始错误排序查询的大幅修复构成，但部分收益被一些初始正确排序上的回退所抵消。
+
+\FloatBarrier
 
 \section{Encoder Instantiations}
 \label{app:encoder_instantiations}
@@ -860,6 +881,11 @@ Within each locally evaluated refinement checkpoint, MaxSim raises MRR for every
   \label{tab:encoder_graph_full}
 \end{table*}
 
+\FloatBarrier
+
+Across the local columns, Rerank-minus-Global macro MRR is +0.52 for CoCoSoDa, +0.68 for UniXcoder, and +1.15 for GraphCodeBERT. These are within-checkpoint comparisons because each pair differs only by application of the common MaxSim stage. By contrast, a Published-to-Global difference would mix checkpoints and protocols and is therefore not used as a refinement estimate.
+% 中文：在本地评测列中，Rerank 相对 Global 的宏平均 MRR 变化在 CoCoSoDa、UniXcoder 和 GraphCodeBERT 上分别为 +0.52、+0.68 和 +1.15。这些属于同一检查点内的比较，因为每一对结果只在是否应用统一 MaxSim 阶段上存在差异。相比之下，Published 到 Global 的差值会混合不同检查点和评测协议，因此不被用作细化收益估计。
+
 \section{Reranking Selection and Efficiency Details}
 \label{app:reranking_details}
 
@@ -934,6 +960,11 @@ The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} conta
 \end{minipage}
 \end{center}
 
+The validation grid distinguishes the roles of the two inference parameters. At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\); at smaller \(\alpha\), changing \(K\) changes both the candidates rescored and the online cost. Once \(\alpha=0.5\) is fixed by validation, the held-out macro scores differ by only 0.045 points across the four depths, while MaxSim latency rises from 18.08 to 84.27 ms per query. The selected \(K=20\) is therefore a validation decision whose cost is reported separately, not a test-set optimum chosen after inspection.
+% 中文：验证网格区分了两个推理参数的作用。当 \(\alpha=1\) 时不使用 MaxSim，因此所有 \(K\) 的分数完全相同；当 \(\alpha\) 较小时，改变 \(K\) 会同时改变被重新计分的候选和在线开销。在验证集将 \(\alpha=0.5\) 固定后，四种深度的留出测试集宏平均分数仅相差 0.045 个点，而 MaxSim 延迟从每查询 18.08 毫秒增至 84.27 毫秒。因此，选取 \(K=20\) 是一个单独报告成本的验证集决策，而不是查看测试结果后选择的最优点。
+
+\FloatBarrier
+
 \section{Statistical Reliability}
 \label{app:statistical_reliability}
 
@@ -971,5 +1002,8 @@ Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in
   \label{tab:bootstrap}
 \end{minipage}
 \end{center}
+
+Every language-level interval has a positive lower bound for both systems, while the macro intervals are narrower because the stratified estimate aggregates evidence across all six test sets. The wider intervals for individual languages should therefore be read together with their test-set sizes in Table~\ref{tab:dataset_stats}. These intervals support the direction of the fixed-checkpoint differences; they do not replace independent retraining when assessing seed-to-seed variability.
+% 中文：两种系统在每种语言上的区间下界均为正；宏平均区间更窄，是因为分层估计汇总了六个测试集的证据。因此，逐语言较宽的区间需要结合表~\ref{tab:dataset_stats} 中的测试集规模理解。这些区间支持固定检查点差值的方向，但在评估不同随机种子之间的变异时，不能替代独立重新训练。
 
 \end{document}
