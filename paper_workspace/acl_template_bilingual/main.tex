@@ -16,6 +16,7 @@
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{colortbl}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -109,13 +110,13 @@ Contrastive methods strengthen code--text alignment through syntax-guided multim
 % 中文：对比式方法通过语法引导的多模态学习、大规模配对预训练、动量编码器、语义保持变换和增强视图来强化代码—文本对齐~\citep{SynCoBERT,CodeRetriever,CoCoSoDa,Corder,ContraCode,ContraBERT}。这些目标改进初始训练阶段学习到的表示。
 
 \paragraph{Negative-aware training.}
-Negative-aware objectives further change how contrastive competitors are selected or weighted. Soft-InfoNCE downweights negative pairs according to estimated relevance~\citep{SoftInfoNCE}; uncertainty-aware training combines hard-negative sampling with confidence information~\citep{AAAIUA}; and HedgeCode adds auxiliary relevance supervision~\citep{HedgeCode}. Related systems mine or synthesize difficult examples during training~\citep{CoCoHaNeRe,R2PS}. The first three groups in Table~\ref{tab:main_results} follow this progression from pre-trained representations to contrastive retrieval and negative-aware training; each group denotes a model's primary emphasis rather than an exclusive capability.
-% 中文：负样本感知目标进一步改变对比竞争项的选择或加权方式。Soft-InfoNCE 根据估计相关性降低负样本对的权重~\citep{SoftInfoNCE}；不确定性感知训练将困难负例采样与置信信息结合~\citep{AAAIUA}；HedgeCode 则加入辅助相关性监督~\citep{HedgeCode}。相关系统也会在训练期间挖掘或合成困难样本~\citep{CoCoHaNeRe,R2PS}。表~\ref{tab:main_results} 的前三组遵循从预训练表示、对比式检索到负样本感知训练的演进顺序；每组表示模型的主要侧重点，而非互斥能力。
+Negative-aware objectives further change how contrastive competitors are selected or weighted. Soft-InfoNCE downweights negative pairs according to estimated relevance~\citep{SoftInfoNCE}; uncertainty-aware training combines hard-negative sampling with confidence information~\citep{AAAIUA}; and HedgeCode adds auxiliary relevance supervision~\citep{HedgeCode}. Related systems mine or synthesize difficult examples during training~\citep{CoCoHaNeRe,R2PS}. The Category column in Table~\ref{tab:main_results} records this progression from pre-trained representations to contrastive retrieval and negative-aware training; each category denotes a model's primary emphasis rather than an exclusive capability.
+% 中文：负样本感知目标进一步改变对比竞争项的选择或加权方式。Soft-InfoNCE 根据估计相关性降低负样本对的权重~\citep{SoftInfoNCE}；不确定性感知训练将困难负例采样与置信信息结合~\citep{AAAIUA}；HedgeCode 则加入辅助相关性监督~\citep{HedgeCode}。相关系统也会在训练期间挖掘或合成困难样本~\citep{CoCoHaNeRe,R2PS}。表~\ref{tab:main_results} 的 Category 列记录了从预训练表示、对比式检索到负样本感知训练的演进；每个类别表示模型的主要侧重点，而非互斥能力。
 
 \subsection{Retriever Feedback and Refinement}
 
-Hard-negative mining in dense text retrieval draws supervision from retrieved negatives, refreshed indexes, large candidate pools, and denoising~\citep{DPR,ANCE,HardNegDR,RocketQA}. We use \emph{retriever feedback} to denote the offline full-corpus ranking produced by a frozen initial retriever. \method{} obtains this signal after initial training, converts the query-specific high-ranked unpaired candidates into a fixed Failure Candidate Pool, and uses the pool in a separate refinement stage. Candidate discovery and parameter updates are thereby separated. In Table~\ref{tab:main_results}, the \method{} rows in the matched local block instantiate this retriever-feedback refinement after the progression from pre-trained representations to contrastive and negative-aware training. \emph{Failure Candidate} is an operational label for a high-ranked unpaired competitor; benchmark pairing leaves its semantic validity unspecified.
-% 中文：在稠密文本检索中，困难负例挖掘通过检索负例、索引刷新、大规模候选池和去噪获得监督~\citep{DPR,ANCE,HardNegDR,RocketQA}。本文使用\emph{检索器反馈（retriever feedback）}指代冻结初始检索器离线产生的全库排序。\method{} 在初始训练完成后获取这一信号，将逐查询的高排名未配对候选转化为固定的失败候选池，并在独立的细化阶段使用该候选池，由此将候选发现与参数更新分开。表~\ref{tab:main_results} 中协议一致本地评测区块的 \method{} 行，在从预训练表示、对比式检索到负样本感知训练的演进之后，实例化了这一检索器反馈细化。\emph{失败候选（Failure Candidate）}是高排名未配对竞争项的操作性标签；其语义有效性无法由基准配对关系确定。
+Hard-negative mining in dense text retrieval draws supervision from retrieved negatives, refreshed indexes, large candidate pools, and denoising~\citep{DPR,ANCE,HardNegDR,RocketQA}. We use \emph{retriever feedback} to denote the offline full-corpus ranking produced by a frozen initial retriever. \method{} obtains this signal after initial training, converts the query-specific high-ranked unpaired candidates into a fixed Failure Candidate Pool, and uses the pool in a separate refinement stage. Candidate discovery and parameter updates are thereby separated. In Table~\ref{tab:main_results}, the \method{} rows are categorized as retriever feedback and appear in the matched local block after the progression from pre-trained representations to contrastive and negative-aware training. \emph{Failure Candidate} is an operational label for a high-ranked unpaired competitor; benchmark pairing leaves its semantic validity unspecified.
+% 中文：在稠密文本检索中，困难负例挖掘通过检索负例、索引刷新、大规模候选池和去噪获得监督~\citep{DPR,ANCE,HardNegDR,RocketQA}。本文使用\emph{检索器反馈（retriever feedback）}指代冻结初始检索器离线产生的全库排序。\method{} 在初始训练完成后获取这一信号，将逐查询的高排名未配对候选转化为固定的失败候选池，并在独立的细化阶段使用该候选池，由此将候选发现与参数更新分开。表~\ref{tab:main_results} 将 \method{} 行归入检索器反馈类别，并置于协议一致的本地评测区块中，以承接从预训练表示、对比式检索到负样本感知训练的演进。\emph{失败候选（Failure Candidate）}是高排名未配对竞争项的操作性标签；其语义有效性无法由基准配对关系确定。
 
 \subsection{Late Interaction and Reranking}
 
@@ -290,38 +291,37 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
 \begin{table*}[!t]
   \centering
   \scriptsize
-  \setlength{\tabcolsep}{3.4pt}
+  \setlength{\tabcolsep}{2.6pt}
   \renewcommand{\arraystretch}{0.90}
-  \begin{tabular}{@{}lrrrrrrr@{}}
+  \begin{tabular}{@{}llrrrrrrr@{}}
     \toprule
-    Model & Ruby & JS & Go & Python & Java & PHP & Avg. \\
+    Category & Model & Ruby & JS & Go & Python & Java & PHP & Avg. \\
     \midrule
-    \multicolumn{8}{@{}l}{\textit{Pre-trained code representations}} \\
-    CodeBERT (EMNLP Findings, 2020) & 67.9 & 62.0 & 88.2 & 67.2 & 67.6 & 62.8 & 69.3 \\
-    PLBART (NAACL, 2021) & 67.5 & 61.6 & 88.7 & 66.3 & 66.3 & 61.1 & 68.5 \\
-    GraphCodeBERT (ICLR, 2021) & 70.3 & 64.4 & 89.7 & 69.2 & 69.1 & 64.9 & 71.3 \\
-    CodeT5 (EMNLP, 2021) & 71.9 & 65.5 & 88.8 & 69.8 & 68.6 & 64.5 & 71.5 \\
-    UniXcoder (ACL, 2022) & 74.0 & 68.4 & 91.5 & 72.0 & 72.6 & 67.6 & 74.4 \\
+    \multirow{5}{*}{\shortstack[l]{Pre-trained\\representation}}
+    & CodeBERT (EMNLP Findings, 2020) & 67.9 & 62.0 & 88.2 & 67.2 & 67.6 & 62.8 & 69.3 \\
+    & PLBART (NAACL, 2021) & 67.5 & 61.6 & 88.7 & 66.3 & 66.3 & 61.1 & 68.5 \\
+    & GraphCodeBERT (ICLR, 2021) & 70.3 & 64.4 & 89.7 & 69.2 & 69.1 & 64.9 & 71.3 \\
+    & CodeT5 (EMNLP, 2021) & 71.9 & 65.5 & 88.8 & 69.8 & 68.6 & 64.5 & 71.5 \\
+    & UniXcoder (ACL, 2022) & 74.0 & 68.4 & 91.5 & 72.0 & 72.6 & 67.6 & 74.4 \\
     \addlinespace[0.15em]
-    \multicolumn{8}{@{}l}{\textit{Contrastive code retrieval}} \\
-    SynCoBERT (arXiv, 2021) & 72.2 & 67.7 & 91.3 & 72.4 & 72.3 & 67.8 & 74.0 \\
-    CodeRetriever (EMNLP, 2022) & 77.1 & 71.9 & 92.4 & 75.8 & 76.5 & 70.8 & 77.4 \\
-    CoCoSoDa (ICSE, 2023) & 81.8 & 76.4 & 92.1 & 75.7 & 76.3 & 70.3 & 78.8 \\
+    \multirow{3}{*}{\shortstack[l]{Contrastive\\retrieval}}
+    & SynCoBERT (arXiv, 2021) & 72.2 & 67.7 & 91.3 & 72.4 & 72.3 & 67.8 & 74.0 \\
+    & CodeRetriever (EMNLP, 2022) & 77.1 & 71.9 & 92.4 & 75.8 & 76.5 & 70.8 & 77.4 \\
+    & CoCoSoDa (ICSE, 2023) & 81.8 & 76.4 & 92.1 & 75.7 & 76.3 & 70.3 & 78.8 \\
     \addlinespace[0.15em]
-    \multicolumn{8}{@{}l}{\textit{Negative-aware training}} \\
-    Soft-InfoNCE (EMNLP, 2023) & 75.3 & 69.9 & 91.3 & 72.6 & 73.1 & 68.4 & 75.1 \\
-    HedgeCode (ICSE, 2025) & 82.5 & 77.1 & 92.7 & 77.6 & 78.5 & 73.8 & 80.3 \\
+    \multirow{2}{*}{\shortstack[l]{Negative-aware\\training}}
+    & Soft-InfoNCE (EMNLP, 2023) & 75.3 & 69.9 & 91.3 & 72.6 & 73.1 & 68.4 & 75.1 \\
+    & HedgeCode (ICSE, 2025) & 82.5 & 77.1 & 92.7 & 77.6 & 78.5 & 73.8 & 80.3 \\
     \midrule
-    \multicolumn{8}{@{}l}{\textit{Matched local evaluation}} \\
-    UA-HN Initial (AAAI, 2025) & 82.2 & 77.7 & 92.4 & 77.2 & 77.2 & 71.9 & 79.8 \\
+    \shortstack[l]{Negative-aware\\training} & UA-HN Initial (AAAI, 2025) & 82.2 & 77.7 & 92.4 & 77.2 & 77.2 & 71.9 & 79.8 \\
     \rowcolor{gray!10}
-    \textbf{\method{}-Global (Ours)} & \second{82.8} & \second{78.4} & \second{93.0} & \second{78.0} & \second{78.1} & \second{73.1} & \second{80.6} \textbf{(+0.8)} \\
+    & \textbf{\method{}-Global (Ours)} & \second{82.8} & \second{78.4} & \second{93.0} & \second{78.0} & \second{78.1} & \second{73.1} & \second{80.6} \textbf{(+0.8)} \\
     \rowcolor{gray!10}
-    \textbf{\method{}-Rerank (Ours)} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \best{73.6} & \best{81.1} \textbf{(+1.3)} \\
+    \multirow{-2}{*}{\shortstack[l]{Retriever\\feedback}} & \textbf{\method{}-Rerank (Ours)} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \best{73.6} & \best{81.1} \textbf{(+1.3)} \\
     \bottomrule
   \end{tabular}
-  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. Cited baselines are grouped by primary methodological emphasis, with venue and year after each name; the final block contains the three protocol-matched local evaluations. PLBART and CodeT5 values follow the published CoCoSoDa comparison~\citep{CoCoSoDa}; Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. Within the local block, bold and underlined scores mark the best and second-best values; parenthesized gains use the initial retriever. JS denotes JavaScript.}
-  % 中文表注：CodeSearchNet 上的 MRR（\%），结果保留一位小数。引用的基线按主要方法侧重点分组，名称后标注发表场所与年份；最后一个区块包含三项协议一致的本地评测。PLBART 与 CodeT5 的数值沿用 CoCoSoDa 论文中的公开比较~\citep{CoCoSoDa}；Soft-InfoNCE 采用其论文报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。在本地区块中，粗体与下划线分别表示第一名与第二名；括号中的增益以初始检索器为参照。JS 表示 JavaScript。
+  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. Category gives each model's primary methodological emphasis, and venue and year follow each model name. Rows above the separating rule are cited published results; the final three rows are protocol-matched local evaluations. PLBART and CodeT5 values follow the published CoCoSoDa comparison~\citep{CoCoSoDa}; Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. Within the local rows, bold and underlined scores mark the best and second-best values; parenthesized gains use the initial retriever. JS denotes JavaScript.}
+  % 中文表注：CodeSearchNet 上的 MRR（\%），结果保留一位小数。Category 列表示各模型的主要方法侧重点，模型名称后标注发表场所与年份。分隔线以上为引用的论文报告结果，最后三行为协议一致的本地评测。PLBART 与 CodeT5 的数值沿用 CoCoSoDa 论文中的公开比较~\citep{CoCoSoDa}；Soft-InfoNCE 采用其论文报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。在本地评测行中，粗体与下划线分别表示第一名与第二名；括号中的增益以初始检索器为参照。JS 表示 JavaScript。
   \label{tab:main_results}
 \end{table*}
 
@@ -354,13 +354,13 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     Candidate-selection strategy & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
     \midrule
     No refinement & 79.8 & 70.7 & \textbf{91.3} & \textbf{95.1} & -- \\
-    Random & 79.7 & 70.7 & 91.2 & 95.0 & -0.1 \\
+    Random & 79.7 & 70.7 & 91.2 & 95.0 & 0.0 \\
     Static hard negative & 79.7 & 70.7 & 91.1 & 94.9 & -0.1 \\
     Retriever-mined failure candidate & \textbf{80.1} & \textbf{71.6} & 91.0 & 94.6 & \textbf{+0.4} \\
     \bottomrule
   \end{tabular}
-  \caption{Budget-matched candidate selection with one added candidate per query and global retrieval. \(\Delta\)MRR uses the unrefined initial retriever; bold reflects unrounded values.}
-  % 中文表注：预算一致的候选选择比较，每个查询增加一个候选并采用全局检索。\(\Delta\)MRR 以未细化的初始检索器为参照；粗体依据未舍入数值确定。
+  \caption{Budget-matched candidate selection with one added candidate per query and global retrieval. \(\Delta\)MRR is computed from unrounded macro averages relative to the unrefined initial retriever and then rounded to one decimal place; bold reflects unrounded values.}
+  % 中文表注：预算一致的候选选择比较，每个查询增加一个候选并采用全局检索。\(\Delta\)MRR 先根据未舍入的宏平均值与未细化初始检索器之差计算，再统一保留一位小数；粗体依据未舍入数值确定。
   \label{tab:candidate_controls}
 \end{table*}
 
@@ -405,8 +405,8 @@ MaxSim contributes 0.6 points before and 0.5 points after refinement; refinement
 Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.4 points and R@1 by 0.8 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
 % 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.4 和 0.8 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
 
-Random and static selection each change macro MRR by \(-0.1\) points at the displayed precision, whereas retriever-mined selection changes it by \(+0.4\). Because the schedule and per-query candidate budget are fixed, the candidate source accounts for the controlled difference. Its larger R@1 movement, accompanied by small R@5 and R@10 reductions, places the change near the first position. Appendix~\ref{app:component_details} provides the complete component and candidate-selection results by language.
-% 中文：在当前显示精度下，随机选择和静态选择均使宏平均 MRR 变化 \(-0.1\) 个点，而检索器挖掘候选带来 \(+0.4\) 个点的变化。由于优化日程和每查询候选预算保持固定，候选来源构成该受控比较中的差异。后者较大的 R@1 变化伴随 R@5 和 R@10 的小幅下降，说明变化集中在首位附近。附录~\ref{app:component_details} 给出完整的逐语言组件与候选选择结果。
+Random and static selection change macro MRR by \(0.0\) and \(-0.1\) points, respectively, at the displayed precision, whereas retriever-mined selection changes it by \(+0.4\). Because the schedule and per-query candidate budget are fixed, the candidate source accounts for the controlled difference. Its larger R@1 movement, accompanied by small R@5 and R@10 reductions, places the change near the first position. Appendix~\ref{app:component_details} provides the complete component and candidate-selection results by language.
+% 中文：在当前显示精度下，随机选择和静态选择分别使宏平均 MRR 变化 \(0.0\) 和 \(-0.1\) 个点，而检索器挖掘候选带来 \(+0.4\) 个点的变化。由于优化日程和每查询候选预算保持固定，候选来源构成该受控比较中的差异。后者较大的 R@1 变化伴随 R@5 和 R@10 的小幅下降，说明变化集中在首位附近。附录~\ref{app:component_details} 给出完整的逐语言组件与候选选择结果。
 
 \paragraph{Rank-conditioned behavior.}
 Table~\ref{tab:rank_strata} conditions retrieval behavior on the paired code's rank under the initial retriever. The largest gains occur when the paired code initially appears at ranks 2--10: Global refinement adds 8.9 MRR points, and reranking increases the gain to 11.3 points. Improvements remain positive but smaller for ranks 11--50 and beyond 50. MRR falls by 2.1 and 2.5 points, respectively, among queries that initially place the paired code at rank 1. The aggregate gain therefore reflects substantial correction of near-top misrankings, partially offset by regressions on some initially correct rankings.
@@ -424,13 +424,13 @@ We instantiate the same harvesting, refinement, and reranking pipeline with CoCo
 The three successful instantiations support architecture compatibility. Within each refined checkpoint, the Global/Rerank pair isolates the reranking benefit. The published markers provide context and are not used as refinement baselines; Appendix~\ref{app:encoder_instantiations} reports the full metrics.
 % 中文：三种成功实例支持该流程的架构兼容性。在每个细化检查点内，Global/Rerank 配对隔离了重排收益。论文报告标记仅提供背景，不作为细化基线；完整指标见附录~\ref{app:encoder_instantiations}。
 
-\begin{figure*}[!t]
+\begin{figure}[!t]
   \centering
-  \includegraphics[width=0.93\textwidth]{figures/figure3_encoder_compatibility.pdf}
+  \includegraphics[width=\columnwidth]{figures/figure3_encoder_compatibility.pdf}
   \caption{Encoder compatibility across six languages. Markers show published references and local Global/Rerank MRR; annotations give matched Rerank-minus-Global differences.}
   % 中文图注：三种编码器在六种语言上的兼容性。标记给出论文报告参考值以及本地 Global/Rerank MRR；标注表示协议一致的 Rerank 减 Global 差值。
   \label{fig:encoder_compatibility}
-\end{figure*}
+\end{figure}
 
 \subsection{Reranking Effectiveness and Efficiency}
 \label{sec:efficiency}
