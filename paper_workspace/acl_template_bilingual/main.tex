@@ -360,8 +360,8 @@ Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim rerank
     \method{}-Rerank & \checkmark & \checkmark & \textbf{81.06} & \textbf{72.64} & \textbf{91.68} & 95.11 & \textbf{+1.29} \\
     \bottomrule
   \end{tabular}
-  \caption{Component analysis of FC refinement and MaxSim. A check mark denotes an enabled component; reranked configurations use \(K=20\) and \(\alpha=0.5\). Metrics are six-language macro averages, with \(\Delta\)MRR relative to the initial retriever.}
-  % 中文表注：FC 细化与 MaxSim 的组件分析。勾号表示启用相应组件；重排配置使用 \(K=20\)、\(\alpha=0.5\)。指标为六语言宏平均，\(\Delta\)MRR 以初始检索器为参照。
+  \caption{Component analysis. Check marks denote enabled components; reranked rows use \(K=20\) and \(\alpha=0.5\). Metrics are six-language macro averages, and \(\Delta\)MRR uses the initial retriever.}
+  % 中文表注：组件分析。勾号表示启用相应组件；重排行使用 \(K=20\)、\(\alpha=0.5\)。指标为六语言宏平均，\(\Delta\)MRR 以初始检索器为参照。
   \label{tab:ablation}
 \end{table*}
 
@@ -391,8 +391,8 @@ Random and static selection change macro MRR by \(-0.05\) and \(-0.10\) points, 
     Retriever-mined failure candidate & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
     \bottomrule
   \end{tabular}
-  \caption{Budget-matched comparison of candidate-selection strategies. Each refinement variant uses one additional unpaired candidate per query and is evaluated with global retrieval only. \(\Delta\)MRR is measured relative to the initial retriever without refinement.}
-  % 中文表注：候选选择策略的预算一致比较。每个细化变体为每个查询引入一个额外未配对候选，并且仅使用全局检索评测。\(\Delta\)MRR 以未进行细化的初始检索器为参照。
+  \caption{Budget-matched candidate selection with one added candidate per query and global retrieval. \(\Delta\)MRR uses the unrefined initial retriever.}
+  % 中文表注：预算一致的候选选择比较，每个查询增加一个候选并采用全局检索。\(\Delta\)MRR 以未细化的初始检索器为参照。
   \label{tab:candidate_controls}
 \end{table*}
 
@@ -415,8 +415,8 @@ Because the corresponding initial checkpoints were not evaluated locally on the 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{figures/figure3_encoder_compatibility.pdf}
-  \caption{Encoder compatibility across six languages. Markers show absolute MRR for published references and locally evaluated Global and Rerank checkpoints; each annotated \(\Delta\)MRR is Rerank minus Global for the same refined checkpoint.}
-  % 中文图注：三种编码器在六种语言上的兼容性。标记给出论文报告参考值以及本地评测的 Global 与 Rerank 检查点的绝对 MRR；每个标注的 \(\Delta\)MRR 均为同一细化检查点下 Rerank 减 Global 的差值。
+  \caption{Encoder compatibility across six languages. Markers show published references and local Global/Rerank MRR; annotations give matched Rerank-minus-Global differences.}
+  % 中文图注：三种编码器在六种语言上的兼容性。标记给出论文报告参考值以及本地 Global/Rerank MRR；标注表示协议一致的 Rerank 减 Global 差值。
   \label{fig:encoder_compatibility}
 \end{figure}
 
@@ -441,8 +441,8 @@ Figure~\ref{fig:reranking_sensitivity} separates validation selection from held-
     \caption{Held-out test effectiveness--latency.}
     \label{fig:inference_efficiency}
   \end{subfigure}
-  \caption{Reranking selection and efficiency. The ring in (a) marks the configuration selected by macro validation MRR; (b) reports held-out test \(\Delta\)MRR over Global against JavaScript inference latency at \(\alpha=0.5\).}
-  % 中文图注：重排配置选择与推理效率。(a) 中的圆环标出按宏平均验证集 MRR 选定的配置；(b) 报告 \(\alpha=0.5\) 时，相对于 Global 的留出测试集 \(\Delta\)MRR 与 JavaScript 推理延迟的关系。
+  \caption{Reranking selection and efficiency. The ring marks the validation-selected setting; (b) plots held-out test \(\Delta\)MRR over Global against JavaScript latency at \(\alpha=0.5\).}
+  % 中文图注：重排配置选择与推理效率。圆环标出验证集选定的配置；(b) 展示 \(\alpha=0.5\) 时相对于 Global 的留出测试集 \(\Delta\)MRR 与 JavaScript 延迟。
   \label{fig:reranking_sensitivity}
 \end{figure}
 
@@ -594,13 +594,21 @@ The completed \(\lambda_f\) sweep yields macro MRR values between 80.55 and 80.6
 Table~\ref{tab:component_language_details} expands the four component configurations from Table~\ref{tab:ablation} by programming language and metric. All entries are local evaluations under the same test protocol. The complete configuration attains the highest macro MRR and R@1. Recall changes are smaller and vary across languages, consistent with a method that primarily reorders candidates near the top.
 % 中文：表~\ref{tab:component_language_details} 按编程语言和指标展开表~\ref{tab:ablation} 中的四种组件配置。所有数值均来自相同测试协议下的本地评测。完整配置取得最高的宏平均 MRR 和 R@1。召回变化幅度较小且因语言而异，这与该方法主要重排顶部附近候选的作用相符。
 
+\subsection{Candidate-Selection Results by Language}
+\label{app:candidate_details}
+
+Table~\ref{tab:candidate_language_details} reports all four language-level metrics underlying the budget-matched candidate comparison. Retriever-mined failure candidates give the highest MRR in every language except PHP, where they tie the random strategy after rounding. The random and static controls fluctuate around the initial retriever and do not improve the six-language macro MRR. The mined candidates increase macro R@1 while R@5 and R@10 decrease, locating the improvement at the top of the ranking.
+% 中文：表~\ref{tab:candidate_language_details} 报告预算匹配候选对照所依据的全部四项逐语言指标。检索器挖掘的失败候选在除 PHP 外的每种语言上均取得最高 MRR；在 PHP 上，它与随机策略在四舍五入后持平。随机与静态对照围绕初始检索器上下波动，且没有提高六语言宏平均 MRR。挖掘候选提高了宏平均 R@1，而 R@5 与 R@10 下降，说明改进集中在排序顶部。
+
 \begin{table*}[!t]
   \centering
+  \begin{minipage}[t]{0.485\textwidth}
+  \centering
   \scriptsize
-  \setlength{\tabcolsep}{5.0pt}
+  \setlength{\tabcolsep}{1.5pt}
   \begin{tabular}{llrrrr}
     \toprule
-    Language & Metric & Initial & Initial + MaxSim & FC + Global & FC + MaxSim \\
+    Language & Metric & Init. & Init.+MS & FC+G & FC+MS \\
     \midrule
     Ruby       & MRR  & 82.16 & 82.65 & 82.84 & 83.51 \\
                & R@1  & 72.88 & 73.35 & 73.83 & 74.70 \\
@@ -638,24 +646,17 @@ Table~\ref{tab:component_language_details} expands the four component configurat
                & R@10 & 95.10 & 95.16 & \textbf{95.17} & 95.11 \\
     \bottomrule
   \end{tabular}
-  \caption{Complete local component results (\%) by language. ``Initial'' denotes the initial retriever, and FC denotes Failure-Calibrated Contrastive Refinement. Both MaxSim columns use \(K=20\) and \(\alpha=0.5\).}
-  % 中文表注：按语言报告完整的本地组件结果（\%）。“Initial”表示初始检索器，FC 表示失败校准对比细化。两个 MaxSim 列均使用 \(K=20\)、\(\alpha=0.5\)。
+  \captionof{table}{Complete local component results (\%) by language. FC denotes refinement, G global retrieval, and MS MaxSim; MS uses \(K=20\), \(\alpha=0.5\).}
+  % 中文表注：逐语言完整本地组件结果（\%）。FC 表示细化，G 表示全局检索，MS 表示 MaxSim；MS 使用 \(K=20\)、\(\alpha=0.5\)。
   \label{tab:component_language_details}
-\end{table*}
-
-\subsection{Candidate-Selection Results by Language}
-\label{app:candidate_details}
-
-Table~\ref{tab:candidate_language_details} reports all four language-level metrics underlying the budget-matched candidate comparison. Retriever-mined failure candidates give the highest MRR in every language except PHP, where they tie the random strategy after rounding. The random and static controls fluctuate around the initial retriever and do not improve the six-language macro MRR. The mined candidates increase macro R@1 while R@5 and R@10 decrease, locating the improvement at the top of the ranking.
-% 中文：表~\ref{tab:candidate_language_details} 报告预算匹配候选对照所依据的全部四项逐语言指标。检索器挖掘的失败候选在除 PHP 外的每种语言上均取得最高 MRR；在 PHP 上，它与随机策略在四舍五入后持平。随机与静态对照围绕初始检索器上下波动，且没有提高六语言宏平均 MRR。挖掘候选提高了宏平均 R@1，而 R@5 与 R@10 下降，说明改进集中在排序顶部。
-
-\begin{table*}[!t]
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.485\textwidth}
   \centering
   \scriptsize
-  \setlength{\tabcolsep}{5.0pt}
+  \setlength{\tabcolsep}{2.0pt}
   \begin{tabular}{llrrrr}
     \toprule
-    Language & Metric & Initial & Random & Static & Failure candidate \\
+    Language & Metric & Init. & Random & Static & Mined FC \\
     \midrule
     Ruby       & MRR  & 82.16 & 82.20 & 82.40 & \textbf{82.70} \\
                & R@1  & 72.88 & 73.00 & 73.40 & \textbf{73.80} \\
@@ -693,9 +694,10 @@ Table~\ref{tab:candidate_language_details} reports all four language-level metri
                & R@10 & \textbf{95.10} & 95.00 & 94.88 & 94.58 \\
     \bottomrule
   \end{tabular}
-  \caption{Complete language-level results (\%) for the candidate-selection control. Each refinement variant uses one additional candidate per query and global retrieval only.}
-  % 中文表注：候选选择对照的完整逐语言结果（\%）。每种细化变体均为每个查询使用一个附加候选，并且只采用全局检索。
+  \captionof{table}{Complete language-level candidate-selection results (\%). Each refinement variant adds one candidate per query and uses global retrieval.}
+  % 中文表注：完整的逐语言候选选择结果（\%）。每种细化变体均为每个查询增加一个候选，并使用全局检索。
   \label{tab:candidate_language_details}
+  \end{minipage}
 \end{table*}
 
 \section{Retrieval Behavior by Initial Paired-Code Rank}
