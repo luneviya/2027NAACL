@@ -79,6 +79,9 @@ The positive--negative score margin explains the refinement signal: a small or n
 Under a matched local protocol on all six CodeSearchNet languages~\citep{CodeSearchNet}, \method{}-Global raises macro MRR from 79.77 to 80.57 and R@1 from 70.72 to 71.90; optional reranking reaches 81.06 MRR and 72.64 R@1. Budget-matched controls favor retriever-mined Failure Candidates over random and static alternatives. Paired-bootstrap intervals quantify test-query sampling uncertainty for the fixed checkpoints, and three encoder instantiations examine pipeline compatibility.
 % 中文：在全部六种 CodeSearchNet 语言~\citep{CodeSearchNet}上的协议一致本地评测中，\method{}-Global 将宏平均 MRR 从 79.77 提升至 80.57，并将 R@1 从 70.72 提升至 71.90；可选重排达到 81.06 MRR 和 72.64 R@1。预算匹配的对照表明，检索器挖掘的失败候选优于随机和静态替代方案。配对 bootstrap 区间衡量固定检查点上的测试查询采样不确定性，三种编码器实例则考察流程兼容性。
 
+The two interventions operate at different retrieval scopes. Global refinement changes the representation space used for every corpus comparison, whereas optional reranking revisits only the candidates returned by global retrieval. We evaluate them separately so that training-side improvements remain distinguishable from token-level inference effects.
+% 中文：两种干预作用于不同的检索范围。全局细化改变所有语料库比较所使用的表示空间，而可选重排只重新考察全局检索返回的候选。本文分别评测二者，使训练侧改进能够与词元级推理效果清晰区分。
+
 Our contributions are threefold:
 % 中文：本文的贡献有三点：
 \begin{itemize}
@@ -90,6 +93,18 @@ Our contributions are threefold:
   % 中文：在六语言受控评测中，全局细化相对于协议一致的初始检索器提升 0.80 个 MRR 点，可选的双粒度重排将完整系统的提升扩大至 1.29 个点，并显式报告不确定性与效率。
 \end{itemize}
 
+% Queue the full-width method overview before the section boundary so that it
+% can occupy the top of page 3 while Related Work continues beneath it.
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=0.98\textwidth]{figures/figure2_method_framework.pdf}
+  \caption{Overview of \method{}. A frozen initial retriever supplies a fixed failure-candidate pool; a separately weighted contrastive loss refines global representations; optional top-\(K\) reranking then fuses global and token-level MaxSim scores.}
+  % 中文图注：\method{} 总体框架。冻结初始检索器提供固定的失败候选池；单独加权的对比损失细化全局表示；可选的前 \(K\) 重排随后融合全局分数与词元级 MaxSim 分数。
+  \label{fig:framework}
+\end{figure*}
+
+% Keep the section heading with substantive text at the top of the next column.
+\newpage
 \section{Related Work}
 \label{sec:related_work}
 
@@ -103,19 +118,11 @@ Recent systems also strengthen supervision through task-specific negatives and a
 
 \subsection{Hard Negatives and Late Interaction}
 
-Hard-negative mining replaces easy random negatives with candidates that better challenge the representation space. ANCE retrieves negatives from an evolving index, while RocketQA combines large negative pools with denoising~\citep{ANCE,RocketQA}; code-search work also uses uncertainty-aware sampling~\citep{AAAIUA}. These methods primarily make the training distribution more informative. Failure Candidate Harvesting differs in timing and source: after the initial retriever is fully trained, it freezes that model, records its query-specific full-corpus rankings, and uses the highest-ranked unpaired candidates in a separate refinement stage. Candidate difficulty is therefore defined relative to the behavior of the trained initial retriever, rather than by a model-independent pool alone. Because benchmark pairing does not establish semantic invalidity, ``failure candidate'' denotes the candidate's operational role in refinement, not a semantic label.
-% 中文：困难负样本挖掘以更能挑战表示空间的候选替代简单随机负样本。ANCE 从持续更新的索引中检索负样本，RocketQA 结合大规模负样本池与去噪~\citep{ANCE,RocketQA}；代码搜索研究也采用不确定性感知采样~\citep{AAAIUA}。这些方法主要用于提高训练分布的信息量。失败候选挖掘在时机与来源上有所不同：初始检索器完成训练后，冻结该模型，记录其针对各查询的全库排序，再在独立细化阶段使用排名最高的未配对候选。因此，候选难度由训练完成的初始检索器的实际行为界定，而不只由与模型无关的候选池决定。由于基准配对关系并不能判定语义无效，“失败候选”描述的是候选在细化中的操作性角色，而不是语义标签。
+Hard-negative mining replaces easy random negatives with candidates that better challenge the representation space. ANCE retrieves negatives from an evolving index, while RocketQA combines large negative pools with denoising~\citep{ANCE,RocketQA}; code-search work also uses uncertainty-aware sampling~\citep{AAAIUA}. These methods primarily make the training distribution more informative. Mining policies also differ in whether candidate identities evolve with the learner: online retrieval can refresh them as training proceeds, whereas model-independent static pools do not adapt to the final retriever's rankings. Failure Candidate Harvesting uses a third arrangement. Its pool is model-specific because the trained initial retriever produces it, yet fixed throughout refinement. The method records query-specific full-corpus rankings and uses the highest-ranked unpaired candidates in a separate refinement stage. Candidate difficulty is therefore defined relative to the behavior of the trained initial retriever, rather than by a model-independent pool alone. Because benchmark pairing does not establish semantic invalidity, ``failure candidate'' denotes the candidate's operational role in refinement, not a semantic label.
+% 中文：困难负样本挖掘以更能挑战表示空间的候选替代简单随机负样本。ANCE 从持续更新的索引中检索负样本，RocketQA 结合大规模负样本池与去噪~\citep{ANCE,RocketQA}；代码搜索研究也采用不确定性感知采样~\citep{AAAIUA}。这些方法主要用于提高训练分布的信息量。挖掘策略还取决于候选身份是否随学习器演化：在线检索可以在训练过程中刷新候选，而与模型无关的静态候选池不会适应最终检索器的排序。失败候选挖掘采用第三种安排：候选池由训练完成的初始检索器生成，因此具有模型特异性；但在整个细化阶段保持固定。该方法记录针对各查询的全库排序，并在独立细化阶段使用排名最高的未配对候选。因此，候选难度由训练完成的初始检索器的实际行为界定，而不只由与模型无关的候选池决定。由于基准配对关系并不能判定语义无效，“失败候选”描述的是候选在细化中的操作性角色，而不是语义标签。
 
 Late interaction complements global retrieval by retaining token representations and aggregating token-wise similarities; ColBERT's MaxSim is representative~\citep{ColBERT}. Applying these interactions throughout a corpus would sacrifice the main efficiency advantage of dual encoders. \method{} instead preserves global representations for training and full-corpus search, then optionally applies MaxSim only within the retrieved top-\(K\). Global--Local Score Fusion combines the standardized scores without additional trainable parameters, while retaining a measurable inference cost.
 % 中文：后期交互通过保留词元表示并聚合逐词元相似度来补充全局检索；ColBERT 的 MaxSim 是代表性形式~\citep{ColBERT}。若在整个语料库范围内应用此类交互，会损失双编码器的主要效率优势。\method{} 在训练与全库搜索中保留全局表示，随后仅在检索得到的前 \(K\) 个候选内可选地应用 MaxSim。全局—局部分数融合在不增加可训练参数的情况下组合标准化分数，同时保留可测量的推理开销。
-
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=0.98\textwidth]{figures/figure2_method_framework.pdf}
-  \caption{Overview of \method{}. A frozen initial retriever supplies a fixed failure-candidate pool; a separately weighted contrastive loss refines global representations; optional top-\(K\) reranking then fuses global and token-level MaxSim scores.}
-  % 中文图注：\method{} 总体框架。冻结初始检索器提供固定的失败候选池；单独加权的对比损失细化全局表示；可选的前 \(K\) 重排随后融合全局分数与词元级 MaxSim 分数。
-  \label{fig:framework}
-\end{figure*}
 
 \section{Method}
 \label{sec:method}
@@ -229,8 +236,8 @@ Only candidates inside the top-\(K\) set are reordered; all remaining corpus ite
 \section{Experiments}
 \label{sec:experiments}
 
-Our evaluation traces aggregate retrieval gains to their sources and online cost. After reporting matched six-language effectiveness, we isolate failure-calibrated refinement, candidate selection, and MaxSim, and analyze changes by the paired code's initial rank. We then examine encoder compatibility and validation-selected reranking trade-offs. Paired bootstrap intervals quantify query-sampling uncertainty for fixed checkpoints; training-side sensitivity is reported in Appendix~\ref{app:parameter_sensitivity}.
-% 中文：我们的评测从总体检索收益出发，追溯其来源与在线开销。在报告协议一致的六语言效果后，我们分别考察失败校准细化、候选选择与 MaxSim，并依据配对代码的初始排名分析变化；随后考察编码器兼容性和经验证集选择的重排权衡。配对 bootstrap 区间衡量固定检查点上的查询采样不确定性，训练侧敏感性见附录~\ref{app:parameter_sensitivity}。
+Our evaluation first reports matched six-language effectiveness, then isolates refinement, candidate selection, MaxSim, and changes by the paired code's initial rank. We next examine encoder compatibility and validation-selected reranking trade-offs. Paired bootstrap intervals quantify query-sampling uncertainty for fixed checkpoints; training-side sensitivity appears in Appendix~\ref{app:parameter_sensitivity}.
+% 中文：我们的评测首先报告协议一致的六语言效果，随后分别考察细化、候选选择、MaxSim 以及配对代码初始排名对应的变化；之后考察编码器兼容性和经验证集选择的重排权衡。配对 bootstrap 区间衡量固定检查点上的查询采样不确定性，训练侧敏感性见附录~\ref{app:parameter_sensitivity}。
 
 \subsection{Experimental Setup}
 \label{sec:experimental_setup}
@@ -411,8 +418,8 @@ Because the corresponding initial checkpoints were not evaluated locally on the 
 \subsection{Reranking Effectiveness and Efficiency}
 \label{sec:efficiency}
 
-Figure~\ref{fig:reranking_sensitivity} separates validation-based hyperparameter selection from held-out test evaluation. Panel (a) shows the complete \(K\times\alpha\) validation grid as MRR changes relative to global retrieval for each language and their macro average. The maximum macro-averaged validation MRR is obtained at \(K=20\) and \(\alpha=0.5\); both values are then fixed before evaluating the test set. Panel (b) shows the corresponding language-level and macro effectiveness--latency trade-off. The selected configuration reaches a test macro MRR of 81.06 at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 yields no further macro MRR improvement but raises latency to 46.64 and 85.19 ms, respectively. At 19.04 ms per query, \(K=10\) provides a lower-latency alternative with a macro MRR of 81.03.
-% 中文：图~\ref{fig:reranking_sensitivity} 将基于验证集的超参数选择与留出测试集评测明确分开。子图 (a) 以相对于全局检索的 MRR 变化展示每种语言及其宏平均的完整 \(K\times\alpha\) 验证网格；宏平均验证 MRR 在 \(K=20\)、\(\alpha=0.5\) 时达到最高，随后在测试集评测前固定这两个取值。子图 (b) 展示相应的逐语言及宏平均检索效果—延迟权衡。最终选定的配置在 JavaScript 上以每查询 26.04 毫秒的延迟取得 81.06 的测试宏平均 MRR。将 \(K\) 增至 50 或 100 并未进一步提高宏平均 MRR，却分别将延迟增加到 46.64 和 85.19 毫秒。\(K=10\) 则以每查询 19.04 毫秒取得 81.03 的宏平均 MRR，可作为延迟更低的选择。
+Figure~\ref{fig:reranking_sensitivity} separates validation selection from held-out test evaluation. Panel (a) reports the complete \(K\times\alpha\) grid and selects \(K=20\), \(\alpha=0.5\) by macro validation MRR before test evaluation. Panel (b) shows the language-level and macro effectiveness--latency trade-off. The selected configuration reaches 81.06 test MRR at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 provides no further macro improvement but raises latency to 46.64 and 85.19 ms; \(K=10\) offers 81.03 MRR at 19.04 ms.
+% 中文：图~\ref{fig:reranking_sensitivity} 将验证集选择与留出测试集评测分开。子图 (a) 报告完整的 \(K\times\alpha\) 网格，并在测试集评测前依据宏平均验证集 MRR 选定 \(K=20\)、\(\alpha=0.5\)。子图 (b) 展示逐语言及宏平均检索效果—延迟权衡。选定配置在 JavaScript 上以每查询 26.04 毫秒取得 81.06 的测试 MRR。将 \(K\) 增至 50 或 100 不再提高宏平均效果，却分别将延迟增至 46.64 和 85.19 毫秒；\(K=10\) 则以 19.04 毫秒取得 81.03 MRR。
 
 \begin{figure}[!t]
   \centering
@@ -437,8 +444,8 @@ Figure~\ref{fig:reranking_sensitivity} separates validation-based hyperparameter
 The measured latency covers query encoding, global search, and token-level rescoring for every query, irrespective of gold-code inclusion in the top-\(K\); offline mining, refinement, and code encoding are excluded. Every configuration peaks at 3,063 MiB GPU memory.
 % 中文：实测延迟包含每个查询的查询编码、全局搜索和词元级重新计分，无论正确代码是否位于前 \(K\) 名；离线候选挖掘、细化训练和代码编码不计入其中。所有配置的 GPU 峰值显存占用均为 3,063 MiB。
 
-The selected depth provides a favorable point on this trade-off. Moving from \(K=10\) to \(K=20\) changes test macro MRR from 81.03 to 81.06 while increasing latency from 19.04 to 26.04 ms per query. Larger depths slightly reduce macro MRR and make MaxSim the dominant online cost: at \(K=100\), total latency reaches 85.19 ms although query encoding and global search together remain below 1 ms. The measurements therefore expose \(K\) as an explicit deployment-time cost control rather than treating reranking as cost-free.
-% 中文：选定深度在这一权衡上提供了较有利的取值点。从 \(K=10\) 增至 \(K=20\) 时，测试集宏平均 MRR 从 81.03 变化到 81.06，每查询延迟则从 19.04 毫秒增加到 26.04 毫秒。更大的深度会使宏平均 MRR 略有下降，并使 MaxSim 成为主要在线开销：当 \(K=100\) 时，尽管查询编码与全局搜索合计仍不足 1 毫秒，总延迟已达到 85.19 毫秒。因此，这些测量将 \(K\) 明确呈现为部署阶段的成本控制参数，而不是将重排描述为无成本操作。
+Larger depths make MaxSim the dominant online cost: at \(K=100\), total latency reaches 85.19 ms although query encoding and global search together remain below 1 ms. The measurements therefore expose \(K\) as a deployment-time cost control rather than treating reranking as cost-free.
+% 中文：更大的深度使 MaxSim 成为主要在线开销：当 \(K=100\) 时，尽管查询编码与全局搜索合计仍不足 1 毫秒，总延迟达到 85.19 毫秒。因此，这些测量将 \(K\) 明确呈现为部署阶段的成本控制参数，而不是将重排描述为无成本操作。
 
 At \(K=20\), MaxSim alone (\(\alpha=0\)) obtains 81.157 validation MRR, global retrieval alone (\(\alpha=1\)) obtains 81.861, and balanced fusion reaches 82.219. With \(\alpha=0.5\), MRR spans only 0.054 points across depths while test latency grows more than fourfold; the grid therefore favors fusion, with \(K\) mainly controlling online cost.
 % 中文：当 \(K=20\) 时，仅使用 MaxSim（\(\alpha=0\)）的验证集 MRR 为 81.157，仅使用全局检索（\(\alpha=1\)）为 81.861，而等权融合达到 82.219。当 \(\alpha=0.5\) 时，不同深度之间的 MRR 范围仅为 0.054 个点，但测试延迟增长超过四倍；因此，该网格支持分数融合，而 \(K\) 主要控制在线开销。
