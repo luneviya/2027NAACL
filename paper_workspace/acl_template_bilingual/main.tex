@@ -391,8 +391,8 @@ The reported results in the upper block place \method{} in the context of prior 
 Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim reranking under a shared inference configuration (\(K=20\), \(\alpha=0.5\)). Applied directly to the initial retriever, MaxSim raises MRR from 79.77 to 80.36. Failure-calibrated refinement without reranking reaches 80.57, and the complete configuration obtains the best MRR of 81.06. These matched comparisons estimate the separate contribution of each component; they do not estimate an interaction effect.
 % 中文：表~\ref{tab:ablation} 在统一的推理配置（\(K=20\)、\(\alpha=0.5\)）下交叉比较失败候选细化与 MaxSim 重排。MaxSim 直接应用于初始检索器时，将 MRR 从 79.77 提升到 80.36；不使用重排的失败校准细化达到 80.57；完整配置取得最高的 81.06 MRR。这些协议一致的比较分别估计两个组件的贡献，但不估计二者的交互效应。
 
-The shared configuration permits matched comparisons along both axes without attributing an interaction to the components. MaxSim contributes 0.59 points before and 0.49 points after refinement; refinement contributes 0.80 points without MaxSim and 0.70 points with the shared reranker. Each operation therefore improves its matched counterpart, and the complete configuration has the highest absolute MRR, without implying a statistically validated interaction. Independently selecting reranking parameters for the initial retriever yields the same rounded test MRR of 80.36. Relative to the fixed initial retriever, the 95\% intervals are [0.66, 0.95] for refinement and [1.11, 1.47] for the complete system, quantifying test-query resampling uncertainty. Appendix~\ref{app:component_details} gives every language and metric.
-% 中文：统一配置允许沿表格两个维度进行协议一致的比较，而无需将变化归因于组件交互。MaxSim 在细化前后分别贡献 0.59 和 0.49 个点；细化在不使用 MaxSim 和使用统一重排器时分别贡献 0.80 和 0.70 个点。因此，每种操作都能改善其协议一致对照，完整配置取得最高绝对 MRR，但这并不意味着存在经过统计验证的交互作用。为初始检索器独立选择重排参数后，其测试 MRR 四舍五入后仍为 80.36。相对于固定初始检索器，细化和完整系统的 95\% 区间分别为 [0.66, 0.95] 与 [1.11, 1.47]，衡量测试查询重采样不确定性。附录~\ref{app:component_details} 给出全部逐语言指标。
+MaxSim contributes 0.59 points before and 0.49 points after refinement; refinement contributes 0.80 points without MaxSim and 0.70 points with the shared reranker. Each operation improves its matched counterpart, and the complete configuration has the highest MRR. Independently selecting reranking parameters for the initial retriever yields the same rounded test MRR of 80.36. Relative to the fixed initial retriever, the 95\% intervals are [0.66, 0.95] for refinement and [1.11, 1.47] for the complete system, quantifying test-query resampling uncertainty. Appendix~\ref{app:component_details} gives every language and metric.
+% 中文：MaxSim 在细化前后分别贡献 0.59 和 0.49 个点；细化在不使用 MaxSim 和使用统一重排器时分别贡献 0.80 和 0.70 个点。每种操作都能改善其协议一致对照，完整配置取得最高 MRR。为初始检索器独立选择重排参数后，其测试 MRR 四舍五入后仍为 80.36。相对于固定初始检索器，细化和完整系统的 95\% 区间分别为 [0.66, 0.95] 与 [1.11, 1.47]，衡量测试查询重采样不确定性。附录~\ref{app:component_details} 给出全部逐语言指标。
 
 \paragraph{Candidate-selection control.}
 \label{sec:candidate_controls}
@@ -896,49 +896,6 @@ The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} conta
   \label{tab:reranking_validation_grid}
 \end{table}
 
-\begin{table}[!t]
-  \centering
-  \scriptsize
-  \setlength{\tabcolsep}{2.7pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    Language & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
-    \midrule
-    Ruby       & 83.461 & 83.515 & 83.466 & 83.426 \\
-    JavaScript & 78.930 & 78.949 & 78.785 & 78.814 \\
-    Go         & 93.388 & 93.410 & 93.419 & 93.426 \\
-    Python     & 78.272 & 78.305 & 78.292 & 78.273 \\
-    Java       & 78.542 & 78.569 & 78.568 & 78.583 \\
-    PHP        & 73.615 & 73.585 & 73.574 & 73.539 \\
-    \midrule
-    Macro      & 81.035 & \textbf{81.055} & 81.017 & 81.010 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Language-level held-out test MRR (\%) at \(\alpha=0.5\). The bold macro score uses the validation-selected depth; language-level test values do not select it.}
-  % 中文表注：\(\alpha=0.5\) 时的逐语言留出测试集 MRR（\%）。粗体宏平均分数采用验证集选定的深度；逐语言测试值不参与选择。
-  \label{tab:reranking_depth_language}
-\end{table}
-
-\begin{table}[!t]
-  \centering
-  \scriptsize
-  \setlength{\tabcolsep}{2.5pt}
-  \begin{tabular}{rrrrrr}
-    \toprule
-    \(K\) & MRR & Encode & Search & MaxSim & Total \\
-    & (\%) & \multicolumn{4}{c}{ms/query} \\
-    \midrule
-    10  & 81.035 & 0.76 & 0.21 & 18.08 & 19.04 \\
-    20  & \textbf{81.055} & 0.69 & 0.21 & 25.13 & 26.04 \\
-    50  & 81.017 & 0.77 & 0.21 & 45.66 & 46.64 \\
-    100 & 81.010 & 0.70 & 0.22 & 84.27 & 85.19 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Effectiveness and measured online latency at \(\alpha=0.5\). MRR is macro-averaged over the six test languages; Encode and Search denote query encoding and global search. Latency is measured on JavaScript with one NVIDIA H20. All settings peak at 3,063 MiB.}
-  % 中文表注：\(\alpha=0.5\) 时的效果与实测在线延迟。MRR 为六个测试语言的宏平均；Encode 与 Search 分别表示查询编码和全局搜索。延迟在单张 NVIDIA H20 上使用 JavaScript 测得。所有设置的峰值显存占用均为 3,063 MiB。
-  \label{tab:reranking_efficiency_details}
-\end{table}
-
 The validation grid distinguishes the roles of the two inference parameters. At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\); at smaller \(\alpha\), changing \(K\) changes both the candidates rescored and the online cost. Once \(\alpha=0.5\) is fixed by validation, the held-out macro scores differ by only 0.045 points across the four depths, while MaxSim latency rises from 18.08 to 84.27 ms per query. The selected \(K=20\) is therefore a validation decision whose cost is reported separately, not a test-set optimum chosen after inspection.
 % 中文：验证网格区分了两个推理参数的作用。当 \(\alpha=1\) 时不使用 MaxSim，因此所有 \(K\) 的分数完全相同；当 \(\alpha\) 较小时，改变 \(K\) 会同时改变被重新计分的候选和在线开销。在验证集将 \(\alpha=0.5\) 固定后，四种深度的留出测试集宏平均分数仅相差 0.045 个点，而 MaxSim 延迟从每查询 18.08 毫秒增至 84.27 毫秒。因此，选取 \(K=20\) 是一个单独报告成本的验证集决策，而不是查看测试结果后选择的最优点。
 
@@ -948,37 +905,83 @@ The validation grid distinguishes the roles of the two inference parameters. At 
 Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in Section~\ref{sec:component_analysis} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs.
 % 中文：表~\ref{tab:bootstrap} 按编程语言展开第~\ref{sec:component_analysis} 节报告的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。
 
-\begin{table}[!t]
-  \centering
-  \scriptsize
-  \setlength{\tabcolsep}{1.5pt}
-  \begin{tabular}{lrlrl}
-    \toprule
-    Language & Initial & System & MRR & \(\Delta\) [95\% CI] \\
-    \midrule
-    Java & 77.20 & Global & 78.14 & +0.94 [0.68, 1.19] \\
-         &       & Rerank & 78.57 & +1.37 [1.07, 1.66] \\
-    JavaScript & 77.72 & Global & 78.36 & +0.64 [0.20, 1.08] \\
-         &       & Rerank & 78.95 & +1.23 [0.68, 1.78] \\
-    Ruby & 82.16 & Global & 82.84 & +0.68 [0.12, 1.26] \\
-         &       & Rerank & 83.51 & +1.35 [0.64, 2.10] \\
-    Python & 77.17 & Global & 77.95 & +0.78 [0.51, 1.05] \\
-         &       & Rerank & 78.30 & +1.13 [0.82, 1.44] \\
-    PHP & 71.91 & Global & 73.10 & +1.20 [0.90, 1.50] \\
-         &       & Rerank & 73.58 & +1.68 [1.36, 1.99] \\
-    Go & 92.43 & Global & 93.03 & +0.60 [0.39, 0.80] \\
-         &       & Rerank & 93.41 & +0.98 [0.76, 1.20] \\
-    \midrule
-    Macro & 79.77 & Global & 80.57 & +0.80 [0.66, 0.95] \\
-          &       & Rerank & 81.06 & +1.29 [1.11, 1.47] \\
-    \bottomrule
-  \end{tabular}
-  \caption{MRR and paired-bootstrap differences relative to the initial retriever. Intervals quantify query-sampling uncertainty for fixed checkpoints trained with seed 123456.}
-  % 中文表注：相对于初始检索器的 MRR 与配对 bootstrap 差值。区间衡量使用随机种子 123456 训练的固定检查点上的查询采样不确定性。
-  \label{tab:bootstrap}
-\end{table}
-
 Every language-level interval has a positive lower bound for both systems, while the macro intervals are narrower because the stratified estimate aggregates evidence across all six test sets. The wider intervals for individual languages should therefore be read together with their test-set sizes in Table~\ref{tab:dataset_stats}. These intervals support the direction of the fixed-checkpoint differences; they do not replace independent retraining when assessing seed-to-seed variability.
 % 中文：两种系统在每种语言上的区间下界均为正；宏平均区间更窄，是因为分层估计汇总了六个测试集的证据。因此，逐语言较宽的区间需要结合表~\ref{tab:dataset_stats} 中的测试集规模理解。这些区间支持固定检查点差值的方向，但在评估不同随机种子之间的变异时，不能替代独立重新训练。
+
+\begin{table*}[!t]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \small
+    \setlength{\tabcolsep}{2.7pt}
+    \begin{tabular}{lrrrr}
+      \toprule
+      Language & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
+      \midrule
+      Ruby       & 83.461 & 83.515 & 83.466 & 83.426 \\
+      JavaScript & 78.930 & 78.949 & 78.785 & 78.814 \\
+      Go         & 93.388 & 93.410 & 93.419 & 93.426 \\
+      Python     & 78.272 & 78.305 & 78.292 & 78.273 \\
+      Java       & 78.542 & 78.569 & 78.568 & 78.583 \\
+      PHP        & 73.615 & 73.585 & 73.574 & 73.539 \\
+      \midrule
+      Macro      & 81.035 & \textbf{81.055} & 81.017 & 81.010 \\
+      \bottomrule
+    \end{tabular}
+    \captionof{table}{Language-level held-out test MRR (\%) at \(\alpha=0.5\). The bold macro score uses the validation-selected depth; language-level test values do not select it.}
+    % 中文表注：\(\alpha=0.5\) 时的逐语言留出测试集 MRR（\%）。粗体宏平均分数采用验证集选定的深度；逐语言测试值不参与选择。
+    \label{tab:reranking_depth_language}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \small
+    \setlength{\tabcolsep}{2.5pt}
+    \begin{tabular}{rrrrrr}
+      \toprule
+      \(K\) & MRR & Encode & Search & MaxSim & Total \\
+      & (\%) & \multicolumn{4}{c}{ms/query} \\
+      \midrule
+      10  & 81.035 & 0.76 & 0.21 & 18.08 & 19.04 \\
+      20  & \textbf{81.055} & 0.69 & 0.21 & 25.13 & 26.04 \\
+      50  & 81.017 & 0.77 & 0.21 & 45.66 & 46.64 \\
+      100 & 81.010 & 0.70 & 0.22 & 84.27 & 85.19 \\
+      \bottomrule
+    \end{tabular}
+    \captionof{table}{Effectiveness and measured online latency at \(\alpha=0.5\). MRR is macro-averaged over the six test languages; Encode and Search denote query encoding and global search. Latency is measured on JavaScript with one NVIDIA H20. All settings peak at 3,063 MiB.}
+    % 中文表注：\(\alpha=0.5\) 时的效果与实测在线延迟。MRR 为六个测试语言的宏平均；Encode 与 Search 分别表示查询编码和全局搜索。延迟在单张 NVIDIA H20 上使用 JavaScript 测得。所有设置的峰值显存占用均为 3,063 MiB。
+    \label{tab:reranking_efficiency_details}
+  \end{minipage}
+
+  \vspace{0.75em}
+  \begin{minipage}[t]{0.66\textwidth}
+    \centering
+    \small
+    \setlength{\tabcolsep}{3.0pt}
+    \begin{tabular}{lrlrl}
+      \toprule
+      Language & Initial & System & MRR & \(\Delta\) [95\% CI] \\
+      \midrule
+      Java & 77.20 & Global & 78.14 & +0.94 [0.68, 1.19] \\
+           &       & Rerank & 78.57 & +1.37 [1.07, 1.66] \\
+      JavaScript & 77.72 & Global & 78.36 & +0.64 [0.20, 1.08] \\
+           &       & Rerank & 78.95 & +1.23 [0.68, 1.78] \\
+      Ruby & 82.16 & Global & 82.84 & +0.68 [0.12, 1.26] \\
+           &       & Rerank & 83.51 & +1.35 [0.64, 2.10] \\
+      Python & 77.17 & Global & 77.95 & +0.78 [0.51, 1.05] \\
+           &       & Rerank & 78.30 & +1.13 [0.82, 1.44] \\
+      PHP & 71.91 & Global & 73.10 & +1.20 [0.90, 1.50] \\
+           &       & Rerank & 73.58 & +1.68 [1.36, 1.99] \\
+      Go & 92.43 & Global & 93.03 & +0.60 [0.39, 0.80] \\
+           &       & Rerank & 93.41 & +0.98 [0.76, 1.20] \\
+      \midrule
+      Macro & 79.77 & Global & 80.57 & +0.80 [0.66, 0.95] \\
+            &       & Rerank & 81.06 & +1.29 [1.11, 1.47] \\
+      \bottomrule
+    \end{tabular}
+    \captionof{table}{MRR and paired-bootstrap differences relative to the initial retriever. Intervals quantify query-sampling uncertainty for fixed checkpoints trained with seed 123456.}
+    % 中文表注：相对于初始检索器的 MRR 与配对 bootstrap 差值。区间衡量使用随机种子 123456 训练的固定检查点上的查询采样不确定性。
+    \label{tab:bootstrap}
+  \end{minipage}
+\end{table*}
 
 \end{document}
