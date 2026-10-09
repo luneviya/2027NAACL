@@ -79,8 +79,8 @@ The positive--negative score margin explains the refinement signal: a small or n
 Under a matched local protocol on all six CodeSearchNet languages~\citep{CodeSearchNet}, \method{}-Global raises macro MRR from 79.77 to 80.57 and R@1 from 70.72 to 71.90; optional reranking reaches 81.06 MRR and 72.64 R@1. Budget-matched controls favor retriever-mined Failure Candidates over random and static alternatives. Paired-bootstrap intervals quantify test-query sampling uncertainty for the fixed checkpoints, and three encoder instantiations examine pipeline compatibility.
 % 中文：在全部六种 CodeSearchNet 语言~\citep{CodeSearchNet}上的协议一致本地评测中，\method{}-Global 将宏平均 MRR 从 79.77 提升至 80.57，并将 R@1 从 70.72 提升至 71.90；可选重排达到 81.06 MRR 和 72.64 R@1。预算匹配的对照表明，检索器挖掘的失败候选优于随机和静态替代方案。配对 bootstrap 区间衡量固定检查点上的测试查询采样不确定性，三种编码器实例则考察流程兼容性。
 
-The two interventions operate at different retrieval scopes. Global refinement changes the representation space used for every corpus comparison, whereas optional reranking revisits only the candidates returned by global retrieval. We evaluate them separately so that training-side improvements remain distinguishable from token-level inference effects.
-% 中文：两种干预作用于不同的检索范围。全局细化改变所有语料库比较所使用的表示空间，而可选重排只重新考察全局检索返回的候选。本文分别评测二者，使训练侧改进能够与词元级推理效果清晰区分。
+Global refinement changes the representation space used for every corpus comparison, whereas optional reranking revisits only retrieved candidates. Evaluating them separately distinguishes training-side improvement from token-level inference.
+% 中文：全局细化改变所有语料库比较所使用的表示空间，而可选重排只重新考察检索得到的候选。分别评测二者可以区分训练侧改进与词元级推理效果。
 
 Our contributions are threefold:
 % 中文：本文的贡献有三点：
@@ -103,8 +103,6 @@ Our contributions are threefold:
   \label{fig:framework}
 \end{figure*}
 
-% Keep the section heading with substantive text at the top of the next column.
-\newpage
 \section{Related Work}
 \label{sec:related_work}
 
@@ -699,13 +697,14 @@ Table~\ref{tab:candidate_language_details} reports all four language-level metri
 We partition all 52,561 test queries according to the rank of the gold code snippet under the initial retriever. As shown in Table~\ref{tab:rank_strata}, the largest improvements occur for queries whose gold code is initially ranked between 2 and 10. Within this stratum, \method{}-Global improves MRR by 8.89 points, and \method{}-Rerank increases the improvement to 11.32 points. Positive but smaller differences are observed for initial ranks 11--50 and beyond 50. The concentration of gains among queries with near-top gold ranks is consistent with the intended role of failure-candidate refinement.
 % 中文：我们根据初始检索器下正确代码片段的排名，对全部 52,561 个测试查询进行分组。如表~\ref{tab:rank_strata} 所示，当正确代码的初始排名位于第 2--10 位时，性能提升最大。在这一分组中，\method{}-Global 将 MRR 提升 8.89 个点，\method{}-Rerank 则将提升扩大到 11.32 个点。当初始排名为第 11--50 位或 50 位以后时，也能观察到正向但较小的差异。收益集中在正确代码初始排名接近首位的查询上，这与失败候选细化的预期作用一致。
 
-\begin{table*}[!t]
+\begin{table}[!t]
   \centering
-  \small
-  \setlength{\tabcolsep}{8pt}
+  \scriptsize
+  \setlength{\tabcolsep}{1.7pt}
+  \resizebox{\columnwidth}{!}{%
   \begin{tabular}{lrrrrrr}
     \toprule
-    Paired-code initial rank & Queries & Initial MRR & Global MRR & \(\Delta\)Global & Rerank MRR & \(\Delta\)Rerank \\
+    Initial rank & Queries & Initial & Global & \(\Delta\) & Rerank & \(\Delta\) \\
     \midrule
     1      & 36,274 & 100.00 & 97.88 & -2.12 & 97.53 & -2.47 \\
     2--10  & 13,261 & 35.75  & 44.65 & +8.89 & 47.07 & +11.32 \\
@@ -713,10 +712,11 @@ We partition all 52,561 test queries according to the rank of the gold code snip
     \(>50\) & 756   & 0.97   & 1.29  & +0.32 & 1.30  & +0.33 \\
     \bottomrule
   \end{tabular}
-  \caption{MRR conditioned on the gold code's rank under the initial retriever. Results are micro-averaged over test queries rather than macro-averaged over programming languages.}
+  }
+  \caption{MRR (\%) conditioned on the gold code's rank under the initial retriever. Results are micro-averaged over test queries.}
   % 中文表注：根据正确代码在初始检索器下的排名分层报告 MRR。结果在全部测试查询上进行微平均，而非对编程语言进行宏平均。
   \label{tab:rank_strata}
-\end{table*}
+\end{table}
 
 The transition counts reveal behavior that is obscured by aggregate MRR. Compared with the initial retriever, \method{}-Rerank improves the rank of the gold code for 7,121 queries and worsens it for 5,741 queries. It moves the gold code to rank 1 for 2,644 queries for which it was not initially top-ranked, but demotes the gold code for 1,624 queries that were initially correct at rank 1. Accordingly, MRR decreases by 2.47 points within the initial-rank-1 stratum. The overall improvement therefore reflects substantial corrections on initially misranked queries, partially offset by regressions on some initially correct rankings.
 % 中文：排名转移计数揭示了总体 MRR 所掩盖的行为。与初始检索器相比，\method{}-Rerank 使 7,121 个查询的正确代码排名上升，同时使 5,741 个查询的排名下降。对于 2,644 个正确代码原本不在首位的查询，它将正确代码提升至第 1 位；但对于 1,624 个正确代码原本位于第 1 位的查询，它也使正确代码发生后移。因此，在初始排名为 1 的分组中，MRR 下降了 2.47 个点。总体提升由对初始错误排序查询的大幅修复构成，但部分收益被一些初始正确排序上的回退所抵消。
@@ -848,48 +848,50 @@ Within each locally evaluated refinement checkpoint, MaxSim raises MRR for every
 The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding numerical values. Selection uses the six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
 % 中文：图~\ref{fig:reranking_sensitivity} 子图 (a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合，表~\ref{tab:reranking_validation_grid} 给出相应的精确数值。模型选择仅依据六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
 
-\begin{table}[!t]
+\begin{table*}[!t]
   \centering
-  \small
-  \setlength{\tabcolsep}{4.0pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    \(\alpha\) & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
-    \midrule
-    0    & 81.334 & 81.157 & 81.037 & 80.997 \\
-    0.25 & 81.826 & 81.804 & 81.777 & 81.768 \\
-    0.50 & 82.165 & \textbf{82.219} & 82.210 & 82.203 \\
-    0.75 & 82.152 & 82.167 & 82.168 & 82.169 \\
-    1.00 & 81.861 & 81.861 & 81.861 & 81.861 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Complete six-language macro validation MRR (\%) for reranking selection. The bold cell is the validation-selected setting; no test results are used in this selection.}
-  % 中文表注：用于重排选择的完整六语言宏平均验证集 MRR（\%）。粗体单元格为验证集选定配置；该选择过程不使用测试集结果。
-  \label{tab:reranking_validation_grid}
-\end{table}
-
-\begin{table}[!t]
-  \centering
-  \scriptsize
-  \setlength{\tabcolsep}{2.7pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    Language & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
-    \midrule
-    Ruby       & 83.461 & 83.515 & 83.466 & 83.426 \\
-    JavaScript & 78.930 & 78.949 & 78.785 & 78.814 \\
-    Go         & 93.388 & 93.410 & 93.419 & 93.426 \\
-    Python     & 78.272 & 78.305 & 78.292 & 78.273 \\
-    Java       & 78.542 & 78.569 & 78.568 & 78.583 \\
-    PHP        & 73.615 & 73.585 & 73.574 & 73.539 \\
-    \midrule
-    Macro      & 81.035 & \textbf{81.055} & 81.017 & 81.010 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Language-level held-out test MRR (\%) at \(\alpha=0.5\). The bold macro score corresponds to the setting selected on validation data; language-level test values do not participate in model selection.}
-  % 中文表注：\(\alpha=0.5\) 时的逐语言留出测试集 MRR（\%）。粗体宏平均分数对应验证集选定配置；逐语言测试结果不参与模型选择。
-  \label{tab:reranking_depth_language}
-\end{table}
+  \begin{minipage}[t]{0.47\textwidth}
+    \centering
+    \small
+    \setlength{\tabcolsep}{4.0pt}
+    \begin{tabular}{lrrrr}
+      \toprule
+      \(\alpha\) & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
+      \midrule
+      0    & 81.334 & 81.157 & 81.037 & 80.997 \\
+      0.25 & 81.826 & 81.804 & 81.777 & 81.768 \\
+      0.50 & 82.165 & \textbf{82.219} & 82.210 & 82.203 \\
+      0.75 & 82.152 & 82.167 & 82.168 & 82.169 \\
+      1.00 & 81.861 & 81.861 & 81.861 & 81.861 \\
+      \bottomrule
+    \end{tabular}
+    \captionof{table}{Complete six-language macro validation MRR (\%) for reranking selection. The bold cell is selected on validation; test results are not used.}
+    % 中文表注：用于重排选择的完整六语言宏平均验证集 MRR（\%）。粗体单元格依据验证集选定；不使用测试集结果。
+    \label{tab:reranking_validation_grid}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.47\textwidth}
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{2.7pt}
+    \begin{tabular}{lrrrr}
+      \toprule
+      Language & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
+      \midrule
+      Ruby       & 83.461 & 83.515 & 83.466 & 83.426 \\
+      JavaScript & 78.930 & 78.949 & 78.785 & 78.814 \\
+      Go         & 93.388 & 93.410 & 93.419 & 93.426 \\
+      Python     & 78.272 & 78.305 & 78.292 & 78.273 \\
+      Java       & 78.542 & 78.569 & 78.568 & 78.583 \\
+      PHP        & 73.615 & 73.585 & 73.574 & 73.539 \\
+      \midrule
+      Macro      & 81.035 & \textbf{81.055} & 81.017 & 81.010 \\
+      \bottomrule
+    \end{tabular}
+    \captionof{table}{Language-level held-out test MRR (\%) at \(\alpha=0.5\). The bold macro score uses the validation-selected depth; language-level test values do not select it.}
+    % 中文表注：\(\alpha=0.5\) 时的逐语言留出测试集 MRR（\%）。粗体宏平均分数采用验证集选定的深度；逐语言测试值不参与选择。
+    \label{tab:reranking_depth_language}
+  \end{minipage}
+\end{table*}
 
 \FloatBarrier
 \begin{center}
