@@ -416,8 +416,8 @@ Of 52,561 test queries, 36,274 already place the paired code first and 13,261 pl
 We instantiate the same harvesting, refinement, and reranking pipeline with CoCoSoDa, UniXcoder~\citep{UniXcoder}, and the data-flow-aware GraphCodeBERT~\citep{GraphCodeBERT}. Figure~\ref{fig:encoder_compatibility} reports language-level and macro MRR, with right-side annotations giving the matched Rerank-minus-Global change. At the macro level, MaxSim raises the three refined checkpoints from 80.1 to 80.6, 76.0 to 76.6, and 72.8 to 74.0, respectively; every language-level change is also positive.
 % 中文：我们分别使用 CoCoSoDa、UniXcoder~\citep{UniXcoder} 和数据流感知的 GraphCodeBERT~\citep{GraphCodeBERT} 实例化相同的候选挖掘、细化与重排流程。图~\ref{fig:encoder_compatibility} 报告逐语言和宏平均 MRR，右侧标注给出协议一致的 Rerank 减 Global 变化。在宏平均层面，MaxSim 分别将三个细化检查点从 80.1 提升至 80.6、从 76.0 提升至 76.6、从 72.8 提升至 74.0；全部逐语言变化也均为正。
 
-Because the corresponding initial checkpoints were not evaluated locally on the test sets under a unified encoder-specific protocol, these results establish architecture compatibility and matched within-checkpoint reranking benefits, not refinement gains. The Published markers provide literature context only; Appendix~\ref{app:encoder_instantiations} gives all underlying metrics.
-% 中文：由于各编码器对应的初始检查点没有在统一的编码器特定协议下进行本地测试集评测，这些结果只能证明架构兼容性以及同一检查点内协议一致的重排收益，而不能估计细化增益。Published 标记仅提供文献背景；全部底层指标见附录~\ref{app:encoder_instantiations}。
+Because the corresponding initial checkpoints lack unified local test evaluation, these results establish architecture compatibility and matched within-checkpoint reranking benefits, not refinement gains. Published markers provide context only; Appendix~\ref{app:encoder_instantiations} reports full metrics.
+% 中文：由于相应初始检查点缺少统一的本地测试集评测，这些结果只能证明架构兼容性以及同一检查点内协议一致的重排收益，而不能估计细化增益。Published 标记仅提供背景；完整指标见附录~\ref{app:encoder_instantiations}。
 
 \begin{figure}[!t]
   \centering
