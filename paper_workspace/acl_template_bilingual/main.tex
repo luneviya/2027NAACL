@@ -47,8 +47,8 @@
 \maketitle
 
 \begin{abstract}
-Contrastive code search is commonly trained with in-batch, random, or statically mined negatives, although inference errors are determined by the few high-scoring candidates returned by the trained retriever. We present \method{}, a failure-calibrated refinement framework that freezes an initial retriever, harvests its high-ranked unpaired candidates, and turns them into targeted contrastive supervision. A separately weighted failure-candidate loss refines global query--code representations according to their positive--negative score margins; an optional inference stage then applies token-level MaxSim and Global--Local Score Fusion only within the retrieved top-\(K\). Under a matched local protocol on the six-language CodeSearchNet benchmark, \method{}-Global raises macro-averaged MRR from 79.77 to 80.57, and \method{}-Rerank reaches 81.06. The complete system improves MRR by 1.29 points over the initial retriever, with a paired-bootstrap 95\% confidence interval of [1.11, 1.47] over test queries. Budget-matched candidate controls favor Failure Candidate Harvesting over random and static alternatives, and rank-conditioned analysis locates the largest gains among queries whose paired code initially ranks 2--10. The full pipeline can be instantiated with CoCoSoDa, UniXcoder, and GraphCodeBERT, with MaxSim improving MRR for each refined checkpoint.
-% 中文：对比式代码搜索通常使用批内、随机或静态挖掘的负样本进行训练，但推理错误实际由训练完成的检索器返回的少量高分候选决定。本文提出 \method{}，一种失败校准的细化框架：它冻结初始检索器，挖掘其高排名未配对候选，并将这些候选转化为有针对性的对比监督。单独加权的失败候选损失根据正负样本分数间隔细化全局查询—代码表示；可选的推理阶段随后仅在检索得到的前 \(K\) 个候选内应用词元级 MaxSim 和全局—局部分数融合。在六语言 CodeSearchNet 基准的协议一致本地评测中，\method{}-Global 将宏平均 MRR 从 79.77 提升至 80.57，\method{}-Rerank 进一步达到 81.06。完整系统相对于初始检索器提升 1.29 个 MRR 点，测试查询上的配对 bootstrap 95\% 置信区间为 [1.11, 1.47]。预算匹配的候选对照表明，失败候选挖掘优于随机与静态替代方案；按排名分层的分析则显示，最大收益来自配对代码初始位于第 2--10 名的查询。完整流程可分别使用 CoCoSoDa、UniXcoder 和 GraphCodeBERT 实例化，且 MaxSim 均能提高相应细化检查点的 MRR。
+Contrastive code search is commonly trained with in-batch, random, or statically mined negatives, yet inference errors are determined by the few high-scoring candidates returned by the trained retriever. We present \method{}, a failure-calibrated refinement framework that freezes an initial retriever, harvests its high-ranked unpaired candidates, and turns them into targeted contrastive supervision. A separately weighted failure-candidate loss refines global query--code representations according to their positive--negative score margins; an optional inference stage then applies token-level MaxSim and Global--Local Score Fusion only within the retrieved top-\(K\). Under a matched local protocol on the six-language CodeSearchNet benchmark, \method{}-Global raises macro-averaged MRR from 79.8 to 80.6, and \method{}-Rerank reaches 81.1. The complete system improves MRR by 1.3 points over the initial retriever, with a paired-bootstrap 95\% confidence interval of [1.1, 1.5] over test queries. Budget-matched candidate controls favor Failure Candidate Harvesting over random and static alternatives, and rank-conditioned analysis locates the largest gains among queries whose paired code initially ranks 2--10. The full pipeline can be instantiated with CoCoSoDa, UniXcoder, and GraphCodeBERT, with MaxSim improving MRR for each refined checkpoint.
+% 中文：对比式代码搜索通常使用批内、随机或静态挖掘的负样本进行训练，但推理错误实际由训练完成的检索器返回的少量高分候选决定。本文提出 \method{}，一种失败校准的细化框架：它冻结初始检索器，挖掘其高排名未配对候选，并将这些候选转化为有针对性的对比监督。单独加权的失败候选损失根据正负样本分数间隔细化全局查询—代码表示；可选的推理阶段随后仅在检索得到的前 \(K\) 个候选内应用词元级 MaxSim 和全局—局部分数融合。在六语言 CodeSearchNet 基准的协议一致本地评测中，\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，\method{}-Rerank 进一步达到 81.1。完整系统相对于初始检索器提升 1.3 个 MRR 点，测试查询上的配对 bootstrap 95\% 置信区间为 [1.1, 1.5]。预算匹配的候选对照表明，失败候选挖掘优于随机与静态替代方案；按排名分层的分析则显示，最大收益来自配对代码初始位于第 2--10 名的查询。完整流程可分别使用 CoCoSoDa、UniXcoder 和 GraphCodeBERT 实例化，且 MaxSim 均能提高相应细化检查点的 MRR。
 \end{abstract}
 
 \section{Introduction}
@@ -75,8 +75,8 @@ We therefore propose \method{}, a three-stage failure-calibrated contrastive ref
 The positive--negative score margin explains the refinement signal: a small or negative margin produces a larger loss contribution, so candidates closest to displacing the paired code exert the strongest pressure. The update acts on rank-determining score comparisons, while MRR remains an evaluation metric rather than a training objective. Consistently, the largest gains occur when the paired code initially ranks 2--10.
 % 中文：正负样本分数间隔说明了细化信号：较小或为负的间隔产生更大的损失贡献，因此最接近挤压配对代码排名的候选会施加最强压力。更新作用于决定排名的分数比较，而 MRR 仍是评测指标而非训练目标。与此一致，当配对代码初始位于第 2--10 名时，收益最大。
 
-Under a matched local protocol on all six CodeSearchNet languages~\citep{CodeSearchNet}, \method{}-Global raises macro MRR from 79.77 to 80.57 and R@1 from 70.72 to 71.90; optional reranking reaches 81.06 MRR and 72.64 R@1. Budget-matched controls favor retriever-mined Failure Candidates over random and static alternatives. Paired-bootstrap intervals quantify test-query sampling uncertainty for the fixed checkpoints, and three encoder instantiations examine pipeline compatibility.
-% 中文：在全部六种 CodeSearchNet 语言~\citep{CodeSearchNet}上的协议一致本地评测中，\method{}-Global 将宏平均 MRR 从 79.77 提升至 80.57，并将 R@1 从 70.72 提升至 71.90；可选重排达到 81.06 MRR 和 72.64 R@1。预算匹配的对照表明，检索器挖掘的失败候选优于随机和静态替代方案。配对 bootstrap 区间衡量固定检查点上的测试查询采样不确定性，三种编码器实例则考察流程兼容性。
+Under a matched local protocol on all six CodeSearchNet languages~\citep{CodeSearchNet}, \method{}-Global raises macro MRR from 79.8 to 80.6 and R@1 from 70.7 to 71.9; optional reranking reaches 81.1 MRR and 72.6 R@1. Budget-matched controls favor retriever-mined Failure Candidates over random and static alternatives. Paired-bootstrap intervals quantify test-query sampling uncertainty for the fixed checkpoints, and three encoder instantiations examine pipeline compatibility.
+% 中文：在全部六种 CodeSearchNet 语言~\citep{CodeSearchNet}上的协议一致本地评测中，\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，并将 R@1 从 70.7 提升至 71.9；可选重排达到 81.1 MRR 和 72.6 R@1。预算匹配的对照表明，检索器挖掘的失败候选优于随机和静态替代方案。配对 bootstrap 区间衡量固定检查点上的测试查询采样不确定性，三种编码器实例则考察流程兼容性。
 
 Global refinement changes the representation space used for every corpus comparison, whereas optional reranking revisits only retrieved candidates. Evaluating them separately distinguishes training-side improvement from token-level inference.
 % 中文：全局细化改变所有语料库比较所使用的表示空间，而可选重排只重新考察检索得到的候选。分别评测二者可以区分训练侧改进与词元级推理效果。
@@ -86,10 +86,10 @@ Our contributions are threefold:
 \begin{itemize}
   \item We introduce \method{}, which converts high-ranked unpaired candidates from a frozen initial retriever into model-specific supervision while retaining efficient full-corpus dual-encoder retrieval.
   % 中文：我们提出 \method{}，将冻结初始检索器返回的高排名未配对候选转化为模型特定监督，同时保留高效的全库双编码器检索。
-  \item We connect refinement to positive--negative score margins and isolate its source with budget-matched candidate controls and rank-conditioned analysis, locating the principal gains in near-top misrankings.
-  % 中文：我们将细化与正负样本分数间隔联系起来，并通过预算匹配的候选对照和按排名分层的分析隔离其来源，将主要收益定位于接近顶部的错误排序。
-  \item In a controlled six-language evaluation, global refinement improves the matched initial retriever by 0.80 MRR points, and optional Dual-Granularity Reranking raises the complete improvement to 1.29 points, with explicit uncertainty and efficiency reporting.
-  % 中文：在六语言受控评测中，全局细化相对于协议一致的初始检索器提升 0.80 个 MRR 点，可选的双粒度重排将完整系统的提升扩大至 1.29 个点，并显式报告不确定性与效率。
+  \item We connect refinement to positive--negative score margins and isolate the source of its gains with budget-matched candidate controls and rank-conditioned analysis, locating the principal improvements in near-top misrankings.
+  % 中文：我们将细化与正负样本分数间隔联系起来，并通过预算匹配的候选对照和按排名分层的分析隔离其收益来源，将主要改进定位于接近顶部的错误排序。
+  \item In a controlled six-language evaluation, global refinement improves the matched initial retriever by 0.8 MRR points, and optional Dual-Granularity Reranking raises the complete improvement to 1.3 points, with explicit uncertainty and efficiency reporting.
+  % 中文：在六语言受控评测中，全局细化相对于协议一致的初始检索器提升 0.8 个 MRR 点，可选的双粒度重排将完整系统的提升扩大至 1.3 个点，并显式报告不确定性与效率。
 \end{itemize}
 
 % Queue the full-width method overview before the section boundary so that it
@@ -256,8 +256,8 @@ Our evaluation first reports matched six-language effectiveness, then isolates r
 \label{sec:experimental_setup}
 
 \paragraph{Dataset and metrics.}
-We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go. Table~\ref{tab:dataset_stats} summarizes the fixed data splits and language-specific retrieval corpora. At test time, each query is evaluated against the complete corpus for its language. We use mean reciprocal rank (MRR) as the primary metric and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10). All metrics are reported as percentages.
-% 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对。表~\ref{tab:dataset_stats} 汇总了固定的数据划分和对应语言的检索语料库。测试时，每个查询都在其对应语言的完整语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，并同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）。所有指标均以百分比表示。
+We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go. Table~\ref{tab:dataset_stats} summarizes the fixed data splits and language-specific retrieval corpora. At test time, each query is evaluated against the complete corpus for its language. We use mean reciprocal rank (MRR) as the primary metric and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10). All metrics are percentages. Result metrics and measured latency are rounded to one decimal place; counts and configuration values retain their required precision.
+% 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对。表~\ref{tab:dataset_stats} 汇总了固定的数据划分和对应语言的检索语料库。测试时，每个查询都在其对应语言的完整语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，并同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）。所有指标均以百分比表示。结果指标与实测延迟保留一位小数；计数与配置值则保留其所需精度。
 
 \begin{table}[t]
   \centering
@@ -330,16 +330,16 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     \toprule
     Configuration & FC refinement & MaxSim & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
     \midrule
-    Initial retriever & -- & -- & 79.77 & 70.72 & 91.28 & 95.10 & -- \\
-    Initial + MaxSim & -- & \checkmark & 80.36 & 71.54 & 91.51 & 95.16 & +0.59 \\
+    Initial retriever & -- & -- & 79.8 & 70.7 & 91.3 & 95.1 & -- \\
+    Initial + MaxSim & -- & \checkmark & 80.4 & 71.5 & 91.5 & 95.2 & +0.6 \\
     \rowcolor{gray!10}
-    \method{}-Global & \checkmark & -- & 80.57 & 71.90 & 91.52 & \textbf{95.17} & +0.80 \\
+    \method{}-Global & \checkmark & -- & 80.6 & 71.9 & 91.5 & \textbf{95.2} & +0.8 \\
     \rowcolor{gray!10}
-    \method{}-Rerank & \checkmark & \checkmark & \textbf{81.06} & \textbf{72.64} & \textbf{91.68} & 95.11 & \textbf{+1.29} \\
+    \method{}-Rerank & \checkmark & \checkmark & \textbf{81.1} & \textbf{72.6} & \textbf{91.7} & 95.1 & \textbf{+1.3} \\
     \bottomrule
   \end{tabular}
-  \caption{Component analysis. Check marks denote enabled components; reranked rows use \(K=20\) and \(\alpha=0.5\). Metrics are six-language macro averages, and \(\Delta\)MRR uses the initial retriever.}
-  % 中文表注：组件分析。勾号表示启用相应组件；重排行使用 \(K=20\)、\(\alpha=0.5\)。指标为六语言宏平均，\(\Delta\)MRR 以初始检索器为参照。
+  \caption{Component analysis. Check marks denote enabled components; reranked rows use \(K=20\) and \(\alpha=0.5\). Metrics are six-language macro averages, and \(\Delta\)MRR uses the initial retriever. Bold reflects unrounded values.}
+  % 中文表注：组件分析。勾号表示启用相应组件；重排行使用 \(K=20\)、\(\alpha=0.5\)。指标为六语言宏平均，\(\Delta\)MRR 以初始检索器为参照；粗体依据未舍入数值确定。
   \label{tab:ablation}
   \vspace{0.4em}
 
@@ -348,14 +348,14 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     \toprule
     Candidate-selection strategy & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
     \midrule
-    No refinement & 79.77 & 70.72 & \textbf{91.28} & \textbf{95.10} & -- \\
-    Random & 79.72 & 70.72 & 91.15 & 95.00 & -0.05 \\
-    Static hard negative & 79.67 & 70.65 & 91.05 & 94.88 & -0.10 \\
-    Retriever-mined failure candidate & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
+    No refinement & 79.8 & 70.7 & \textbf{91.3} & \textbf{95.1} & -- \\
+    Random & 79.7 & 70.7 & 91.2 & 95.0 & -0.1 \\
+    Static hard negative & 79.7 & 70.7 & 91.1 & 94.9 & -0.1 \\
+    Retriever-mined failure candidate & \textbf{80.1} & \textbf{71.6} & 91.0 & 94.6 & \textbf{+0.4} \\
     \bottomrule
   \end{tabular}
-  \caption{Budget-matched candidate selection with one added candidate per query and global retrieval. \(\Delta\)MRR uses the unrefined initial retriever.}
-  % 中文表注：预算一致的候选选择比较，每个查询增加一个候选并采用全局检索。\(\Delta\)MRR 以未细化的初始检索器为参照。
+  \caption{Budget-matched candidate selection with one added candidate per query and global retrieval. \(\Delta\)MRR uses the unrefined initial retriever; bold reflects unrounded values.}
+  % 中文表注：预算一致的候选选择比较，每个查询增加一个候选并采用全局检索。\(\Delta\)MRR 以未细化的初始检索器为参照；粗体依据未舍入数值确定。
   \label{tab:candidate_controls}
 \end{table*}
 
@@ -375,11 +375,11 @@ We estimate 95\% confidence intervals for paired MRR differences by stratified p
 Table~\ref{tab:main_results} compares retrieval performance across the six CodeSearchNet programming languages. \method{}-Global achieves a macro-averaged MRR of 80.6 and consistently outperforms the matched initial retriever across all six languages. Applying MaxSim reranking with validation-selected hyperparameters further increases macro-averaged MRR to 81.1. Relative to the locally evaluated initial retriever (79.8), \method{}-Global and \method{}-Rerank improve MRR by 0.8 and 1.3 absolute points, respectively.
 % 中文：表~\ref{tab:main_results} 比较了六种 CodeSearchNet 编程语言上的检索性能。\method{}-Global 的宏平均 MRR 达到 80.6，并在全部六种语言上稳定超过协议一致的初始检索器。采用验证集选定的超参数进行 MaxSim 重排后，宏平均 MRR 进一步提升到 81.1。相对于本地评测的初始检索器（79.8），\method{}-Global 和 \method{}-Rerank 分别带来 0.8 和 1.3 个 MRR 绝对点数的提升。
 
-At full precision, Global refinement raises every language's MRR by 0.60--1.19 points, and the complete system by 0.98--1.67 points. The common direction across the six equally weighted languages complements the aggregate confidence intervals reported below.
-% 中文：按完整精度计算，Global 细化使每种语言的 MRR 提升 0.60--1.19 个点，完整系统则提升 0.98--1.67 个点。六种等权语言上的一致提升方向与下文报告的总体置信区间形成互补证据。
+Across the six languages, Global refinement raises MRR by 0.6--1.2 points, and the complete system by 1.0--1.7 points. The common direction across the six equally weighted languages complements the aggregate confidence intervals reported below.
+% 中文：在六种语言上，Global 细化使 MRR 提升 0.6--1.2 个点，完整系统则提升 1.0--1.7 个点。六种等权语言上的一致提升方向与下文报告的总体置信区间形成互补证据。
 
-Recall@\(K\) clarifies where the ranking changes. From the initial retriever to \method{}-Rerank, R@1 increases from 70.72 to 72.64, while R@5 rises from 91.28 to 91.68 and R@10 is essentially unchanged (95.10 versus 95.11). The much larger 1.92-point change at R@1 indicates reordering near the top rather than broader top-10 coverage, consistent with correcting Retrieved-but-Mis-ranked Cases.
-% 中文：Recall@\(K\) 进一步说明排序变化发生的位置。从初始检索器到 \method{}-Rerank，R@1 从 70.72 提升到 72.64，而 R@5 从 91.28 提升到 91.68，R@10 基本不变（95.10 对 95.11）。R@1 高达 1.92 个点的变化远大于其他截断位置，说明收益来自顶部附近的重新排序，而非更广泛的前 10 名覆盖；这与修复“已检索但排序错误案例”一致。
+Recall@\(K\) clarifies where the ranking changes. From the initial retriever to \method{}-Rerank, R@1 increases from 70.7 to 72.6, while R@5 rises from 91.3 to 91.7 and R@10 is unchanged at the displayed precision (95.1). The much larger 1.9-point change at R@1 indicates reordering near the top rather than broader top-10 coverage, consistent with correcting Retrieved-but-Mis-ranked Cases.
+% 中文：Recall@\(K\) 进一步说明排序变化发生的位置。从初始检索器到 \method{}-Rerank，R@1 从 70.7 提升到 72.6，而 R@5 从 91.3 提升到 91.7，R@10 在当前显示精度下保持不变（95.1）。R@1 高达 1.9 个点的变化远大于其他截断位置，说明收益来自顶部附近的重新排序，而非更广泛的前 10 名覆盖；这与修复“已检索但排序错误案例”一致。
 
 The reported results in the upper block place \method{} in the context of prior work. All quantitative estimates of improvement, however, use the matched local comparison with the initial retriever. We next trace these gains through component, candidate-selection, and rank-conditioned analyses, before testing encoder compatibility and measuring reranking cost.
 % 中文：表格上半部分的论文报告结果用于说明 \method{} 在既有工作中的性能位置。不过，所有性能提升的定量估计都基于与初始检索器之间的协议一致本地比较。下文通过组件、候选选择和按初始排名分层的分析追溯这些收益，再考察编码器兼容性并测量重排开销。
@@ -388,24 +388,24 @@ The reported results in the upper block place \method{} in the context of prior 
 \label{sec:component_analysis}
 
 \paragraph{Component contributions.}
-Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim reranking under a shared inference configuration (\(K=20\), \(\alpha=0.5\)). Applied directly to the initial retriever, MaxSim raises MRR from 79.77 to 80.36. Failure-calibrated refinement without reranking reaches 80.57, and the complete configuration obtains the best MRR of 81.06. These matched comparisons estimate the separate contribution of each component; they do not estimate an interaction effect.
-% 中文：表~\ref{tab:ablation} 在统一的推理配置（\(K=20\)、\(\alpha=0.5\)）下交叉比较失败候选细化与 MaxSim 重排。MaxSim 直接应用于初始检索器时，将 MRR 从 79.77 提升到 80.36；不使用重排的失败校准细化达到 80.57；完整配置取得最高的 81.06 MRR。这些协议一致的比较分别估计两个组件的贡献，但不估计二者的交互效应。
+Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim reranking under a shared inference configuration (\(K=20\), \(\alpha=0.5\)). Applied directly to the initial retriever, MaxSim raises MRR from 79.8 to 80.4. Failure-calibrated refinement without reranking reaches 80.6, and the complete configuration obtains the best MRR of 81.1. These matched comparisons estimate the separate contribution of each component; they do not estimate an interaction effect.
+% 中文：表~\ref{tab:ablation} 在统一的推理配置（\(K=20\)、\(\alpha=0.5\)）下交叉比较失败候选细化与 MaxSim 重排。MaxSim 直接应用于初始检索器时，将 MRR 从 79.8 提升到 80.4；不使用重排的失败校准细化达到 80.6；完整配置取得最高的 81.1 MRR。这些协议一致的比较分别估计两个组件的贡献，但不估计二者的交互效应。
 
-MaxSim contributes 0.59 points before and 0.49 points after refinement; refinement contributes 0.80 points without MaxSim and 0.70 points with the shared reranker. Each operation improves its matched counterpart, and the complete configuration has the highest MRR. Independently selecting reranking parameters for the initial retriever yields the same rounded test MRR of 80.36. Relative to the fixed initial retriever, the 95\% intervals are [0.66, 0.95] for refinement and [1.11, 1.47] for the complete system, quantifying test-query resampling uncertainty. Appendix~\ref{app:component_details} gives every language and metric.
-% 中文：MaxSim 在细化前后分别贡献 0.59 和 0.49 个点；细化在不使用 MaxSim 和使用统一重排器时分别贡献 0.80 和 0.70 个点。每种操作都能改善其协议一致对照，完整配置取得最高 MRR。为初始检索器独立选择重排参数后，其测试 MRR 四舍五入后仍为 80.36。相对于固定初始检索器，细化和完整系统的 95\% 区间分别为 [0.66, 0.95] 与 [1.11, 1.47]，衡量测试查询重采样不确定性。附录~\ref{app:component_details} 给出全部逐语言指标。
+MaxSim contributes 0.6 points before and 0.5 points after refinement; refinement contributes 0.8 points without MaxSim and 0.7 points with the shared reranker. Each operation improves its matched counterpart, and the complete configuration has the highest MRR. Independently selecting reranking parameters for the initial retriever yields the same test MRR of 80.4 at the displayed precision. Relative to the fixed initial retriever, the 95\% intervals are [0.7, 1.0] for refinement and [1.1, 1.5] for the complete system, quantifying test-query resampling uncertainty. Appendix~\ref{app:component_details} gives every language and metric.
+% 中文：MaxSim 在细化前后分别贡献 0.6 和 0.5 个点；细化在不使用 MaxSim 和使用统一重排器时分别贡献 0.8 和 0.7 个点。每种操作都能改善其协议一致对照，完整配置取得最高 MRR。为初始检索器独立选择重排参数后，其测试 MRR 在当前显示精度下仍为 80.4。相对于固定初始检索器，细化和完整系统的 95\% 区间分别为 [0.7, 1.0] 与 [1.1, 1.5]，衡量测试查询重采样不确定性。附录~\ref{app:component_details} 给出全部逐语言指标。
 
 \paragraph{Candidate-selection control.}
 \label{sec:candidate_controls}
 
-Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.35 points and R@1 by 0.83 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
-% 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.35 和 0.83 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
+Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.4 points and R@1 by 0.8 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
+% 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.4 和 0.8 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
 
-Random and static selection change macro MRR by \(-0.05\) and \(-0.10\) points, whereas retriever-mined selection changes it by \(+0.35\). Because the schedule and per-query candidate budget are fixed, additional optimization alone does not explain the mined-candidate gain. Its larger R@1 movement, accompanied by small R@5 and R@10 reductions, localizes the effect near the first position rather than broader retrieval coverage. Appendix~\ref{app:candidate_details} provides the language-level results.
-% 中文：随机选择和静态选择分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘候选带来 \(+0.35\) 个点的变化。由于优化日程和每查询候选预算保持固定，单纯增加优化过程不能解释检索器挖掘候选的收益。后者较大的 R@1 变化伴随 R@5 和 R@10 的小幅下降，说明其作用集中在首位附近，而不是扩大整体检索覆盖。逐语言结果见附录~\ref{app:candidate_details}。
+Random and static selection each change macro MRR by \(-0.1\) points at the displayed precision, whereas retriever-mined selection changes it by \(+0.4\). Because the schedule and per-query candidate budget are fixed, additional optimization alone does not explain the mined-candidate gain. Its larger R@1 movement, accompanied by small R@5 and R@10 reductions, localizes the effect near the first position rather than broader retrieval coverage. Appendix~\ref{app:candidate_details} provides the language-level results.
+% 中文：在当前显示精度下，随机选择和静态选择均使宏平均 MRR 变化 \(-0.1\) 个点，而检索器挖掘候选带来 \(+0.4\) 个点的变化。由于优化日程和每查询候选预算保持固定，单纯增加优化过程不能解释检索器挖掘候选的收益。后者较大的 R@1 变化伴随 R@5 和 R@10 的小幅下降，说明其作用集中在首位附近，而不是扩大整体检索覆盖。逐语言结果见附录~\ref{app:candidate_details}。
 
 \paragraph{Rank-conditioned behavior.}
-Table~\ref{tab:rank_strata} conditions retrieval behavior on the paired code's rank under the initial retriever. The largest gains occur when the paired code initially appears at ranks 2--10: Global refinement adds 8.89 MRR points, and reranking increases the gain to 11.32 points. Improvements remain positive but smaller for ranks 11--50 and beyond 50. Conversely, MRR falls by 2.12 and 2.47 points, respectively, among queries that initially place the paired code at rank 1. The aggregate gain therefore reflects substantial correction of near-top misrankings, partially offset by regressions on some initially correct rankings. Appendix~\ref{app:rank_analysis} provides the query counts and transition statistics.
-% 中文：表~\ref{tab:rank_strata} 根据配对代码在初始检索器下的排名分析检索行为。当配对代码初始位于第 2--10 名时，收益最大：Global 细化提升 8.89 个 MRR 点，加入重排后增益扩大到 11.32 个点。初始排名为第 11--50 名或 50 名以后时，改进仍为正但幅度较小。相反，对于配对代码初始位于第 1 名的查询，Global 与 Rerank 的 MRR 分别下降 2.12 和 2.47 个点。因此，总体收益主要来自对接近顶部的错误排序进行大幅修复，但部分收益被初始正确排序上的回退抵消。附录~\ref{app:rank_analysis} 给出查询数量和排名转移统计。
+Table~\ref{tab:rank_strata} conditions retrieval behavior on the paired code's rank under the initial retriever. The largest gains occur when the paired code initially appears at ranks 2--10: Global refinement adds 8.9 MRR points, and reranking increases the gain to 11.3 points. Improvements remain positive but smaller for ranks 11--50 and beyond 50. Conversely, MRR falls by 2.1 and 2.5 points, respectively, among queries that initially place the paired code at rank 1. The aggregate gain therefore reflects substantial correction of near-top misrankings, partially offset by regressions on some initially correct rankings. Appendix~\ref{app:rank_analysis} provides the query counts and transition statistics.
+% 中文：表~\ref{tab:rank_strata} 根据配对代码在初始检索器下的排名分析检索行为。当配对代码初始位于第 2--10 名时，收益最大：Global 细化提升 8.9 个 MRR 点，加入重排后增益扩大到 11.3 个点。初始排名为第 11--50 名或 50 名以后时，改进仍为正但幅度较小。相反，对于配对代码初始位于第 1 名的查询，Global 与 Rerank 的 MRR 分别下降 2.1 和 2.5 个点。因此，总体收益主要来自对接近顶部的错误排序进行大幅修复，但部分收益被初始正确排序上的回退抵消。附录~\ref{app:rank_analysis} 给出查询数量和排名转移统计。
 
 Of 52,561 test queries, 36,274 already place the paired code first and 13,261 place it at ranks 2--10. Modest regressions in the larger first group therefore offset part of the near-top improvement; this imbalance explains why large conditional gains translate into a smaller aggregate change. The positive aggregate MRR shows that repairs of Retrieved-but-Mis-ranked Cases exceed the offset. Appendix~\ref{app:rank_analysis} reports the transition counts.
 % 中文：52,561 个测试查询中，36,274 个查询的配对代码已位于首位，13,261 个位于第 2--10 名。因此，规模更大的首位分组中的小幅回退会抵消部分近顶部改进；这种数量不平衡解释了为何较大的条件增益最终只转化为较小的总体变化。总体 MRR 仍然为正，说明对“已检索但排序错误案例”的修复超过了这一抵消。附录~\ref{app:rank_analysis} 报告排名转移计数。
@@ -413,8 +413,8 @@ Of 52,561 test queries, 36,274 already place the paired code first and 13,261 pl
 \subsection{Encoder Compatibility}
 \label{sec:encoder_compatibility}
 
-We instantiate the same harvesting, refinement, and reranking pipeline with CoCoSoDa, UniXcoder~\citep{UniXcoder}, and the data-flow-aware GraphCodeBERT~\citep{GraphCodeBERT}. Figure~\ref{fig:encoder_compatibility} reports language-level and macro MRR, with right-side annotations giving the matched Rerank-minus-Global change. At the macro level, MaxSim raises the three refined checkpoints from 80.10 to 80.62, 75.96 to 76.64, and 72.82 to 73.97, respectively; every language-level change is also positive.
-% 中文：我们分别使用 CoCoSoDa、UniXcoder~\citep{UniXcoder} 和数据流感知的 GraphCodeBERT~\citep{GraphCodeBERT} 实例化相同的候选挖掘、细化与重排流程。图~\ref{fig:encoder_compatibility} 报告逐语言和宏平均 MRR，右侧标注给出协议一致的 Rerank 减 Global 变化。在宏平均层面，MaxSim 分别将三个细化检查点从 80.10 提升至 80.62、从 75.96 提升至 76.64、从 72.82 提升至 73.97；全部逐语言变化也均为正。
+We instantiate the same harvesting, refinement, and reranking pipeline with CoCoSoDa, UniXcoder~\citep{UniXcoder}, and the data-flow-aware GraphCodeBERT~\citep{GraphCodeBERT}. Figure~\ref{fig:encoder_compatibility} reports language-level and macro MRR, with right-side annotations giving the matched Rerank-minus-Global change. At the macro level, MaxSim raises the three refined checkpoints from 80.1 to 80.6, 76.0 to 76.6, and 72.8 to 74.0, respectively; every language-level change is also positive.
+% 中文：我们分别使用 CoCoSoDa、UniXcoder~\citep{UniXcoder} 和数据流感知的 GraphCodeBERT~\citep{GraphCodeBERT} 实例化相同的候选挖掘、细化与重排流程。图~\ref{fig:encoder_compatibility} 报告逐语言和宏平均 MRR，右侧标注给出协议一致的 Rerank 减 Global 变化。在宏平均层面，MaxSim 分别将三个细化检查点从 80.1 提升至 80.6、从 76.0 提升至 76.6、从 72.8 提升至 74.0；全部逐语言变化也均为正。
 
 Because the corresponding initial checkpoints were not evaluated locally on the test sets under a unified encoder-specific protocol, these results establish architecture compatibility and matched within-checkpoint reranking benefits, not refinement gains. The Published markers provide literature context only; Appendix~\ref{app:encoder_instantiations} gives all underlying metrics.
 % 中文：由于各编码器对应的初始检查点没有在统一的编码器特定协议下进行本地测试集评测，这些结果只能证明架构兼容性以及同一检查点内协议一致的重排收益，而不能估计细化增益。Published 标记仅提供文献背景；全部底层指标见附录~\ref{app:encoder_instantiations}。
@@ -430,8 +430,8 @@ Because the corresponding initial checkpoints were not evaluated locally on the 
 \subsection{Reranking Effectiveness and Efficiency}
 \label{sec:efficiency}
 
-Figure~\ref{fig:reranking_sensitivity} separates validation selection from held-out test evaluation. Panel (a) reports the complete \(K\times\alpha\) grid and selects \(K=20\), \(\alpha=0.5\) by macro validation MRR before test evaluation. Panel (b) shows the language-level and macro effectiveness--latency trade-off. The selected configuration reaches 81.06 test MRR at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 provides no further macro improvement but raises latency to 46.64 and 85.19 ms; \(K=10\) offers 81.03 MRR at 19.04 ms.
-% 中文：图~\ref{fig:reranking_sensitivity} 将验证集选择与留出测试集评测分开。子图 (a) 报告完整的 \(K\times\alpha\) 网格，并在测试集评测前依据宏平均验证集 MRR 选定 \(K=20\)、\(\alpha=0.5\)。子图 (b) 展示逐语言及宏平均检索效果—延迟权衡。选定配置在 JavaScript 上以每查询 26.04 毫秒取得 81.06 的测试 MRR。将 \(K\) 增至 50 或 100 不再提高宏平均效果，却分别将延迟增至 46.64 和 85.19 毫秒；\(K=10\) 则以 19.04 毫秒取得 81.03 MRR。
+Figure~\ref{fig:reranking_sensitivity} separates validation selection from held-out test evaluation. Panel (a) reports the complete \(K\times\alpha\) grid and selects \(K=20\), \(\alpha=0.5\) by macro validation MRR before test evaluation. Panel (b) shows the language-level and macro effectiveness--latency trade-off. The selected configuration reaches 81.1 test MRR at 26.0 ms per JavaScript query. Increasing \(K\) to 50 or 100 provides no further macro improvement but raises latency to 46.6 and 85.2 ms; \(K=10\) offers 81.0 MRR at 19.0 ms.
+% 中文：图~\ref{fig:reranking_sensitivity} 将验证集选择与留出测试集评测分开。子图 (a) 报告完整的 \(K\times\alpha\) 网格，并在测试集评测前依据宏平均验证集 MRR 选定 \(K=20\)、\(\alpha=0.5\)。子图 (b) 展示逐语言及宏平均检索效果—延迟权衡。选定配置在 JavaScript 上以每查询 26.0 毫秒取得 81.1 的测试 MRR。将 \(K\) 增至 50 或 100 不再提高宏平均效果，却分别将延迟增至 46.6 和 85.2 毫秒；\(K=10\) 则以 19.0 毫秒取得 81.0 MRR。
 
 This operating point captures the highest macro score before MaxSim cost grows sharply with reranking depth.
 % 中文：该运行点在 MaxSim 成本随重排深度显著增长之前取得最高的宏平均分数。
@@ -459,20 +459,20 @@ This operating point captures the highest macro score before MaxSim cost grows s
 The measured latency covers query encoding, global search, and token-level rescoring for every query, irrespective of gold-code inclusion in the top-\(K\); offline mining, refinement, and code encoding are excluded. Every configuration peaks at 3,063 MiB GPU memory.
 % 中文：实测延迟包含每个查询的查询编码、全局搜索和词元级重新计分，无论正确代码是否位于前 \(K\) 名；离线候选挖掘、细化训练和代码编码不计入其中。所有配置的 GPU 峰值显存占用均为 3,063 MiB。
 
-Larger depths make MaxSim the dominant online cost: at \(K=100\), total latency reaches 85.19 ms although query encoding and global search together remain below 1 ms. The measurements therefore expose \(K\) as a deployment-time cost control rather than treating reranking as cost-free.
-% 中文：更大的深度使 MaxSim 成为主要在线开销：当 \(K=100\) 时，尽管查询编码与全局搜索合计仍不足 1 毫秒，总延迟达到 85.19 毫秒。因此，这些测量将 \(K\) 明确呈现为部署阶段的成本控制参数，而不是将重排描述为无成本操作。
+Larger depths make MaxSim the dominant online cost: at \(K=100\), total latency reaches 85.2 ms although query encoding and global search together remain below 1 ms. The measurements therefore expose \(K\) as a deployment-time cost control rather than treating reranking as cost-free.
+% 中文：更大的深度使 MaxSim 成为主要在线开销：当 \(K=100\) 时，尽管查询编码与全局搜索合计仍不足 1 毫秒，总延迟达到 85.2 毫秒。因此，这些测量将 \(K\) 明确呈现为部署阶段的成本控制参数，而不是将重排描述为无成本操作。
 
-At \(K=20\), MaxSim alone (\(\alpha=0\)) obtains 81.157 validation MRR, global retrieval alone (\(\alpha=1\)) obtains 81.861, and balanced fusion reaches 82.219. With \(\alpha=0.5\), MRR spans only 0.054 points across depths while test latency grows more than fourfold; the grid therefore favors fusion, with \(K\) mainly controlling online cost.
-% 中文：当 \(K=20\) 时，仅使用 MaxSim（\(\alpha=0\)）的验证集 MRR 为 81.157，仅使用全局检索（\(\alpha=1\)）为 81.861，而等权融合达到 82.219。当 \(\alpha=0.5\) 时，不同深度之间的 MRR 范围仅为 0.054 个点，但测试延迟增长超过四倍；因此，该网格支持分数融合，而 \(K\) 主要控制在线开销。
+At \(K=20\), MaxSim alone (\(\alpha=0\)) obtains 81.2 validation MRR, global retrieval alone (\(\alpha=1\)) obtains 81.9, and balanced fusion reaches 82.2. With \(\alpha=0.5\), MRR spans only 0.1 points across depths at the displayed precision while test latency grows more than fourfold; the grid therefore favors fusion, with \(K\) mainly controlling online cost.
+% 中文：当 \(K=20\) 时，仅使用 MaxSim（\(\alpha=0\)）的验证集 MRR 为 81.2，仅使用全局检索（\(\alpha=1\)）为 81.9，而等权融合达到 82.2。在当前显示精度下，当 \(\alpha=0.5\) 时，不同深度之间的 MRR 范围仅为 0.1 个点，但测试延迟增长超过四倍；因此，该网格支持分数融合，而 \(K\) 主要控制在线开销。
 
-Appendix~\ref{app:reranking_details} reports the exact validation grid, language-level test results at each reranking depth, and the corresponding latency decomposition and memory footprint.
+Appendix~\ref{app:reranking_details} reports the complete validation grid, language-level test results at each reranking depth, and the corresponding latency decomposition and memory footprint.
 % 中文：附录~\ref{app:reranking_details} 报告完整验证网格、各重排深度下的逐语言测试结果，以及相应的延迟分解与显存占用。
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented \method{}, which converts high-ranked unpaired candidates exposed by a frozen initial retriever into margin-sensitive contrastive refinement. The refined dual encoder retains full-corpus global retrieval, with optional Dual-Granularity Reranking confined to its top-\(K\) and exposing an explicit effectiveness--latency trade-off. Under a matched six-language CodeSearchNet protocol, refinement raises macro MRR from 79.77 to 80.57 and the complete system reaches 81.06. Candidate controls favor retriever-mined supervision over equal-budget random and static alternatives, while rank-conditioned analysis locates the principal gains at initial ranks 2--10. These results support failure-calibrated refinement for the evaluated benchmark and fixed checkpoints.
-% 中文：本文提出 \method{}，将冻结初始检索器暴露的高排名未配对候选转化为对分数间隔敏感的对比细化。细化后的双编码器保留全库全局检索，可选的双粒度重排仅作用于其前 \(K\) 个候选，并呈现明确的效果—延迟权衡。在六语言 CodeSearchNet 的协议一致评测中，细化将宏平均 MRR 从 79.77 提升至 80.57，完整系统达到 81.06。候选对照显示，检索器挖掘监督优于等预算的随机与静态替代方案；按排名分层的分析则将主要收益定位于初始第 2--10 名。上述结果支持失败校准细化在当前基准与固定检查点上的有效性。
+We presented \method{}, which converts high-ranked unpaired candidates exposed by a frozen initial retriever into margin-sensitive contrastive refinement. The refined dual encoder retains full-corpus global retrieval, with optional Dual-Granularity Reranking confined to its top-\(K\) and exposing an explicit effectiveness--latency trade-off. Under a matched six-language CodeSearchNet protocol, refinement raises macro MRR from 79.8 to 80.6 and the complete system reaches 81.1. Candidate controls favor retriever-mined supervision over equal-budget random and static alternatives, while rank-conditioned analysis locates the principal gains at initial ranks 2--10. These results support failure-calibrated refinement for the evaluated benchmark and fixed checkpoints.
+% 中文：本文提出 \method{}，将冻结初始检索器暴露的高排名未配对候选转化为对分数间隔敏感的对比细化。细化后的双编码器保留全库全局检索，可选的双粒度重排仅作用于其前 \(K\) 个候选，并呈现明确的效果—延迟权衡。在六语言 CodeSearchNet 的协议一致评测中，细化将宏平均 MRR 从 79.8 提升至 80.6，完整系统达到 81.1。候选对照显示，检索器挖掘监督优于等预算的随机与静态替代方案；按排名分层的分析则将主要收益定位于初始第 2--10 名。上述结果支持失败校准细化在当前基准与固定检查点上的有效性。
 
 \newpage
 \section*{Limitations}
@@ -569,8 +569,8 @@ The two configuration tables serve different replication scopes. Table~\ref{tab:
 We vary the FC loss weight \(\lambda_f\in\{0.25,0.45,0.65\}\) and retained candidate depth \(m\in\{2,8,32\}\) one at a time, holding the other value at \(\lambda_f=0.45\) or \(m=8\). Every setting starts from the same language-specific initial retriever and uses the same frozen top-32 candidate pool, three-epoch global-only refinement protocol, and random seed 123456. Table~\ref{tab:parameter_sensitivity} reports test Global MRR without MaxSim, thereby isolating the training-side parameters from inference-time reranking.
 % 中文：我们分别改变 FC 损失权重 \(\lambda_f\in\{0.25,0.45,0.65\}\) 和保留候选深度 \(m\in\{2,8,32\}\)，每次只改变一个参数，并将另一个参数固定为 \(\lambda_f=0.45\) 或 \(m=8\)。每个设置均从相同的逐语言初始检索器出发，使用相同的冻结前 32 候选池、三轮仅全局表示细化协议和随机种子 123456。表~\ref{tab:parameter_sensitivity} 报告不含 MaxSim 的测试集 Global MRR，从而将训练侧参数与推理阶段重排区分开来。
 
-The \(\lambda_f\) sweep yields macro MRR values between 80.55 and 80.60, a range of 0.05 points across the evaluated weights. For \(m=2,8,32\), macro MRR is 80.42, 80.57, and 80.45, respectively, spanning 0.15 points. Thus, both training-side sweeps produce only small changes over the evaluated values under the fixed single-seed protocol.
-% 中文：\(\lambda_f\) 分析在不同权重下取得 80.55 至 80.60 的宏平均 MRR，范围为 0.05 个点。当 \(m=2,8,32\) 时，宏平均 MRR 分别为 80.42、80.57 和 80.45，范围为 0.15 个点。因此，在固定的单随机种子协议下，两项训练侧参数分析在所评测取值范围内都只产生较小变化。
+At one-decimal reporting precision, the \(\lambda_f\) sweep yields 80.6 macro MRR at all three weights. For \(m=2,8,32\), macro MRR is 80.4, 80.6, and 80.5, respectively, spanning 0.2 points. Thus, both training-side sweeps produce only small changes over the evaluated values under the fixed single-seed protocol.
+% 中文：在保留一位小数的报告精度下，三个 \(\lambda_f\) 取值的宏平均 MRR 均为 80.6。当 \(m=2,8,32\) 时，宏平均 MRR 分别为 80.4、80.6 和 80.5，范围为 0.2 个点。因此，在固定的单随机种子协议下，两项训练侧参数分析在所评测取值范围内都只产生较小变化。
 
 \begin{table*}[!t]
   \centering
@@ -583,18 +583,18 @@ The \(\lambda_f\) sweep yields macro MRR values between 80.55 and 80.60, a range
     \cmidrule(lr){2-4}\cmidrule(lr){5-7}
     Language & 0.25 & 0.45 & 0.65 & 2 & 8 & 32 \\
     \midrule
-    Ruby       & 82.80 & 82.84 & 82.80 & 83.00 & 82.84 & 82.50 \\
-    JavaScript & 78.40 & 78.36 & 78.30 & 78.30 & 78.36 & 78.20 \\
-    Go         & 93.10 & 93.03 & 93.00 & 93.00 & 93.03 & 92.90 \\
-    Python     & 78.00 & 77.95 & 77.90 & 77.80 & 77.95 & 78.10 \\
-    Java       & 78.20 & 78.14 & 78.30 & 78.00 & 78.14 & 77.90 \\
-    PHP        & 73.10 & 73.10 & 73.00 & 72.40 & 73.10 & 73.10 \\
+    Ruby       & 82.8 & 82.8 & 82.8 & 83.0 & 82.8 & 82.5 \\
+    JavaScript & 78.4 & 78.4 & 78.3 & 78.3 & 78.4 & 78.2 \\
+    Go         & 93.1 & 93.0 & 93.0 & 93.0 & 93.0 & 92.9 \\
+    Python     & 78.0 & 78.0 & 77.9 & 77.8 & 78.0 & 78.1 \\
+    Java       & 78.2 & 78.1 & 78.3 & 78.0 & 78.1 & 77.9 \\
+    PHP        & 73.1 & 73.1 & 73.0 & 72.4 & 73.1 & 73.1 \\
     \midrule
-    Macro      & 80.60 & 80.57 & 80.55 & 80.42 & 80.57 & 80.45 \\
+    Macro      & 80.6 & 80.6 & 80.6 & 80.4 & 80.6 & 80.5 \\
     \bottomrule
   \end{tabular}
-  \caption{Language-level test Global MRR (\%) for one-at-a-time training-side parameter variation. The shared \((\lambda_f,m)=(0.45,8)\) column is reused from the primary run.}
-  % 中文表注：逐语言报告每次只改变一个训练侧参数时的测试集 Global MRR（\%）。共享配置 \((\lambda_f,m)=(0.45,8)\) 复用主要实验运行。
+  \caption{Language-level test Global MRR (\%), rounded to one decimal place, for one-at-a-time training-side parameter variation. The shared \((\lambda_f,m)=(0.45,8)\) column is reused from the primary run.}
+  % 中文表注：逐语言报告每次只改变一个训练侧参数时的测试集 Global MRR（\%），结果保留一位小数。共享配置 \((\lambda_f,m)=(0.45,8)\) 复用主要实验运行。
   \label{tab:parameter_sensitivity}
 \end{table*}
 
@@ -623,44 +623,44 @@ Table~\ref{tab:candidate_language_details} reports all four language-level metri
     \toprule
     Language & Metric & Init. & Init.+MS & FC+G & FC+MS \\
     \midrule
-    Ruby       & MRR  & 82.16 & 82.65 & 82.84 & 83.51 \\
-               & R@1  & 72.88 & 73.35 & 73.83 & 74.70 \\
-               & R@5  & 94.85 & 94.69 & 94.77 & 95.16 \\
-               & R@10 & 96.99 & 97.15 & 97.30 & 96.83 \\
+    Ruby       & MRR  & 82.2 & 82.7 & 82.8 & 83.5 \\
+               & R@1  & 72.9 & 73.4 & 73.8 & 74.7 \\
+               & R@5  & 94.9 & 94.7 & 94.8 & 95.2 \\
+               & R@10 & 97.0 & 97.2 & 97.3 & 96.8 \\
     \midrule
-    JavaScript & MRR  & 77.72 & 78.31 & 78.36 & 78.95 \\
-               & R@1  & 67.43 & 68.52 & 68.37 & 69.55 \\
-               & R@5  & 90.64 & 90.95 & 90.82 & 90.82 \\
-               & R@10 & 95.44 & 95.26 & 95.38 & 95.11 \\
+    JavaScript & MRR  & 77.7 & 78.3 & 78.4 & 79.0 \\
+               & R@1  & 67.4 & 68.5 & 68.4 & 69.6 \\
+               & R@5  & 90.6 & 91.0 & 90.8 & 90.8 \\
+               & R@10 & 95.4 & 95.3 & 95.4 & 95.1 \\
     \midrule
-    Go         & MRR  & 92.43 & 92.71 & 93.03 & 93.41 \\
-               & R@1  & 88.51 & 88.89 & 89.37 & 89.99 \\
-               & R@5  & 97.22 & 97.30 & 97.37 & 97.46 \\
-               & R@10 & 98.40 & 98.46 & 98.45 & 98.52 \\
+    Go         & MRR  & 92.4 & 92.7 & 93.0 & 93.4 \\
+               & R@1  & 88.5 & 88.9 & 89.4 & 90.0 \\
+               & R@5  & 97.2 & 97.3 & 97.4 & 97.5 \\
+               & R@10 & 98.4 & 98.5 & 98.5 & 98.5 \\
     \midrule
-    Python     & MRR  & 77.17 & 78.02 & 77.95 & 78.30 \\
-               & R@1  & 67.03 & 68.29 & 68.25 & 68.80 \\
-               & R@5  & 89.94 & 90.52 & 90.30 & 90.31 \\
-               & R@10 & 94.42 & 94.65 & 94.31 & 94.39 \\
+    Python     & MRR  & 77.2 & 78.0 & 78.0 & 78.3 \\
+               & R@1  & 67.0 & 68.3 & 68.3 & 68.8 \\
+               & R@5  & 89.9 & 90.5 & 90.3 & 90.3 \\
+               & R@10 & 94.4 & 94.7 & 94.3 & 94.4 \\
     \midrule
-    Java       & MRR  & 77.20 & 77.92 & 78.14 & 78.57 \\
-               & R@1  & 67.24 & 68.15 & 68.67 & 69.20 \\
-               & R@5  & 89.86 & 90.24 & 90.16 & 90.52 \\
-               & R@10 & 94.10 & 94.20 & 94.19 & 94.29 \\
+    Java       & MRR  & 77.2 & 77.9 & 78.1 & 78.6 \\
+               & R@1  & 67.2 & 68.2 & 68.7 & 69.2 \\
+               & R@5  & 89.9 & 90.2 & 90.2 & 90.5 \\
+               & R@10 & 94.1 & 94.2 & 94.2 & 94.3 \\
     \midrule
-    PHP        & MRR  & 71.91 & 72.53 & 73.10 & 73.58 \\
-               & R@1  & 61.23 & 62.05 & 62.88 & 63.58 \\
-               & R@5  & 85.20 & 85.36 & 85.72 & 85.78 \\
-               & R@10 & 91.23 & 91.25 & 91.38 & 91.54 \\
+    PHP        & MRR  & 71.9 & 72.5 & 73.1 & 73.6 \\
+               & R@1  & 61.2 & 62.1 & 62.9 & 63.6 \\
+               & R@5  & 85.2 & 85.4 & 85.7 & 85.8 \\
+               & R@10 & 91.2 & 91.3 & 91.4 & 91.5 \\
     \midrule
-    Macro      & MRR  & 79.77 & 80.36 & 80.57 & \textbf{81.06} \\
-               & R@1  & 70.72 & 71.54 & 71.90 & \textbf{72.64} \\
-               & R@5  & 91.28 & 91.51 & 91.52 & \textbf{91.68} \\
-               & R@10 & 95.10 & 95.16 & \textbf{95.17} & 95.11 \\
+    Macro      & MRR  & 79.8 & 80.4 & 80.6 & \textbf{81.1} \\
+               & R@1  & 70.7 & 71.5 & 71.9 & \textbf{72.6} \\
+               & R@5  & 91.3 & 91.5 & 91.5 & \textbf{91.7} \\
+               & R@10 & 95.1 & 95.2 & \textbf{95.2} & 95.1 \\
     \bottomrule
   \end{tabular}
-  \captionof{table}{Complete local component results (\%) by language. FC denotes refinement, G global retrieval, and MS MaxSim; MS uses \(K=20\), \(\alpha=0.5\).}
-  % 中文表注：逐语言完整本地组件结果（\%）。FC 表示细化，G 表示全局检索，MS 表示 MaxSim；MS 使用 \(K=20\)、\(\alpha=0.5\)。
+  \captionof{table}{Complete local component results (\%) by language, rounded to one decimal place. FC denotes refinement, G global retrieval, and MS MaxSim; MS uses \(K=20\), \(\alpha=0.5\). Bold reflects unrounded values.}
+  % 中文表注：逐语言完整本地组件结果（\%），结果保留一位小数。FC 表示细化，G 表示全局检索，MS 表示 MaxSim；MS 使用 \(K=20\)、\(\alpha=0.5\)。粗体依据未舍入数值确定。
   \label{tab:component_language_details}
   \end{minipage}\hfill
   \begin{minipage}[t]{0.485\textwidth}
@@ -671,44 +671,44 @@ Table~\ref{tab:candidate_language_details} reports all four language-level metri
     \toprule
     Language & Metric & Init. & Random & Static & Mined FC \\
     \midrule
-    Ruby       & MRR  & 82.16 & 82.20 & 82.40 & \textbf{82.70} \\
-               & R@1  & 72.88 & 73.00 & 73.40 & \textbf{73.80} \\
-               & R@5  & \textbf{94.85} & 94.70 & 94.50 & 94.60 \\
-               & R@10 & 96.99 & \textbf{97.00} & 96.90 & 96.60 \\
+    Ruby       & MRR  & 82.2 & 82.2 & 82.4 & \textbf{82.7} \\
+               & R@1  & 72.9 & 73.0 & 73.4 & \textbf{73.8} \\
+               & R@5  & \textbf{94.9} & 94.7 & 94.5 & 94.6 \\
+               & R@10 & 97.0 & \textbf{97.0} & 96.9 & 96.6 \\
     \midrule
-    JavaScript & MRR  & 77.72 & 77.50 & 77.40 & \textbf{78.20} \\
-               & R@1  & 67.43 & 67.30 & 67.00 & \textbf{68.40} \\
-               & R@5  & \textbf{90.64} & 90.50 & 90.40 & 90.40 \\
-               & R@10 & \textbf{95.44} & 95.20 & 95.00 & 94.90 \\
+    JavaScript & MRR  & 77.7 & 77.5 & 77.4 & \textbf{78.2} \\
+               & R@1  & 67.4 & 67.3 & 67.0 & \textbf{68.4} \\
+               & R@5  & \textbf{90.6} & 90.5 & 90.4 & 90.4 \\
+               & R@10 & \textbf{95.4} & 95.2 & 95.0 & 94.9 \\
     \midrule
-    Go         & MRR  & 92.43 & 92.50 & 92.50 & \textbf{92.80} \\
-               & R@1  & 88.51 & 88.60 & 88.60 & \textbf{89.20} \\
-               & R@5  & 97.22 & 97.20 & \textbf{97.30} & \textbf{97.30} \\
-               & R@10 & \textbf{98.40} & 98.30 & 98.30 & 98.20 \\
+    Go         & MRR  & 92.4 & 92.5 & 92.5 & \textbf{92.8} \\
+               & R@1  & 88.5 & 88.6 & 88.6 & \textbf{89.2} \\
+               & R@5  & 97.2 & 97.2 & \textbf{97.3} & \textbf{97.3} \\
+               & R@10 & \textbf{98.4} & 98.3 & 98.3 & 98.2 \\
     \midrule
-    Python     & MRR  & 77.17 & 77.20 & 77.10 & \textbf{77.40} \\
-               & R@1  & 67.03 & 67.10 & 66.90 & \textbf{67.70} \\
-               & R@5  & 89.94 & \textbf{90.00} & 89.80 & 89.70 \\
-               & R@10 & 94.42 & \textbf{94.50} & 94.30 & 94.00 \\
+    Python     & MRR  & 77.2 & 77.2 & 77.1 & \textbf{77.4} \\
+               & R@1  & 67.0 & 67.1 & 66.9 & \textbf{67.7} \\
+               & R@5  & 89.9 & \textbf{90.0} & 89.8 & 89.7 \\
+               & R@10 & 94.4 & \textbf{94.5} & 94.3 & 94.0 \\
     \midrule
-    Java       & MRR  & 77.20 & 77.00 & 77.00 & \textbf{77.70} \\
-               & R@1  & 67.24 & 67.10 & 67.10 & \textbf{68.50} \\
-               & R@5  & \textbf{89.86} & 89.60 & 89.60 & 89.40 \\
-               & R@10 & \textbf{94.10} & 93.90 & 93.90 & 93.50 \\
+    Java       & MRR  & 77.2 & 77.0 & 77.0 & \textbf{77.7} \\
+               & R@1  & 67.2 & 67.1 & 67.1 & \textbf{68.5} \\
+               & R@5  & \textbf{89.9} & 89.6 & 89.6 & 89.4 \\
+               & R@10 & \textbf{94.1} & 93.9 & 93.9 & 93.5 \\
     \midrule
-    PHP        & MRR  & \textbf{71.91} & 71.90 & 71.60 & 71.90 \\
-               & R@1  & 61.23 & 61.20 & 60.90 & \textbf{61.70} \\
-               & R@5  & \textbf{85.20} & 84.90 & 84.70 & 84.70 \\
-               & R@10 & \textbf{91.23} & 91.10 & 90.90 & 90.30 \\
+    PHP        & MRR  & \textbf{71.9} & 71.9 & 71.6 & 71.9 \\
+               & R@1  & 61.2 & 61.2 & 60.9 & \textbf{61.7} \\
+               & R@5  & \textbf{85.2} & 84.9 & 84.7 & 84.7 \\
+               & R@10 & \textbf{91.2} & 91.1 & 90.9 & 90.3 \\
     \midrule
-    Macro      & MRR  & 79.77 & 79.72 & 79.67 & \textbf{80.12} \\
-               & R@1  & 70.72 & 70.72 & 70.65 & \textbf{71.55} \\
-               & R@5  & \textbf{91.28} & 91.15 & 91.05 & 91.02 \\
-               & R@10 & \textbf{95.10} & 95.00 & 94.88 & 94.58 \\
+    Macro      & MRR  & 79.8 & 79.7 & 79.7 & \textbf{80.1} \\
+               & R@1  & 70.7 & 70.7 & 70.7 & \textbf{71.6} \\
+               & R@5  & \textbf{91.3} & 91.2 & 91.1 & 91.0 \\
+               & R@10 & \textbf{95.1} & 95.0 & 94.9 & 94.6 \\
     \bottomrule
   \end{tabular}
-  \captionof{table}{Complete language-level candidate-selection results (\%). Each refinement variant adds one candidate per query and uses global retrieval.}
-  % 中文表注：完整的逐语言候选选择结果（\%）。每种细化变体均为每个查询增加一个候选，并使用全局检索。
+  \captionof{table}{Complete language-level candidate-selection results (\%), rounded to one decimal place. Each refinement variant adds one candidate per query and uses global retrieval; bold reflects unrounded values.}
+  % 中文表注：完整的逐语言候选选择结果（\%），结果保留一位小数。每种细化变体均为每个查询增加一个候选，并使用全局检索；粗体依据未舍入数值确定。
   \label{tab:candidate_language_details}
   \end{minipage}
 \end{table*}
@@ -719,8 +719,8 @@ The two tables separate different causal comparisons. Table~\ref{tab:component_l
 \section{Retrieval Behavior by Initial Paired-Code Rank}
 \label{app:rank_analysis}
 
-We partition all 52,561 test queries according to the rank of the gold code snippet under the initial retriever. As shown in Table~\ref{tab:rank_strata}, the largest improvements occur for queries whose gold code is initially ranked between 2 and 10. Within this stratum, \method{}-Global improves MRR by 8.89 points, and \method{}-Rerank increases the improvement to 11.32 points. Positive but smaller differences are observed for initial ranks 11--50 and beyond 50. The concentration of gains among queries with near-top gold ranks is consistent with the intended role of failure-candidate refinement.
-% 中文：我们根据初始检索器下正确代码片段的排名，对全部 52,561 个测试查询进行分组。如表~\ref{tab:rank_strata} 所示，当正确代码的初始排名位于第 2--10 位时，性能提升最大。在这一分组中，\method{}-Global 将 MRR 提升 8.89 个点，\method{}-Rerank 则将提升扩大到 11.32 个点。当初始排名为第 11--50 位或 50 位以后时，也能观察到正向但较小的差异。收益集中在正确代码初始排名接近首位的查询上，这与失败候选细化的预期作用一致。
+We partition all 52,561 test queries according to the rank of the gold code snippet under the initial retriever. As shown in Table~\ref{tab:rank_strata}, the largest improvements occur for queries whose gold code is initially ranked between 2 and 10. Within this stratum, \method{}-Global improves MRR by 8.9 points, and \method{}-Rerank increases the improvement to 11.3 points. Positive but smaller differences are observed for initial ranks 11--50 and beyond 50. The concentration of gains among queries with near-top gold ranks is consistent with the intended role of failure-candidate refinement.
+% 中文：我们根据初始检索器下正确代码片段的排名，对全部 52,561 个测试查询进行分组。如表~\ref{tab:rank_strata} 所示，当正确代码的初始排名位于第 2--10 位时，性能提升最大。在这一分组中，\method{}-Global 将 MRR 提升 8.9 个点，\method{}-Rerank 则将提升扩大到 11.3 个点。当初始排名为第 11--50 位或 50 位以后时，也能观察到正向但较小的差异。收益集中在正确代码初始排名接近首位的查询上，这与失败候选细化的预期作用一致。
 
 \begin{table}[!t]
   \centering
@@ -731,20 +731,20 @@ We partition all 52,561 test queries according to the rank of the gold code snip
     \toprule
     Initial rank & Queries & Initial & Global & \(\Delta\) & Rerank & \(\Delta\) \\
     \midrule
-    1      & 36,274 & 100.00 & 97.88 & -2.12 & 97.53 & -2.47 \\
-    2--10  & 13,261 & 35.75  & 44.65 & +8.89 & 47.07 & +11.32 \\
-    11--50 & 2,270  & 5.54   & 7.88  & +2.34 & 9.20  & +3.66 \\
-    \(>50\) & 756   & 0.97   & 1.29  & +0.32 & 1.30  & +0.33 \\
+    1      & 36,274 & 100.0 & 97.9 & -2.1 & 97.5 & -2.5 \\
+    2--10  & 13,261 & 35.8  & 44.7 & +8.9 & 47.1 & +11.3 \\
+    11--50 & 2,270  & 5.5   & 7.9  & +2.3 & 9.2  & +3.7 \\
+    \(>50\) & 756   & 1.0   & 1.3  & +0.3 & 1.3  & +0.3 \\
     \bottomrule
   \end{tabular}
   }
-  \caption{MRR (\%) conditioned on the gold code's rank under the initial retriever. Results are micro-averaged over test queries.}
-  % 中文表注：根据正确代码在初始检索器下的排名分层报告 MRR。结果在全部测试查询上进行微平均，而非对编程语言进行宏平均。
+  \caption{MRR (\%), rounded to one decimal place, conditioned on the gold code's rank under the initial retriever. Results are micro-averaged over test queries.}
+  % 中文表注：根据正确代码在初始检索器下的排名分层报告 MRR，结果保留一位小数。结果在全部测试查询上进行微平均，而非对编程语言进行宏平均。
   \label{tab:rank_strata}
 \end{table}
 
-The transition counts reveal behavior that is obscured by aggregate MRR. Compared with the initial retriever, \method{}-Rerank improves the rank of the gold code for 7,121 queries and worsens it for 5,741 queries. It moves the gold code to rank 1 for 2,644 queries for which it was not initially top-ranked, but demotes the gold code for 1,624 queries that were initially correct at rank 1. Accordingly, MRR decreases by 2.47 points within the initial-rank-1 stratum. The overall improvement therefore reflects substantial corrections on initially misranked queries, partially offset by regressions on some initially correct rankings.
-% 中文：排名转移计数揭示了总体 MRR 所掩盖的行为。与初始检索器相比，\method{}-Rerank 使 7,121 个查询的正确代码排名上升，同时使 5,741 个查询的排名下降。对于 2,644 个正确代码原本不在首位的查询，它将正确代码提升至第 1 位；但对于 1,624 个正确代码原本位于第 1 位的查询，它也使正确代码发生后移。因此，在初始排名为 1 的分组中，MRR 下降了 2.47 个点。总体提升由对初始错误排序查询的大幅修复构成，但部分收益被一些初始正确排序上的回退所抵消。
+The transition counts reveal behavior that is obscured by aggregate MRR. Compared with the initial retriever, \method{}-Rerank improves the rank of the gold code for 7,121 queries and worsens it for 5,741 queries. It moves the gold code to rank 1 for 2,644 queries for which it was not initially top-ranked, but demotes the gold code for 1,624 queries that were initially correct at rank 1. Accordingly, MRR decreases by 2.5 points within the initial-rank-1 stratum. The overall improvement therefore reflects substantial corrections on initially misranked queries, partially offset by regressions on some initially correct rankings.
+% 中文：排名转移计数揭示了总体 MRR 所掩盖的行为。与初始检索器相比，\method{}-Rerank 使 7,121 个查询的正确代码排名上升，同时使 5,741 个查询的排名下降。对于 2,644 个正确代码原本不在首位的查询，它将正确代码提升至第 1 位；但对于 1,624 个正确代码原本位于第 1 位的查询，它也使正确代码发生后移。因此，在初始排名为 1 的分组中，MRR 下降了 2.5 个点。总体提升由对初始错误排序查询的大幅修复构成，但部分收益被一些初始正确排序上的回退所抵消。
 
 \section{Encoder Instantiations}
 \label{app:encoder_instantiations}
@@ -768,27 +768,27 @@ Within each locally evaluated refinement checkpoint, MaxSim raises MRR for every
     \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
     Language & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} \\
     \midrule
-    Ruby       & 81.80 & 83.06 & 83.10 & 71.90 & 74.15 & 74.07 & 94.70 & 95.00 & 94.61 & 97.30 & 96.99 & 96.75 \\
-    JavaScript & 76.40 & 77.84 & 78.53 & 66.10 & 67.79 & 68.88 & 89.60 & 90.37 & 90.31 & 94.20 & 94.90 & 94.80 \\
-    Go         & 92.10 & 92.98 & 93.24 & 88.00 & 89.30 & 89.65 & 97.10 & 97.37 & 97.62 & 98.30 & 98.50 & 98.53 \\
-    Python     & 75.70 & 77.32 & 78.02 & 66.50 & 67.54 & 68.43 & 88.80 & 89.70 & 90.14 & 93.00 & 93.74 & 93.98 \\
-    Java       & 76.30 & 77.52 & 78.27 & 61.80 & 67.97 & 69.06 & 85.30 & 89.71 & 89.95 & 90.50 & 93.68 & 93.83 \\
-    PHP        & 70.30 & 71.89 & 72.56 & 59.80 & 61.58 & 62.42 & 83.40 & 84.67 & 85.21 & 89.70 & 90.42 & 90.74 \\
-    Macro      & 78.77 & 80.10 & 80.62 & 69.02 & 71.39 & 72.08 & 89.82 & 91.14 & 91.31 & 93.83 & 94.70 & 94.77 \\
+    Ruby       & 81.8 & 83.1 & 83.1 & 71.9 & 74.2 & 74.1 & 94.7 & 95.0 & 94.6 & 97.3 & 97.0 & 96.8 \\
+    JavaScript & 76.4 & 77.8 & 78.5 & 66.1 & 67.8 & 68.9 & 89.6 & 90.4 & 90.3 & 94.2 & 94.9 & 94.8 \\
+    Go         & 92.1 & 93.0 & 93.2 & 88.0 & 89.3 & 89.7 & 97.1 & 97.4 & 97.6 & 98.3 & 98.5 & 98.5 \\
+    Python     & 75.7 & 77.3 & 78.0 & 66.5 & 67.5 & 68.4 & 88.8 & 89.7 & 90.1 & 93.0 & 93.7 & 94.0 \\
+    Java       & 76.3 & 77.5 & 78.3 & 61.8 & 68.0 & 69.1 & 85.3 & 89.7 & 90.0 & 90.5 & 93.7 & 93.8 \\
+    PHP        & 70.3 & 71.9 & 72.6 & 59.8 & 61.6 & 62.4 & 83.4 & 84.7 & 85.2 & 89.7 & 90.4 & 90.7 \\
+    Macro      & 78.8 & 80.1 & 80.6 & 69.0 & 71.4 & 72.1 & 89.8 & 91.1 & 91.3 & 93.8 & 94.7 & 94.8 \\
     \midrule
     \multicolumn{13}{c}{\textbf{UniXcoder}} \\
     \midrule
-    Ruby       & 74.00 & 76.10 & 76.47 & 64.20 & 68.04 & 68.28 & 86.00 & 86.44 & 86.76 & 89.80 & 90.09 & 90.56 \\
-    JavaScript & 68.40 & 69.79 & 70.84 & 59.10 & 60.35 & 61.62 & 80.40 & 81.59 & 82.29 & 85.40 & 86.60 & 87.03 \\
-    Go         & 91.50 & 92.53 & 92.75 & 87.50 & 88.92 & 89.17 & 96.60 & 96.85 & 96.96 & 98.00 & 97.94 & 98.08 \\
-    Python     & 72.00 & 74.28 & 75.11 & 61.20 & 64.85 & 65.89 & 83.80 & 85.90 & 86.57 & 88.90 & 90.06 & 90.47 \\
-    Java       & 72.60 & 74.31 & 75.20 & 61.80 & 65.20 & 66.30 & 85.30 & 85.63 & 86.25 & 90.50 & 89.67 & 90.13 \\
-    PHP        & 67.60 & 68.76 & 69.44 & 57.20 & 58.95 & 59.65 & 80.00 & 80.86 & 81.55 & 86.30 & 86.55 & 86.94 \\
-    Macro      & 74.35 & 75.96 & 76.64 & 65.17 & 67.72 & 68.48 & 85.35 & 86.21 & 86.73 & 89.82 & 90.15 & 90.54 \\
+    Ruby       & 74.0 & 76.1 & 76.5 & 64.2 & 68.0 & 68.3 & 86.0 & 86.4 & 86.8 & 89.8 & 90.1 & 90.6 \\
+    JavaScript & 68.4 & 69.8 & 70.8 & 59.1 & 60.4 & 61.6 & 80.4 & 81.6 & 82.3 & 85.4 & 86.6 & 87.0 \\
+    Go         & 91.5 & 92.5 & 92.8 & 87.5 & 88.9 & 89.2 & 96.6 & 96.9 & 97.0 & 98.0 & 97.9 & 98.1 \\
+    Python     & 72.0 & 74.3 & 75.1 & 61.2 & 64.9 & 65.9 & 83.8 & 85.9 & 86.6 & 88.9 & 90.1 & 90.5 \\
+    Java       & 72.6 & 74.3 & 75.2 & 61.8 & 65.2 & 66.3 & 85.3 & 85.6 & 86.3 & 90.5 & 89.7 & 90.1 \\
+    PHP        & 67.6 & 68.8 & 69.4 & 57.2 & 59.0 & 59.7 & 80.0 & 80.9 & 81.6 & 86.3 & 86.6 & 86.9 \\
+    Macro      & 74.4 & 76.0 & 76.6 & 65.2 & 67.7 & 68.5 & 85.4 & 86.2 & 86.7 & 89.8 & 90.2 & 90.5 \\
     \bottomrule
   \end{tabular}
-  \caption{Complete encoder-instantiation results (\%) for CoCoSoDa and UniXcoder. P\reported{} denotes published results~\citep{CoCoSoDa}; G\localrun{} and R\localrun{} denote local Global and Rerank evaluation.}
-  % 中文表注：CoCoSoDa 与 UniXcoder 编码器实例的完整结果（\%）。P\reported{} 表示论文报告结果~\citep{CoCoSoDa}；G\localrun{} 与 R\localrun{} 分别表示本地 Global 和 Rerank 评测。
+  \caption{Complete encoder-instantiation results (\%), rounded to one decimal place, for CoCoSoDa and UniXcoder. P\reported{} denotes published results~\citep{CoCoSoDa}; G\localrun{} and R\localrun{} denote local Global and Rerank evaluation.}
+  % 中文表注：CoCoSoDa 与 UniXcoder 编码器实例的完整结果（\%），结果保留一位小数。P\reported{} 表示论文报告结果~\citep{CoCoSoDa}；G\localrun{} 与 R\localrun{} 分别表示本地 Global 和 Rerank 评测。
   \label{tab:encoder_coco_unix_full}
 \end{table*}
 
@@ -803,31 +803,31 @@ Within each locally evaluated refinement checkpoint, MaxSim raises MRR for every
     \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
     Language & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} & P\reported{} & G\localrun{} & R\localrun{} \\
     \midrule
-    Ruby       & 70.30 & 71.86 & 73.46 & 60.70 & 62.33 & 64.31 & 82.40 & 83.03 & 84.30 & 87.20 & 88.18 & 88.26 \\
-    JavaScript & 64.40 & 65.61 & 66.79 & 53.80 & 55.79 & 57.28 & 77.40 & 77.24 & 78.46 & 83.40 & 83.08 & 83.87 \\
-    Go         & 89.70 & 90.98 & 91.57 & 85.80 & 86.76 & 87.55 & 95.40 & 96.10 & 96.52 & 97.20 & 97.49 & 97.71 \\
-    Python     & 69.20 & 71.11 & 72.42 & 59.40 & 61.53 & 63.06 & 81.30 & 82.75 & 83.99 & 86.60 & 87.77 & 88.63 \\
-    Java       & 69.10 & 71.29 & 72.54 & 59.20 & 61.99 & 63.39 & 81.70 & 82.85 & 84.15 & 86.50 & 87.57 & 88.33 \\
-    PHP        & 64.90 & 66.06 & 67.05 & 54.50 & 55.89 & 57.01 & 78.50 & 78.57 & 79.48 & 83.20 & 84.51 & 85.31 \\
-    Macro      & 71.27 & 72.82 & 73.97 & 62.23 & 64.05 & 65.43 & 82.78 & 83.42 & 84.48 & 87.35 & 88.10 & 88.69 \\
+    Ruby       & 70.3 & 71.9 & 73.5 & 60.7 & 62.3 & 64.3 & 82.4 & 83.0 & 84.3 & 87.2 & 88.2 & 88.3 \\
+    JavaScript & 64.4 & 65.6 & 66.8 & 53.8 & 55.8 & 57.3 & 77.4 & 77.2 & 78.5 & 83.4 & 83.1 & 83.9 \\
+    Go         & 89.7 & 91.0 & 91.6 & 85.8 & 86.8 & 87.6 & 95.4 & 96.1 & 96.5 & 97.2 & 97.5 & 97.7 \\
+    Python     & 69.2 & 71.1 & 72.4 & 59.4 & 61.5 & 63.1 & 81.3 & 82.8 & 84.0 & 86.6 & 87.8 & 88.6 \\
+    Java       & 69.1 & 71.3 & 72.5 & 59.2 & 62.0 & 63.4 & 81.7 & 82.9 & 84.2 & 86.5 & 87.6 & 88.3 \\
+    PHP        & 64.9 & 66.1 & 67.1 & 54.5 & 55.9 & 57.0 & 78.5 & 78.6 & 79.5 & 83.2 & 84.5 & 85.3 \\
+    Macro      & 71.3 & 72.8 & 74.0 & 62.2 & 64.1 & 65.4 & 82.8 & 83.4 & 84.5 & 87.4 & 88.1 & 88.7 \\
     \bottomrule
   \end{tabular}
-  \caption{Complete GraphCodeBERT encoder-instantiation results (\%). P\reported{} denotes published results~\citep{CoCoSoDa}; G\localrun{} and R\localrun{} denote local Global and Rerank evaluation.}
-  % 中文表注：GraphCodeBERT 编码器实例的完整结果（\%）。P\reported{} 表示论文报告结果~\citep{CoCoSoDa}；G\localrun{} 与 R\localrun{} 分别表示本地 Global 和 Rerank 评测。
+  \caption{Complete GraphCodeBERT encoder-instantiation results (\%), rounded to one decimal place. P\reported{} denotes published results~\citep{CoCoSoDa}; G\localrun{} and R\localrun{} denote local Global and Rerank evaluation.}
+  % 中文表注：GraphCodeBERT 编码器实例的完整结果（\%），结果保留一位小数。P\reported{} 表示论文报告结果~\citep{CoCoSoDa}；G\localrun{} 与 R\localrun{} 分别表示本地 Global 和 Rerank 评测。
   \label{tab:encoder_graph_full}
 \end{table*}
 
-Across the local columns, Rerank-minus-Global macro MRR is +0.52 for CoCoSoDa, +0.68 for UniXcoder, and +1.15 for GraphCodeBERT. These are within-checkpoint comparisons because each pair differs only by application of the common MaxSim stage. By contrast, a Published-to-Global difference would mix checkpoints and protocols and is therefore not used as a refinement estimate.
-% 中文：在本地评测列中，Rerank 相对 Global 的宏平均 MRR 变化在 CoCoSoDa、UniXcoder 和 GraphCodeBERT 上分别为 +0.52、+0.68 和 +1.15。这些属于同一检查点内的比较，因为每一对结果只在是否应用统一 MaxSim 阶段上存在差异。相比之下，Published 到 Global 的差值会混合不同检查点和评测协议，因此不被用作细化收益估计。
+Across the local columns, Rerank-minus-Global macro MRR is +0.5 for CoCoSoDa, +0.7 for UniXcoder, and +1.2 for GraphCodeBERT. These are within-checkpoint comparisons because each pair differs only by application of the common MaxSim stage. By contrast, a Published-to-Global difference would mix checkpoints and protocols and is therefore not used as a refinement estimate.
+% 中文：在本地评测列中，Rerank 相对 Global 的宏平均 MRR 变化在 CoCoSoDa、UniXcoder 和 GraphCodeBERT 上分别为 +0.5、+0.7 和 +1.2。这些属于同一检查点内的比较，因为每一对结果只在是否应用统一 MaxSim 阶段上存在差异。相比之下，Published 到 Global 的差值会混合不同检查点和评测协议，因此不被用作细化收益估计。
 
 \section{Reranking Selection and Efficiency Details}
 \label{app:reranking_details}
 
 The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding numerical values. Selection uses the six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
-% 中文：图~\ref{fig:reranking_sensitivity} 子图 (a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合，表~\ref{tab:reranking_validation_grid} 给出相应的精确数值。模型选择仅依据六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
+% 中文：图~\ref{fig:reranking_sensitivity} 子图 (a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合，表~\ref{tab:reranking_validation_grid} 给出相应数值。模型选择仅依据六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
 
-The validation grid distinguishes the roles of the two inference parameters. At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\); at smaller \(\alpha\), changing \(K\) changes both the candidates rescored and the online cost. Once \(\alpha=0.5\) is fixed by validation, the held-out macro scores differ by only 0.045 points across the four depths, while MaxSim latency rises from 18.08 to 84.27 ms per query. The selected \(K=20\) is therefore a validation decision whose cost is reported separately, not a test-set optimum chosen after inspection.
-% 中文：验证网格区分了两个推理参数的作用。当 \(\alpha=1\) 时不使用 MaxSim，因此所有 \(K\) 的分数完全相同；当 \(\alpha\) 较小时，改变 \(K\) 会同时改变被重新计分的候选和在线开销。在验证集将 \(\alpha=0.5\) 固定后，四种深度的留出测试集宏平均分数仅相差 0.045 个点，而 MaxSim 延迟从每查询 18.08 毫秒增至 84.27 毫秒。因此，选取 \(K=20\) 是一个单独报告成本的验证集决策，而不是查看测试结果后选择的最优点。
+The validation grid distinguishes the roles of the two inference parameters. At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\); at smaller \(\alpha\), changing \(K\) changes both the candidates rescored and the online cost. Once \(\alpha=0.5\) is fixed by validation, the held-out macro scores differ by only 0.1 points at the displayed precision across the four depths, while MaxSim latency rises from 18.1 to 84.3 ms per query. The selected \(K=20\) is therefore a validation decision whose cost is reported separately, not a test-set optimum chosen after inspection.
+% 中文：验证网格区分了两个推理参数的作用。当 \(\alpha=1\) 时不使用 MaxSim，因此所有 \(K\) 的分数完全相同；当 \(\alpha\) 较小时，改变 \(K\) 会同时改变被重新计分的候选和在线开销。在验证集将 \(\alpha=0.5\) 固定后，按当前显示精度，四种深度的留出测试集宏平均分数仅相差 0.1 个点，而 MaxSim 延迟从每查询 18.1 毫秒增至 84.3 毫秒。因此，选取 \(K=20\) 是一个单独报告成本的验证集决策，而不是查看测试结果后选择的最优点。
 
 \section{Statistical Reliability}
 \label{app:statistical_reliability}
@@ -850,15 +850,15 @@ Every language-level interval has a positive lower bound for both systems, while
       \toprule
       \(\alpha\) & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
       \midrule
-      0    & 81.334 & 81.157 & 81.037 & 80.997 \\
-      0.25 & 81.826 & 81.804 & 81.777 & 81.768 \\
-      0.50 & 82.165 & \textbf{82.219} & 82.210 & 82.203 \\
-      0.75 & 82.152 & 82.167 & 82.168 & 82.169 \\
-      1.00 & 81.861 & 81.861 & 81.861 & 81.861 \\
+      0    & 81.3 & 81.2 & 81.0 & 81.0 \\
+      0.25 & 81.8 & 81.8 & 81.8 & 81.8 \\
+      0.50 & 82.2 & \textbf{82.2} & 82.2 & 82.2 \\
+      0.75 & 82.2 & 82.2 & 82.2 & 82.2 \\
+      1.00 & 81.9 & 81.9 & 81.9 & 81.9 \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{Macro validation MRR (\%) over the complete \(K\times\alpha\) grid; bold marks the selected setting.}
-    % 中文表注：完整 \(K\times\alpha\) 网格上的宏平均验证集 MRR（\%）；粗体表示选定配置。
+    \captionof{table}{Macro validation MRR (\%), rounded to one decimal place, over the complete \(K\times\alpha\) grid; bold marks the selected setting.}
+    % 中文表注：完整 \(K\times\alpha\) 网格上的宏平均验证集 MRR（\%），结果保留一位小数；粗体表示选定配置。
     \label{tab:reranking_validation_grid}
   \end{minipage}\hfill%
   \begin{minipage}[t]{0.485\textwidth}
@@ -870,18 +870,18 @@ Every language-level interval has a positive lower bound for both systems, while
       \toprule
       Language & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
       \midrule
-      Ruby       & 83.461 & 83.515 & 83.466 & 83.426 \\
-      JavaScript & 78.930 & 78.949 & 78.785 & 78.814 \\
-      Go         & 93.388 & 93.410 & 93.419 & 93.426 \\
-      Python     & 78.272 & 78.305 & 78.292 & 78.273 \\
-      Java       & 78.542 & 78.569 & 78.568 & 78.583 \\
-      PHP        & 73.615 & 73.585 & 73.574 & 73.539 \\
+      Ruby       & 83.5 & 83.5 & 83.5 & 83.4 \\
+      JavaScript & 78.9 & 78.9 & 78.8 & 78.8 \\
+      Go         & 93.4 & 93.4 & 93.4 & 93.4 \\
+      Python     & 78.3 & 78.3 & 78.3 & 78.3 \\
+      Java       & 78.5 & 78.6 & 78.6 & 78.6 \\
+      PHP        & 73.6 & 73.6 & 73.6 & 73.5 \\
       \midrule
-      Macro      & 81.035 & \textbf{81.055} & 81.017 & 81.010 \\
+      Macro      & 81.0 & \textbf{81.1} & 81.0 & 81.0 \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{Held-out test MRR (\%) by language and depth at \(\alpha=0.5\); bold marks validation-selected \(K\).}
-    % 中文表注：\(\alpha=0.5\) 时按语言和深度报告的留出测试集 MRR（\%）；粗体表示验证集选定的 \(K\)。
+    \captionof{table}{Held-out test MRR (\%), rounded to one decimal place, by language and depth at \(\alpha=0.5\); bold marks validation-selected \(K\).}
+    % 中文表注：\(\alpha=0.5\) 时按语言和深度报告的留出测试集 MRR（\%），结果保留一位小数；粗体表示验证集选定的 \(K\)。
     \label{tab:reranking_depth_language}
   \end{minipage}
 
@@ -896,14 +896,14 @@ Every language-level interval has a positive lower bound for both systems, while
       \(K\) & MRR & Encode & Search & MaxSim & Total \\
       & (\%) & \multicolumn{4}{c}{ms/query} \\
       \midrule
-      10  & 81.035 & 0.76 & 0.21 & 18.08 & 19.04 \\
-      20  & \textbf{81.055} & 0.69 & 0.21 & 25.13 & 26.04 \\
-      50  & 81.017 & 0.77 & 0.21 & 45.66 & 46.64 \\
-      100 & 81.010 & 0.70 & 0.22 & 84.27 & 85.19 \\
+      10  & 81.0 & 0.8 & 0.2 & 18.1 & 19.0 \\
+      20  & \textbf{81.1} & 0.7 & 0.2 & 25.1 & 26.0 \\
+      50  & 81.0 & 0.8 & 0.2 & 45.7 & 46.6 \\
+      100 & 81.0 & 0.7 & 0.2 & 84.3 & 85.2 \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{Macro test MRR and JavaScript online latency at \(\alpha=0.5\); all settings peak at 3,063 MiB.}
-    % 中文表注：\(\alpha=0.5\) 时的宏平均测试 MRR 与 JavaScript 在线延迟；所有配置的峰值显存均为 3,063 MiB。
+    \captionof{table}{Macro test MRR and JavaScript online latency, both rounded to one decimal place, at \(\alpha=0.5\); all settings peak at 3,063 MiB.}
+    % 中文表注：\(\alpha=0.5\) 时的宏平均测试 MRR 与 JavaScript 在线延迟，二者均保留一位小数；所有配置的峰值显存均为 3,063 MiB。
     \label{tab:reranking_efficiency_details}
   \end{minipage}\hfill%
   \begin{minipage}[t]{0.485\textwidth}
@@ -915,25 +915,25 @@ Every language-level interval has a positive lower bound for both systems, while
       \toprule
       Language & Initial & System & MRR & \(\Delta\) [95\% CI] \\
       \midrule
-      Java & 77.20 & Global & 78.14 & +0.94 [0.68, 1.19] \\
-           &       & Rerank & 78.57 & +1.37 [1.07, 1.66] \\
-      JavaScript & 77.72 & Global & 78.36 & +0.64 [0.20, 1.08] \\
-           &       & Rerank & 78.95 & +1.23 [0.68, 1.78] \\
-      Ruby & 82.16 & Global & 82.84 & +0.68 [0.12, 1.26] \\
-           &       & Rerank & 83.51 & +1.35 [0.64, 2.10] \\
-      Python & 77.17 & Global & 77.95 & +0.78 [0.51, 1.05] \\
-           &       & Rerank & 78.30 & +1.13 [0.82, 1.44] \\
-      PHP & 71.91 & Global & 73.10 & +1.20 [0.90, 1.50] \\
-           &       & Rerank & 73.58 & +1.68 [1.36, 1.99] \\
-      Go & 92.43 & Global & 93.03 & +0.60 [0.39, 0.80] \\
-           &       & Rerank & 93.41 & +0.98 [0.76, 1.20] \\
+      Java & 77.2 & Global & 78.1 & +0.9 [0.7, 1.2] \\
+           &      & Rerank & 78.6 & +1.4 [1.1, 1.7] \\
+      JavaScript & 77.7 & Global & 78.4 & +0.6 [0.2, 1.1] \\
+           &      & Rerank & 79.0 & +1.2 [0.7, 1.8] \\
+      Ruby & 82.2 & Global & 82.8 & +0.7 [0.1, 1.3] \\
+           &      & Rerank & 83.5 & +1.4 [0.6, 2.1] \\
+      Python & 77.2 & Global & 78.0 & +0.8 [0.5, 1.1] \\
+           &      & Rerank & 78.3 & +1.1 [0.8, 1.4] \\
+      PHP & 71.9 & Global & 73.1 & +1.2 [0.9, 1.5] \\
+           &      & Rerank & 73.6 & +1.7 [1.4, 2.0] \\
+      Go & 92.4 & Global & 93.0 & +0.6 [0.4, 0.8] \\
+           &      & Rerank & 93.4 & +1.0 [0.8, 1.2] \\
       \midrule
-      Macro & 79.77 & Global & 80.57 & +0.80 [0.66, 0.95] \\
-            &       & Rerank & 81.06 & +1.29 [1.11, 1.47] \\
+      Macro & 79.8 & Global & 80.6 & +0.8 [0.7, 1.0] \\
+            &      & Rerank & 81.1 & +1.3 [1.1, 1.5] \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{MRR differences from the initial retriever with paired-bootstrap 95\% CIs for fixed checkpoints.}
-    % 中文表注：固定检查点相对于初始检索器的 MRR 差值及配对 bootstrap 95\% 置信区间。
+    \captionof{table}{MRR differences from the initial retriever with paired-bootstrap 95\% CIs for fixed checkpoints; values are rounded to one decimal place.}
+    % 中文表注：固定检查点相对于初始检索器的 MRR 差值及配对 bootstrap 95\% 置信区间；数值保留一位小数。
     \label{tab:bootstrap}
   \end{minipage}
 \end{table*}
