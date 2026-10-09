@@ -34,6 +34,7 @@
 \newcommand{\reported}{\textsuperscript{\textdagger}}
 \newcommand{\localrun}{\textsuperscript{\textdaggerdbl}}
 \newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\second}[1]{\underline{#1}}
 % Replace every \pending cell after the corresponding experiment is audited.
 \newcommand{\pending}{\textit{TBD}}
 
@@ -142,16 +143,23 @@ Let \(\mathcal{D}=\{(q_i,c_i^+)\}_{i=1}^{N}\) denote a code-search training set,
   \label{eq:global_score}
 \end{equation}
 
-For a competing candidate \(c^-\), define the score margin as \(\mu_\theta(q_i,c^-)=s_\theta(q_i,c_i^+)-s_\theta(q_i,c^-)\). The rank of the paired code can then be written as
-% 中文：对于竞争候选 \(c^-\)，定义分数间隔 \(\mu_\theta(q_i,c^-)=s_\theta(q_i,c_i^+)-s_\theta(q_i,c^-)\)。配对代码的排名可写为
+For a competing candidate \(c^-\), define the score margin as
+% 中文：对于竞争候选 \(c^-\)，分数间隔定义为
+\begin{equation}
+  \mu_\theta(q_i,c^-)
+  =s_\theta(q_i,c_i^+)-s_\theta(q_i,c^-).
+  \label{eq:score_margin}
+\end{equation}
+The rank of the paired code can then be written as
+% 中文：配对代码的排名可写为
 \begin{equation}
   \operatorname{rank}_\theta(c_i^+\mid q_i)
   =1+\sum_{c\in\mathcal{C}\setminus\{c_i^+\}}
   \mathbb{I}\!\left[\mu_\theta(q_i,c)\leq 0\right],
   \label{eq:rank_margin}
 \end{equation}
-where \(\mathcal{C}\) is the retrieval corpus. Equation~\ref{eq:rank_margin} makes the relevant score comparisons explicit: a negative margin identifies a candidate that already outranks the paired code, while a small positive margin identifies a nearby competitor whose order can be reversed by a modest score change. Both are more informative for refinement than candidates already separated by a large margin. Conventional in-batch or statically mined negatives are selected before the final retriever is observed and need not coincide with these model-specific competitors. \method{} therefore conditions refinement on the ranking behavior of a trained initial retriever, while retaining MRR strictly as an evaluation metric.
-% 中文：其中 \(\mathcal{C}\) 表示检索语料库。式~\ref{eq:rank_margin} 明确了与排序相关的分数比较：负间隔表示某个候选已经排在配对代码之前，较小的正间隔则表示一个只需较小分数变化就可能发生次序逆转的邻近竞争候选。与已经被大间隔分开的候选相比，这两类候选能为细化提供更有针对性的信息。常规批内负例或静态挖掘负例是在最终检索器行为被观察之前选取的，因此未必与这些模型特定的竞争候选一致。基于此，\method{} 根据训练完成的初始检索器所产生的排序行为开展细化，同时严格将 MRR 保留为评测指标。
+where \(\mathcal{C}\) is the retrieval corpus. Equations~\ref{eq:score_margin} and~\ref{eq:rank_margin} make the relevant score comparisons explicit: a negative margin identifies a candidate that already outranks the paired code, while a small positive margin identifies a nearby competitor whose order can be reversed by a modest score change. Both are more informative for refinement than candidates already separated by a large margin. Conventional in-batch or statically mined negatives are selected before the final retriever is observed and need not coincide with these model-specific competitors. \method{} therefore conditions refinement on the ranking behavior of a trained initial retriever, while retaining MRR strictly as an evaluation metric.
+% 中文：其中 \(\mathcal{C}\) 表示检索语料库。式~\ref{eq:score_margin} 与式~\ref{eq:rank_margin} 明确了与排序相关的分数比较：负间隔表示某个候选已经排在配对代码之前，较小的正间隔则表示一个只需较小分数变化就可能发生次序逆转的邻近竞争候选。与已经被大间隔分开的候选相比，这两类候选能为细化提供更有针对性的信息。常规批内负例或静态挖掘负例是在最终检索器行为被观察之前选取的，因此未必与这些模型特定的竞争候选一致。基于此，\method{} 根据训练完成的初始检索器所产生的排序行为开展细化，同时严格将 MRR 保留为评测指标。
 
 Competitors are query dependent: a code snippet may rank low for one query yet highly for another. Refinement therefore associates each query with candidates from its own corpus ranking, preserving the link between observed scores and subsequent contrastive comparisons.
 % 中文：竞争候选依赖于具体查询：同一代码片段在一个查询下可能排名较低，却可能在另一个查询下排名很高。因此，细化为每个查询关联其自身语料库排序中的候选，从而保留观测分数与后续对比比较之间的对应关系。
@@ -304,30 +312,28 @@ At full precision, Global refinement raises every language's MRR by 0.60--1.19 p
 \begin{table*}[t]
   \centering
   \small
-  \setlength{\tabcolsep}{6.0pt}
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrr@{}}
+  \setlength{\tabcolsep}{5.6pt}
+  \begin{tabular}{@{}lrrrrrrr@{}}
     \toprule
     Model & Ruby & JavaScript & Go & Python & Java & PHP & Avg. \\
     \midrule
-    \multicolumn{8}{l}{\emph{Published results (context only)}} \\
     CodeBERT~\citep{CodeBERT}\reported{} & 67.9 & 62.0 & 88.2 & 67.2 & 67.6 & 62.8 & 69.3 \\
     GraphCodeBERT~\citep{GraphCodeBERT}\reported{} & 70.3 & 64.4 & 89.7 & 69.2 & 69.1 & 64.9 & 71.3 \\
     SynCoBERT~\citep{SynCoBERT}\reported{} & 72.2 & 67.7 & 91.3 & 72.4 & 72.3 & 67.8 & 74.0 \\
     UniXcoder~\citep{UniXcoder}\reported{} & 74.0 & 68.4 & 91.5 & 72.0 & 72.6 & 67.6 & 74.4 \\
     CodeRetriever~\citep{CodeRetriever}\reported{} & 77.1 & 71.9 & 92.4 & 75.8 & 76.5 & 70.8 & 77.4 \\
     CoCoSoDa~\citep{CoCoSoDa}\reported{} & 81.8 & 76.4 & 92.1 & 75.7 & 76.3 & 70.3 & 78.8 \\
-    HedgeCode~\citep{HedgeCode}\reported{} & 82.5 & 77.1 & 92.7 & 77.6 & 78.5 & 73.8 & 80.3 \\
+    UA-HN~\citep{AAAIUA}\localrun{} & 82.2 & 77.7 & 92.4 & 77.2 & 77.2 & 71.9 & 79.8 \\
+    HedgeCode~\citep{HedgeCode}\reported{} & 82.5 & 77.1 & 92.7 & 77.6 & \second{78.5} & \best{73.8} & 80.3 \\
     \midrule
-    \multicolumn{8}{l}{\emph{Matched local evaluation}} \\
-    Initial retriever (UA-HN)~\citep{AAAIUA}\localrun{} & 82.2 & 77.7 & 92.4 & 77.2 & 77.2 & 71.9 & 79.8 \\
     \rowcolor{gray!10}
-    \textbf{\method{}-Global}\localrun{} & 82.8 & 78.4 & 93.0 & 78.0 & 78.1 & 73.1 & 80.6 \textbf{(+0.8)} \\
+    \textbf{\method{}-Global}\localrun{} & \second{82.8} & \second{78.4} & \second{93.0} & \second{78.0} & 78.1 & 73.1 & \second{80.6} \textbf{(+0.8)} \\
     \rowcolor{gray!10}
-    \textbf{\method{}-Rerank}\localrun{} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \best{73.6} & \best{81.1} \textbf{(+1.3)} \\
+    \textbf{\method{}-Rerank}\localrun{} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \second{73.6} & \best{81.1} \textbf{(+1.3)} \\
     \bottomrule
-  \end{tabular*}
-  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. \reported{} denotes published results and \localrun{} local evaluation; the two blocks are not treated as protocol-matched comparisons. Parenthesized gains use the local initial retriever, and bold scores mark the best result within the matched local block.}
-  % 中文表注：CodeSearchNet 上的 MRR（\%），结果保留一位小数。\reported{} 表示论文报告结果，\localrun{} 表示本地评测；两个区块不被视为协议一致的比较。括号中的增益均以本地初始检索器为参照，粗体分数表示协议一致本地区块内的最佳结果。
+  \end{tabular}
+  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. Bold and underlined scores indicate the best and second-best displayed values. \reported{} denotes published results and \localrun{} local evaluation; these values are not treated as protocol-matched comparisons. Parenthesized gains use the locally evaluated UA-HN initial retriever.}
+  % 中文表注：CodeSearchNet 上的 MRR（\%），结果保留一位小数。粗体和下划线分数分别表示表中第一名与第二名。\reported{} 表示论文报告结果，\localrun{} 表示本地评测；二者不被视为协议一致的比较。括号中的增益均以本地评测的 UA-HN 初始检索器为参照。
   \label{tab:main_results}
 \end{table*}
 
@@ -425,6 +431,9 @@ Because the corresponding initial checkpoints were not evaluated locally on the 
 
 Figure~\ref{fig:reranking_sensitivity} separates validation selection from held-out test evaluation. Panel (a) reports the complete \(K\times\alpha\) grid and selects \(K=20\), \(\alpha=0.5\) by macro validation MRR before test evaluation. Panel (b) shows the language-level and macro effectiveness--latency trade-off. The selected configuration reaches 81.06 test MRR at 26.04 ms per JavaScript query. Increasing \(K\) to 50 or 100 provides no further macro improvement but raises latency to 46.64 and 85.19 ms; \(K=10\) offers 81.03 MRR at 19.04 ms.
 % 中文：图~\ref{fig:reranking_sensitivity} 将验证集选择与留出测试集评测分开。子图 (a) 报告完整的 \(K\times\alpha\) 网格，并在测试集评测前依据宏平均验证集 MRR 选定 \(K=20\)、\(\alpha=0.5\)。子图 (b) 展示逐语言及宏平均检索效果—延迟权衡。选定配置在 JavaScript 上以每查询 26.04 毫秒取得 81.06 的测试 MRR。将 \(K\) 增至 50 或 100 不再提高宏平均效果，却分别将延迟增至 46.64 和 85.19 毫秒；\(K=10\) 则以 19.04 毫秒取得 81.03 MRR。
+
+This operating point captures the highest macro score before MaxSim cost grows sharply with reranking depth.
+% 中文：该运行点在 MaxSim 成本随重排深度显著增长之前取得最高的宏平均分数。
 
 \begin{figure}[!t]
   \centering
