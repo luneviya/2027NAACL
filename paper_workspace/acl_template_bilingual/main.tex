@@ -329,8 +329,8 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     \multirow{-2}{*}{\shortstack[l]{Retriever\\feedback}} & \textbf{\method{}-Rerank (Ours)} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \best{73.6} & \best{81.1} \textbf{(+1.3)} \\
     \bottomrule
   \end{tabular*}
-  \caption{CodeSearchNet MRR (\%). Cited rows retain their reported protocols; UA-HN and the two \method{} rows form the matched local comparison. Bold and underlined values mark the best and second-best local results, and parentheses give gains over UA-HN.}
-  % 中文表注：CodeSearchNet 上的 MRR（\%）。引用行沿用各论文报告的评测协议；UA-HN 与两个 \method{} 行构成协议一致的本地比较。粗体与下划线表示本地结果中的第一名与第二名，括号给出相对 UA-HN 的增益。
+  \caption{CodeSearchNet MRR (\%). UA-HN and \method{} form the matched local comparison; bold and underline mark its best and second-best results, and parentheses give gains over UA-HN.}
+  % 中文表注：CodeSearchNet 上的 MRR（\%）。UA-HN 与 \method{} 构成协议一致的本地比较；粗体与下划线表示其中的第一名与第二名，括号给出相对 UA-HN 的增益。
   \label{tab:main_results}
 \end{table*}
 
@@ -358,39 +358,46 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
 \end{table*}
 
 \begin{table*}[!t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{8pt}
-  \begin{tabular}{lrrrrr}
-    \toprule
-    Candidate source & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
-    \midrule
-    No refinement & 79.77 & 70.72 & \textbf{91.28} & \textbf{95.10} & -- \\
-    Random & 79.72 & 70.72 & 91.15 & 95.00 & -0.05 \\
-    Static hard negative & 79.67 & 70.65 & 91.05 & 94.88 & -0.10 \\
-    Retriever-mined Failure Candidate & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
-    \bottomrule
-  \end{tabular}
-  \caption{Candidate-source control with one added candidate per query. Values are macro test percentages; \(\Delta\)MRR is relative to no refinement.}
-  % 中文表注：每查询增加一个候选的候选来源对照。数值为测试集宏平均百分比；\(\Delta\)MRR 以无细化设置为参照。
-  \label{tab:candidate_controls}
-\end{table*}
-
-\begin{table*}[!t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{7pt}
-  \begin{tabular}{lrrrrrr}
-    \toprule
-    Factor & Setting & MRR & Setting & MRR & Setting & MRR \\
-    \midrule
-    FC loss weight \(\lambda_f\) (\(m=8\)) & 0.25 & 80.6 & 0.45 & 80.6 & 0.65 & 80.6 \\
-    Retained depth \(m\) (\(\lambda_f=0.45\)) & 2 & 80.4 & 8 & 80.6 & 32 & 80.5 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Training-side sensitivity of Global refinement. Each sweep changes one factor from the shared default \((\lambda_f,m)=(0.45,8)\); values are macro test MRR (\%).}
-  % 中文表注：Global 细化的训练侧敏感性。每次扫描仅改变共享默认配置 \((\lambda_f,m)=(0.45,8)\) 中的一个因素；数值为测试集宏平均 MRR（\%）。
-  \label{tab:training_sensitivity}
+  \begin{minipage}[t]{0.485\textwidth}
+    \centering
+    \captionsetup{skip=2pt}
+    \scriptsize
+    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrrrr@{}}
+      \toprule
+      Candidate source & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
+      \midrule
+      No refinement & 79.77 & 70.72 & \textbf{91.28} & \textbf{95.10} & -- \\
+      Random & 79.72 & 70.72 & 91.15 & 95.00 & -0.05 \\
+      Static hard negative & 79.67 & 70.65 & 91.05 & 94.88 & -0.10 \\
+      \shortstack[l]{Retriever-mined\\Failure Candidate} & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
+      \bottomrule
+    \end{tabular*}
+    \captionof{table}{Candidate-source control under a one-candidate budget. All metrics are test percentages; \(\Delta\)MRR is relative to no refinement.}
+    % 中文表注：单候选预算下的候选来源对照。所有指标均为测试集百分比；\(\Delta\)MRR 以无细化设置为参照。
+    \label{tab:candidate_controls}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.485\textwidth}
+    \centering
+    \captionsetup{skip=2pt}
+    \scriptsize
+    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrr@{}}
+      \toprule
+      Factor & Setting & MRR \\
+      \midrule
+      \multirow{3}{*}{\(\lambda_f\) (\(m=8\))} & 0.25 & 80.6 \\
+       & 0.45 & 80.6 \\
+       & 0.65 & 80.6 \\
+      \addlinespace[1pt]
+      \multirow{3}{*}{\(m\) (\(\lambda_f=0.45\))} & 2 & 80.4 \\
+       & 8 & 80.6 \\
+       & 32 & 80.5 \\
+      \bottomrule
+    \end{tabular*}
+    \captionof{table}{Training-side sensitivity of Global refinement. Each sweep varies one factor from the default \((\lambda_f,m)=(0.45,8)\).}
+    % 中文表注：Global 细化的训练侧敏感性。每次扫描仅改变默认配置 \((\lambda_f,m)=(0.45,8)\) 中的一个因素。
+    \label{tab:training_sensitivity}
+  \end{minipage}
 \end{table*}
 
 \paragraph{Reranking and encoder settings.}
