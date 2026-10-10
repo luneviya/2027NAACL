@@ -432,8 +432,8 @@ Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim rerank
 \paragraph{Retriever feedback provides the effective refinement signal.}
 \label{sec:candidate_controls}
 
-Table~\ref{tab:candidate_controls} changes only the source of one added candidate per query. Using no refinement (79.77 MRR) as the reference, random and static candidates change macro MRR by \(-0.05\) and \(-0.10\) points, whereas a retriever-mined Failure Candidate raises it by \(0.35\) points and raises R@1 by \(0.83\). Under the matched schedule and candidate budget, the initial retriever's high-ranked results provide the useful refinement supervision. The R@1 increase alongside lower R@5 and R@10 again locates the change at the first position.
-% 中文：表~\ref{tab:candidate_controls} 仅改变每个查询所增加候选的来源。以无细化设置（79.77 MRR）为参照，随机候选和静态候选分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘的失败候选使 MRR 提升 \(0.35\) 个点、R@1 提升 \(0.83\) 个点。在训练日程与候选预算一致时，初始检索器的高排名结果提供了有效的细化监督。R@1 的提升伴随 R@5 与 R@10 的下降，再次将变化定位于首位。
+Table~\ref{tab:candidate_controls} changes only the source of one added candidate per query. Using no refinement (79.77 MRR) as the reference, random and static candidates change macro MRR by \(-0.05\) and \(-0.10\) points, whereas a retriever-mined Failure Candidate raises it by \(0.35\) points. Under the matched schedule and candidate budget, the initial retriever's high-ranked results provide the useful refinement supervision. The same setting raises R@1 by \(0.83\) points, while R@5 and R@10 decrease slightly.
+% 中文：表~\ref{tab:candidate_controls} 仅改变每个查询所增加候选的来源。以无细化设置（79.77 MRR）为参照，随机候选和静态候选分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘的失败候选使 MRR 提升 \(0.35\) 个点。在训练日程与候选预算一致时，初始检索器的高排名结果提供了有效的细化监督。同一设置使 R@1 提升 \(0.83\) 个点，而 R@5 与 R@10 略有下降。
 
 \paragraph{The refinement gain is not tied to a narrow parameter choice.}
 Table~\ref{tab:training_sensitivity} evaluates one-factor sensitivity around the primary \((\lambda_f,m)=(0.45,8)\) configuration fixed before these sweeps. The weight values vary symmetrically around 0.45, while \(m\in\{2,8,32\}\) places 8 at the geometric center between a narrow top-2 pool and the complete top-32 harvested pool. Macro MRR is 80.6 for every \(\lambda_f\) and is 80.4, 80.6, and 80.5 for \(m=2,8,32\). The at-most 0.2-point spread places the primary configuration within a broad plateau over the evaluated values.
@@ -488,8 +488,8 @@ Figure~\ref{fig:reranking_sensitivity} first selects the fusion rule on validati
 With \(\alpha=0.5\) fixed, the selected \(K=20\) setting reaches 81.1 test MRR at 26.0 ms per JavaScript query. \(K=10\) reaches 81.0 MRR at 19.0 ms, while \(K=50\) and \(K=100\) remain at 81.0 and raise latency to 46.6 and 85.2 ms. Across these depths, test MRR spans 0.1 points while latency grows more than fourfold, making \(K\) primarily a cost control in the evaluated range. MaxSim accounts for most online time because query encoding and global search remain below 1 ms together; every setting peaks at 3,063 MiB GPU memory.
 % 中文：固定 \(\alpha=0.5\) 后，验证集选定的 \(K=20\) 配置以每个 JavaScript 查询 26.0 毫秒的延迟达到 81.1 测试 MRR。\(K=10\) 以 19.0 毫秒达到 81.0 MRR，而 \(K=50\) 与 \(K=100\) 的 MRR 均保持 81.0，延迟则升至 46.6 和 85.2 毫秒。在这些深度上，测试 MRR 的跨度为 0.1 个点，而延迟增长超过四倍，因此在所评测范围内，\(K\) 主要控制成本。由于查询编码与全局搜索合计仍不足 1 毫秒，MaxSim 占据大部分在线时间；所有配置的 GPU 峰值显存均为 3,063 MiB。
 
-The latency measurement includes query encoding, global search, and token-level rescoring for every query; offline mining, refinement, and code encoding are excluded. Appendix~\ref{app:reranking_details} reports the complete validation grid, language-level test results at each depth, and the latency decomposition.
-% 中文：延迟测量包含每个查询的查询编码、全局搜索和词元级重新计分，不包含离线候选挖掘、细化训练和代码编码。附录~\ref{app:reranking_details} 报告完整验证网格、各深度的逐语言测试结果以及延迟分解。
+The latency measurement includes query encoding, global search, and token-level rescoring for every query; offline mining, refinement, and code encoding are excluded.
+% 中文：延迟测量包含每个查询的查询编码、全局搜索和词元级重新计分，不包含离线候选挖掘、细化训练和代码编码。
 
 \section{Conclusion}
 \label{sec:conclusion}
