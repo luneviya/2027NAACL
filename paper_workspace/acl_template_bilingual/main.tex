@@ -361,8 +361,9 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
   \begin{minipage}[t]{0.485\textwidth}
     \centering
     \captionsetup{skip=2pt}
-    \scriptsize
-    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrrrr@{}}
+    \footnotesize
+    \setlength{\tabcolsep}{3.0pt}
+    \begin{tabular}{@{}lrrrrr@{}}
       \toprule
       Candidate source & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
       \midrule
@@ -371,7 +372,7 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
       Static hard negative & 79.67 & 70.65 & 91.05 & 94.88 & -0.10 \\
       \shortstack[l]{Retriever-mined\\Failure Candidate} & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
       \bottomrule
-    \end{tabular*}
+    \end{tabular}
     \captionof{table}{Candidate-source control under a one-candidate-per-query budget. \(\Delta\)MRR is measured from no refinement.}
     % 中文表注：每查询单候选预算下的候选来源对照。\(\Delta\)MRR 以无细化设置为参照。
     \label{tab:candidate_controls}
