@@ -304,7 +304,7 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
   \footnotesize
   \setlength{\tabcolsep}{3.2pt}
   \renewcommand{\arraystretch}{1.08}
-  \begin{tabular*}{\textwidth}{@{}l@{\hspace{1.1em}}l@{\extracolsep{\fill}}rrrrrrr@{}}
+  \begin{tabularx}{\textwidth}{@{}ll*{6}{>{\centering\arraybackslash}X}r@{}}
     \toprule
     Category & Model & Ruby & JS & Go & Python & Java & PHP & Avg. \\
     \midrule
@@ -328,7 +328,7 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     \rowcolor{gray!10}
     \multirow{-2}{*}{\shortstack[l]{Retriever\\feedback}} & \textbf{\method{}-Rerank (Ours)} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \best{73.6} & \best{81.1} \textbf{(+1.3)} \\
     \bottomrule
-  \end{tabular*}
+  \end{tabularx}
   \caption{CodeSearchNet MRR (\%). UA-HN and \method{} form the matched local comparison; bold and underline mark its best and second-best results, and parentheses give gains over UA-HN.}
   % 中文表注：CodeSearchNet 上的 MRR（\%）。UA-HN 与 \method{} 构成协议一致的本地比较；粗体与下划线表示其中的第一名与第二名，括号给出相对 UA-HN 的增益。
   \label{tab:main_results}
@@ -380,7 +380,8 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
   \begin{minipage}[t]{0.485\textwidth}
     \centering
     \captionsetup{skip=2pt}
-    \scriptsize
+    \footnotesize
+    \renewcommand{\arraystretch}{0.95}
     \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrr@{}}
       \toprule
       Factor & Setting & MRR \\
