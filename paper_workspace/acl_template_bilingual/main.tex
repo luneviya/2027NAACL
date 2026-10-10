@@ -294,8 +294,8 @@ The primary setting uses a CoCoSoDa encoder~\citep{CoCoSoDa} and the UA-HN train
 % 中文：主要设置使用 CoCoSoDa 编码器~\citep{CoCoSoDa}，并采用 UA-HN~\citep{AAAIUA} 的训练配置构建初始检索器。初始检索器、\method{}-Global 和 \method{}-Rerank 共享数据划分、检索语料库与指标实现。这三个本地评测系统构成表~\ref{tab:main_results} 中协议一致的比较区块，其中 UA-HN 是所有报告增益的参照。其余行保留各自原始协议下的论文报告值，用于提供方法背景，而不构成受控比较。PLBART 与 CodeT5 沿用 CoCoSoDa 论文的比较~\citep{CoCoSoDa}，Soft-InfoNCE 采用其论文报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。候选来源对照进一步固定初始化方式、三轮细化日程以及每查询一个附加候选的预算，仅在随机采样、静态预挖掘和冻结检索器的高排名结果之间改变候选来源。该协议一致设计检验有效细化信号是否来自检索器反馈，而不是额外的优化阶段。
 
 \paragraph{Training and model selection.}
-We train the initial retriever for 10 epochs and select its checkpoint by validation MRR. The frozen checkpoint retrieves over the training corpus; after excluding the paired code and same-URL candidates, we retain the top \(M=32\). Refinement samples \(r=1\) candidate from the top \(m=8\) per update and runs for three epochs with batch size 128, learning rate \(5\times10^{-6}\), \(\lambda_f=0.45\), and \(\tau_f=0.03\). Refinement trains global representations only. Appendix~\ref{app:experimental_details} gives the complete optimizer and base-loss settings.
-% 中文：初始检索器训练 10 个 epoch，并依据验证集 MRR 选择检查点。冻结的检查点在训练语料库上执行检索；排除配对代码及同 URL 候选后，保留前 \(M=32\) 个候选。细化阶段每次更新从前 \(m=8\) 个候选中采样 \(r=1\) 个，训练 3 个 epoch，批量大小为 128，学习率为 \(5\times10^{-6}\)，并设置 \(\lambda_f=0.45\)、\(\tau_f=0.03\)。细化仅训练全局表示。完整优化器与基础损失设置见附录~\ref{app:experimental_details}。
+We train the initial retriever for 10 epochs and select its checkpoint by validation MRR. The frozen checkpoint retrieves over the training corpus; after excluding the paired code and same-URL candidates, we retain the top \(M=32\). The primary refinement configuration, fixed before the sensitivity sweeps, uses \((\lambda_f,m)=(0.45,8)\): the loss weight gives the FC objective a moderate coefficient alongside the base objective, and \(m\) exposes the highest-ranked quarter of the harvested pool. We sample \(r=1\) candidate per update, so \(m\) changes the eligible candidate distribution rather than the comparison budget. Refinement uses \(\tau_f=0.03\), matching the base contrastive temperature, and runs for three epochs with batch size 128 and learning rate \(5\times10^{-6}\), using global representations only. Appendix~\ref{app:experimental_details} gives the complete optimizer and base-loss settings.
+% 中文：初始检索器训练 10 个 epoch，并依据验证集 MRR 选择检查点。冻结的检查点在训练语料库上执行检索；排除配对代码及同 URL 候选后，保留前 \(M=32\) 个候选。在敏感性扫描前固定的主要细化配置为 \((\lambda_f,m)=(0.45,8)\)：该损失权重使 FC 目标以适中的系数与基础目标共同作用，而 \(m\) 开放挖掘池中排名最高的四分之一候选。每次更新采样 \(r=1\) 个候选，因此 \(m\) 改变的是可采样候选的分布，而不是比较预算。细化阶段设置与基础对比温度一致的 \(\tau_f=0.03\)，并以批量大小 128、学习率 \(5\times10^{-6}\) 进行三轮仅使用全局表示的训练。完整优化器与基础损失设置见附录~\ref{app:experimental_details}。
 
 % Queue the full-width main-results table while page 5 is still being built so
 % that the two-column float can occupy the top of page 6.
@@ -395,15 +395,15 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
        & 32 & 80.5 \\
       \bottomrule
     \end{tabular*}
-    \captionof{table}{Training-side sensitivity of Global refinement under one-factor-at-a-time sweeps.}
-    % 中文表注：单因素扫描下 Global 细化的训练侧敏感性。
+    \captionof{table}{Training-side sensitivity around the primary \((\lambda_f,m)=(0.45,8)\) configuration.}
+    % 中文表注：围绕主要配置 \((\lambda_f,m)=(0.45,8)\) 的训练侧敏感性。
     \label{tab:training_sensitivity}
   \end{minipage}
 \end{table*}
 
 \paragraph{Reranking and encoder settings.}
-\method{}-Global performs full-corpus dual-encoder retrieval. \method{}-Rerank computes MaxSim only for the retrieved top-\(K\) and combines the per-query standardized global and token-level scores as \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\). Six-language macro validation MRR selects \(K=20\) and \(\alpha=0.5\); both values and all model checkpoints are fixed before test evaluation.
-% 中文：\method{}-Global 执行全库双编码器检索。\method{}-Rerank 仅对检索得到的前 \(K\) 个候选计算 MaxSim，并按照 \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\) 融合逐查询标准化后的全局分数与词元级分数。六语言宏平均验证集 MRR 选出 \(K=20\) 和 \(\alpha=0.5\)；这两个取值与所有模型检查点均在测试集评测前固定。
+\method{}-Global performs full-corpus dual-encoder retrieval. \method{}-Rerank computes MaxSim only for the retrieved top-\(K\) and combines the per-query standardized global and token-level scores as \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\). Unrounded six-language macro validation MRR selects \(K=20\) and \(\alpha=0.5\); both values and all model checkpoints are fixed before test evaluation.
+% 中文：\method{}-Global 执行全库双编码器检索。\method{}-Rerank 仅对检索得到的前 \(K\) 个候选计算 MaxSim，并按照 \(\alpha\widetilde{s}_g+(1-\alpha)\widetilde{s}_m\) 融合逐查询标准化后的全局分数与词元级分数。未舍入的六语言宏平均验证集 MRR 选出 \(K=20\) 和 \(\alpha=0.5\)；这两个取值与所有模型检查点均在测试集评测前固定。
 
 The encoder-instantiation experiments preserve the same harvesting, refinement, and reranking design. GraphCodeBERT retains data-flow-aware inputs, while its MaxSim score uses lexical tokens and excludes data-flow nodes. Appendix~\ref{app:experimental_details} reports encoder-specific input lengths and optimization settings.
 % 中文：编码器实例化实验保持相同的候选挖掘、细化与重排设计。GraphCodeBERT 保留数据流感知输入，其 MaxSim 分数使用词法词元并排除数据流节点。各编码器特定的输入长度与优化设置见附录~\ref{app:experimental_details}。
@@ -434,9 +434,9 @@ Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim rerank
 Table~\ref{tab:candidate_controls} changes only the source of one added candidate per query. Using no refinement (79.77 MRR) as the reference, random and static candidates change macro MRR by \(-0.05\) and \(-0.10\) points, whereas a retriever-mined Failure Candidate raises it by \(0.35\) points and raises R@1 by \(0.83\). Under the matched schedule and candidate budget, the initial retriever's high-ranked results provide the useful refinement supervision. The R@1 increase alongside lower R@5 and R@10 again locates the change at the first position; Appendix~\ref{app:component_details} gives the language-level results.
 % 中文：表~\ref{tab:candidate_controls} 仅改变每个查询所增加候选的来源。以无细化设置（79.77 MRR）为参照，随机候选和静态候选分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘的失败候选使 MRR 提升 \(0.35\) 个点、R@1 提升 \(0.83\) 个点。在训练日程与候选预算一致时，初始检索器的高排名结果提供了有效的细化监督。R@1 的提升伴随 R@5 与 R@10 的下降，再次将变化定位于首位；附录~\ref{app:component_details} 给出逐语言结果。
 
-\paragraph{Pool-based refinement changes little across the tested settings.}
-Table~\ref{tab:training_sensitivity} varies the FC loss weight and retained pool depth for Global refinement. Each sweep changes one factor while retaining the other factor's primary-setting value: \(m=8\) for the \(\lambda_f\) sweep and \(\lambda_f=0.45\) for the \(m\) sweep. Macro MRR is 80.6 for every \(\lambda_f\in\{0.25,0.45,0.65\}\); varying \(m\) from 2 to 8 to 32 yields 80.4, 80.6, and 80.5. Every setting remains above the initial retriever's 79.8 MRR, and macro variation across either sweep is at most 0.2 points. Appendix~\ref{app:parameter_sensitivity} reports the corresponding language-level values.
-% 中文：表~\ref{tab:training_sensitivity} 改变 Global 细化的 FC 损失权重与保留候选池深度。每次扫描只改变一个因素，另一因素沿用主要配置中的取值：扫描 \(\lambda_f\) 时使用 \(m=8\)，扫描 \(m\) 时使用 \(\lambda_f=0.45\)。对于每个 \(\lambda_f\in\{0.25,0.45,0.65\}\)，宏平均 MRR 均为 80.6；当 \(m\) 从 2 变为 8 和 32 时，MRR 分别为 80.4、80.6 和 80.5。所有设置都高于初始检索器的 79.8 MRR，且任一扫描中的宏平均变化最多为 0.2 个点。附录~\ref{app:parameter_sensitivity} 报告相应的逐语言数值。
+\paragraph{The refinement gain is not tied to a narrow parameter choice.}
+Table~\ref{tab:training_sensitivity} evaluates one-factor sensitivity around the primary \((\lambda_f,m)=(0.45,8)\) configuration fixed before these sweeps. The weight values vary symmetrically around 0.45, while \(m\in\{2,8,32\}\) places 8 at the geometric center between a narrow top-2 pool and the complete top-32 harvested pool. Macro MRR is 80.6 for every \(\lambda_f\) and is 80.4, 80.6, and 80.5 for \(m=2,8,32\). The at-most 0.2-point spread places the primary configuration within a broad plateau over the evaluated values. Appendix~\ref{app:parameter_sensitivity} reports the language-level results.
+% 中文：表~\ref{tab:training_sensitivity} 围绕敏感性扫描前固定的主要配置 \((\lambda_f,m)=(0.45,8)\)，评估单因素敏感性。损失权重以 0.45 为中心对称取值，而 \(m\in\{2,8,32\}\) 将 8 置于较窄的前 2 候选池与完整的前 32 挖掘池之间的几何中心。每个 \(\lambda_f\) 的宏平均 MRR 均为 80.6；\(m=2,8,32\) 时分别为 80.4、80.6 和 80.5。最多 0.2 个点的跨度表明，主要配置位于所评测取值形成的宽平台内。附录~\ref{app:parameter_sensitivity} 报告逐语言结果。
 
 \paragraph{Gains concentrate in near-top misrankings.}
 Table~\ref{tab:rank_strata} conditions MRR on the paired code's initial rank. For ranks 2--10, Global refinement adds 8.9 points and reranking increases the gain to 11.3; gains are positive but smaller beyond rank 10. For the 36,274 queries already correct at rank 1, Global and Rerank reduce conditional MRR by 2.1 and 2.5 points. These regressions in the largest stratum offset part of the improvement among the 13,261 rank-2--10 queries, so the aggregate gain comes from near-top corrections that outweigh losses on some initially correct rankings. Appendix~\ref{app:rank_analysis} reports query counts and rank transitions.
@@ -459,8 +459,8 @@ The same harvesting, refinement, and reranking pipeline runs with CoCoSoDa, UniX
 \subsection{Reranking Effectiveness and Efficiency}
 \label{sec:efficiency}
 
-Figure~\ref{fig:reranking_sensitivity} first selects the fusion rule on validation data and then measures its held-out effectiveness--latency trade-off. At \(K=20\), MaxSim alone (\(\alpha=0\)) obtains 81.2 validation MRR, global retrieval alone (\(\alpha=1\)) obtains 81.9, and balanced fusion reaches 82.2. The complete validation grid selects \(K=20\), \(\alpha=0.5\) before test evaluation, supporting Global--Local Score Fusion rather than either score alone.
-% 中文：图~\ref{fig:reranking_sensitivity} 首先在验证集上选择融合规则，再测量其留出测试集效果—延迟权衡。当 \(K=20\) 时，仅使用 MaxSim（\(\alpha=0\)）的验证集 MRR 为 81.2，仅使用全局检索（\(\alpha=1\)）为 81.9，等权融合则达到 82.2。完整验证网格在测试集评测前选出 \(K=20\)、\(\alpha=0.5\)，从而支持全局—局部分数融合，而不是单独使用任一分数。
+Figure~\ref{fig:reranking_sensitivity} first selects the fusion rule on validation data and then measures its held-out effectiveness--latency trade-off. At \(K=20\), MaxSim alone (\(\alpha=0\)) obtains 81.2 validation MRR, global retrieval alone (\(\alpha=1\)) obtains 81.9, and balanced fusion reaches 82.2. Although several cells tie after rounding, unrounded macro validation MRR selects \(K=20\), \(\alpha=0.5\) before test evaluation, supporting Global--Local Score Fusion rather than either score alone.
+% 中文：图~\ref{fig:reranking_sensitivity} 首先在验证集上选择融合规则，再测量其留出测试集效果—延迟权衡。当 \(K=20\) 时，仅使用 MaxSim（\(\alpha=0\)）的验证集 MRR 为 81.2，仅使用全局检索（\(\alpha=1\)）为 81.9，等权融合则达到 82.2。尽管部分单元格在舍入后并列，未舍入的宏平均验证集 MRR 仍在测试集评测前选出 \(K=20\)、\(\alpha=0.5\)，从而支持全局—局部分数融合，而不是单独使用任一分数。
 
 \begin{figure}[!t]
   \centering
@@ -588,8 +588,8 @@ Table~\ref{tab:primary_configuration} specifies the complete primary comparison,
 \section{Training-Side Sensitivity by Language}
 \label{app:parameter_sensitivity}
 
-Table~\ref{tab:training_sensitivity} summarizes the macro results for \(\lambda_f\in\{0.25,0.45,0.65\}\) and retained depth \(m\in\{2,8,32\}\). Table~\ref{tab:parameter_sensitivity} expands them by language. Each one-at-a-time variation starts from the same language-specific initial retriever and uses the same frozen top-32 candidate pool, three-epoch global-only refinement protocol, and seed 123456. Reporting Global MRR without MaxSim isolates the training-side parameters.
-% 中文：表~\ref{tab:training_sensitivity} 汇总了 \(\lambda_f\in\{0.25,0.45,0.65\}\) 与保留深度 \(m\in\{2,8,32\}\) 的宏平均结果；表~\ref{tab:parameter_sensitivity} 将其展开至逐语言层面。每个单因素变化均从相同的逐语言初始检索器出发，使用相同的冻结前 32 候选池、三轮仅全局表示细化协议和随机种子 123456。报告不含 MaxSim 的 Global MRR，以隔离训练侧参数。
+Table~\ref{tab:training_sensitivity} summarizes the macro results for \(\lambda_f\in\{0.25,0.45,0.65\}\) and retained depth \(m\in\{2,8,32\}\); Table~\ref{tab:parameter_sensitivity} expands them by language. The shared \((0.45,8)\) configuration was fixed before the sweeps: the weights are centered arithmetically on 0.45, and the depths geometrically on 8. Each variation uses the same language-specific initial retriever, frozen top-32 pool, three-epoch global-only refinement protocol, and seed 123456. Global MRR without MaxSim isolates the training-side response while leaving the primary configuration unchanged.
+% 中文：表~\ref{tab:training_sensitivity} 汇总了 \(\lambda_f\in\{0.25,0.45,0.65\}\) 与保留深度 \(m\in\{2,8,32\}\) 的宏平均结果，表~\ref{tab:parameter_sensitivity} 将其展开至逐语言层面。共享配置 \((0.45,8)\) 在扫描前已经固定：损失权重以 0.45 为算术中心，保留深度则以 8 为几何中心。每个变化均使用相同的逐语言初始检索器、冻结前 32 候选池、三轮仅全局表示细化协议和随机种子 123456。不含 MaxSim 的 Global MRR 隔离训练侧响应，同时保持主要配置不变。
 
 At one-decimal precision, every \(\lambda_f\) setting yields 80.6 macro MRR; \(m=2,8,32\) yields 80.4, 80.6, and 80.5. Both factors therefore change macro MRR little across the evaluated values.
 % 中文：在保留一位小数时，每个 \(\lambda_f\) 设置的宏平均 MRR 均为 80.6；\(m=2,8,32\) 时分别为 80.4、80.6 和 80.5。因此，在所评测取值范围内，两项因素对宏平均 MRR 的影响均较小。
@@ -620,8 +620,8 @@ At one-decimal precision, every \(\lambda_f\) setting yields 80.6 macro MRR; \(m
   \label{tab:parameter_sensitivity}
 \end{table*}
 
-The language-level rows reveal different shallow preferences beneath the similar macro averages: Ruby is highest at \(m=2\), Python at \(m=32\), and PHP ties at \(m=8\) and \(m=32\). No retained depth dominates every language, and the loss-weight sweep is similarly flat across the evaluated values.
-% 中文：逐语言结果揭示了相近宏平均值之下不同但幅度较小的偏好：Ruby 在 \(m=2\) 时最高，Python 在 \(m=32\) 时最高，PHP 在 \(m=8\) 与 \(m=32\) 时并列。没有一个保留深度在所有语言上占优，损失权重在所评测取值上的变化也同样平缓。
+The language-level rows reveal different shallow preferences beneath the similar macro averages: Ruby is highest at \(m=2\), Python at \(m=32\), and PHP ties at \(m=8\) and \(m=32\). No retained depth dominates every language. Because \(r=1\) throughout, changing \(m\) changes the eligible region of the fixed pool rather than the number of added comparisons; the loss-weight sweep is similarly flat across the evaluated values.
+% 中文：逐语言结果揭示了相近宏平均值之下不同但幅度较小的偏好：Ruby 在 \(m=2\) 时最高，Python 在 \(m=32\) 时最高，PHP 在 \(m=8\) 与 \(m=32\) 时并列。没有一个保留深度在所有语言上占优。由于始终设置 \(r=1\)，改变 \(m\) 调整的是固定候选池中的可采样区域，而不是新增比较的数量；损失权重在所评测取值上的变化也同样平缓。
 
 \section{Language-Level Controlled Analyses}
 \label{app:component_details}
@@ -847,8 +847,8 @@ Across the matched local columns, Rerank-minus-Global macro MRR is +0.5 for CoCo
 \section{Reranking Selection and Efficiency Details}
 \label{app:reranking_details}
 
-The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding numerical values. Selection uses the six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
-% 中文：图~\ref{fig:reranking_sensitivity} 子图 (a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合，表~\ref{tab:reranking_validation_grid} 给出相应数值。模型选择仅依据六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
+The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding values rounded to one decimal place, while selection uses unrounded six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
+% 中文：图~\ref{fig:reranking_sensitivity} 子图 (a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合。表~\ref{tab:reranking_validation_grid} 给出保留一位小数的对应数值，而模型选择仅依据未舍入的六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
 
 \noindent\begin{minipage}{\columnwidth}
   \centering
@@ -867,14 +867,14 @@ The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} conta
     1.00 & 81.9 & 81.9 & 81.9 & 81.9 \\
     \bottomrule
   \end{tabular}
-  \captionof{table}{Macro validation MRR (\%), rounded to one decimal place, over the complete \(K\times\alpha\) grid; bold marks the selected setting.}
-  % 中文表注：完整 \(K\times\alpha\) 网格上的宏平均验证集 MRR（\%），结果保留一位小数；粗体表示选定配置。
+  \captionof{table}{Macro validation MRR (\%), rounded to one decimal place, over the complete \(K\times\alpha\) grid; bold marks the setting selected from unrounded values.}
+  % 中文表注：完整 \(K\times\alpha\) 网格上的宏平均验证集 MRR（\%），结果保留一位小数；粗体表示依据未舍入数值选定的配置。
   \label{tab:reranking_validation_grid}
 \end{minipage}
 \par\medskip
 
-The validation grid distinguishes the two inference parameters. At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\); at smaller \(\alpha\), changing \(K\) changes both the rescored candidate set and online cost. Validation selects \(\alpha=0.5\) and \(K=20\). Across the four held-out depths at this \(\alpha\), macro MRR spans 0.1 points while MaxSim latency rises from 18.1 to 84.3 ms per query, making depth primarily a cost decision.
-% 中文：验证网格区分了两个推理参数的作用。当 \(\alpha=1\) 时不使用 MaxSim，因此所有 \(K\) 的分数完全相同；当 \(\alpha\) 较小时，改变 \(K\) 会同时改变被重新计分的候选集合与在线开销。验证集选出 \(\alpha=0.5\) 和 \(K=20\)。在该 \(\alpha\) 下，四种留出测试深度的宏平均 MRR 跨度为 0.1 个点，而 MaxSim 延迟从每查询 18.1 毫秒增至 84.3 毫秒，因此深度主要是成本决策。
+The validation grid distinguishes the two inference parameters. At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\); at smaller \(\alpha\), changing \(K\) changes both the rescored candidate set and online cost. The unrounded validation scores uniquely select \(\alpha=0.5\) and \(K=20\), although several cells tie at the displayed precision. Across the four held-out depths at this \(\alpha\), macro MRR spans 0.1 points while MaxSim latency rises from 18.1 to 84.3 ms per query, making depth primarily a cost decision.
+% 中文：验证网格区分了两个推理参数的作用。当 \(\alpha=1\) 时不使用 MaxSim，因此所有 \(K\) 的分数完全相同；当 \(\alpha\) 较小时，改变 \(K\) 会同时改变被重新计分的候选集合与在线开销。虽然若干单元格在当前显示精度下并列，但未舍入的验证分数唯一选出 \(\alpha=0.5\) 和 \(K=20\)。在该 \(\alpha\) 下，四种留出测试深度的宏平均 MRR 跨度为 0.1 个点，而 MaxSim 延迟从每查询 18.1 毫秒增至 84.3 毫秒，因此深度主要是成本决策。
 
 \noindent\begin{minipage}{\columnwidth}
     \centering
