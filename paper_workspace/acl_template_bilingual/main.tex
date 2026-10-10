@@ -386,11 +386,11 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
       \toprule
       Factor & Setting & MRR \\
       \midrule
-      \multirow{3}{*}{\shortstack[l]{FC loss weight \(\lambda_f\)\\(\(m=8\))}} & 0.25 & 80.6 \\
+      \multirow{3}{*}{\shortstack[l]{FC loss weight \(\lambda_f\)\\with \(m=8\)}} & 0.25 & 80.6 \\
        & 0.45 & 80.6 \\
        & 0.65 & 80.6 \\
       \midrule
-      \multirow{3}{*}{\shortstack[l]{Retained depth \(m\)\\(\(\lambda_f=0.45\))}} & 2 & 80.4 \\
+      \multirow{3}{*}{\shortstack[l]{Retained depth \(m\)\\with \(\lambda_f=0.45\)}} & 2 & 80.4 \\
        & 8 & 80.6 \\
        & 32 & 80.5 \\
       \bottomrule
@@ -435,8 +435,8 @@ Table~\ref{tab:candidate_controls} changes only the source of one added candidat
 % 中文：表~\ref{tab:candidate_controls} 仅改变每个查询所增加候选的来源。以无细化设置（79.77 MRR）为参照，随机候选和静态候选分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘的失败候选使 MRR 提升 \(0.35\) 个点、R@1 提升 \(0.83\) 个点。在训练日程与候选预算一致时，初始检索器的高排名结果提供了有效的细化监督。R@1 的提升伴随 R@5 与 R@10 的下降，再次将变化定位于首位；附录~\ref{app:component_details} 给出逐语言结果。
 
 \paragraph{Pool-based refinement changes little across the tested settings.}
-Table~\ref{tab:training_sensitivity} varies the FC loss weight and retained pool depth for Global refinement. Each one-factor-at-a-time sweep holds the other factor at the shared default \((\lambda_f,m)=(0.45,8)\). Macro MRR is 80.6 for every \(\lambda_f\in\{0.25,0.45,0.65\}\); varying \(m\) from 2 to 8 to 32 yields 80.4, 80.6, and 80.5. Every setting remains above the initial retriever's 79.8 MRR, and macro variation across either sweep is at most 0.2 points. Appendix~\ref{app:parameter_sensitivity} reports the corresponding language-level values.
-% 中文：表~\ref{tab:training_sensitivity} 改变 Global 细化的 FC 损失权重与保留候选池深度。每次单因素扫描均将另一因素固定在共享默认配置 \((\lambda_f,m)=(0.45,8)\)。对于每个 \(\lambda_f\in\{0.25,0.45,0.65\}\)，宏平均 MRR 均为 80.6；当 \(m\) 从 2 变为 8 和 32 时，MRR 分别为 80.4、80.6 和 80.5。所有设置都高于初始检索器的 79.8 MRR，且任一扫描中的宏平均变化最多为 0.2 个点。附录~\ref{app:parameter_sensitivity} 报告相应的逐语言数值。
+Table~\ref{tab:training_sensitivity} varies the FC loss weight and retained pool depth for Global refinement. Each sweep changes one factor while retaining the other factor's primary-setting value: \(m=8\) for the \(\lambda_f\) sweep and \(\lambda_f=0.45\) for the \(m\) sweep. Macro MRR is 80.6 for every \(\lambda_f\in\{0.25,0.45,0.65\}\); varying \(m\) from 2 to 8 to 32 yields 80.4, 80.6, and 80.5. Every setting remains above the initial retriever's 79.8 MRR, and macro variation across either sweep is at most 0.2 points. Appendix~\ref{app:parameter_sensitivity} reports the corresponding language-level values.
+% 中文：表~\ref{tab:training_sensitivity} 改变 Global 细化的 FC 损失权重与保留候选池深度。每次扫描只改变一个因素，另一因素沿用主要配置中的取值：扫描 \(\lambda_f\) 时使用 \(m=8\)，扫描 \(m\) 时使用 \(\lambda_f=0.45\)。对于每个 \(\lambda_f\in\{0.25,0.45,0.65\}\)，宏平均 MRR 均为 80.6；当 \(m\) 从 2 变为 8 和 32 时，MRR 分别为 80.4、80.6 和 80.5。所有设置都高于初始检索器的 79.8 MRR，且任一扫描中的宏平均变化最多为 0.2 个点。附录~\ref{app:parameter_sensitivity} 报告相应的逐语言数值。
 
 \paragraph{Gains concentrate in near-top misrankings.}
 Table~\ref{tab:rank_strata} conditions MRR on the paired code's initial rank. For ranks 2--10, Global refinement adds 8.9 points and reranking increases the gain to 11.3; gains are positive but smaller beyond rank 10. For the 36,274 queries already correct at rank 1, Global and Rerank reduce conditional MRR by 2.1 and 2.5 points. These regressions in the largest stratum offset part of the improvement among the 13,261 rank-2--10 queries, so the aggregate gain comes from near-top corrections that outweigh losses on some initially correct rankings. Appendix~\ref{app:rank_analysis} reports query counts and rank transitions.
