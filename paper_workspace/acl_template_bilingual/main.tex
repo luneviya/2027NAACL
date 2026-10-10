@@ -386,11 +386,11 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
       \toprule
       Factor & Setting & MRR \\
       \midrule
-      \multirow{3}{*}{\(\lambda_f\) (\(m=8\))} & 0.25 & 80.6 \\
+      \multirow{3}{*}{\shortstack[l]{FC loss weight \(\lambda_f\)\\(\(m=8\))}} & 0.25 & 80.6 \\
        & 0.45 & 80.6 \\
        & 0.65 & 80.6 \\
-      \addlinespace[1pt]
-      \multirow{3}{*}{\(m\) (\(\lambda_f=0.45\))} & 2 & 80.4 \\
+      \midrule
+      \multirow{3}{*}{\shortstack[l]{Retained depth \(m\)\\(\(\lambda_f=0.45\))}} & 2 & 80.4 \\
        & 8 & 80.6 \\
        & 32 & 80.5 \\
       \bottomrule
