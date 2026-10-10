@@ -290,8 +290,8 @@ We conduct experiments on the standard six-language CodeSearchNet benchmark~\cit
 \end{table}
 
 \paragraph{Implementation and controlled comparisons.}
-The primary setting uses a CoCoSoDa encoder~\citep{CoCoSoDa} and the UA-HN training configuration~\citep{AAAIUA} for the initial retriever. The initial retriever, \method{}-Global, and \method{}-Rerank share data splits, retrieval corpora, and metric implementation. The candidate-source control additionally fixes initialization, the three-epoch refinement schedule, and one added candidate per query; only the source of that candidate changes among random sampling, static pre-mining, and the frozen retriever's high-ranked results. This matched design tests whether retriever feedback, rather than an additional optimization stage, supplies the effective refinement signal. In Table~\ref{tab:main_results}, PLBART and CodeT5 follow the CoCoSoDa comparison~\citep{CoCoSoDa}, and Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}.
-% 中文：主要设置使用 CoCoSoDa 编码器~\citep{CoCoSoDa}，并采用 UA-HN~\citep{AAAIUA} 的训练配置构建初始检索器。初始检索器、\method{}-Global 和 \method{}-Rerank 共享数据划分、检索语料库与指标实现。候选来源对照进一步固定初始化方式、三轮细化日程以及每查询一个附加候选的预算，仅在随机采样、静态预挖掘和冻结检索器的高排名结果之间改变候选来源。该协议一致设计检验有效细化信号是否来自检索器反馈，而不是额外的优化阶段。表~\ref{tab:main_results} 中，PLBART 与 CodeT5 沿用 CoCoSoDa 论文的比较~\citep{CoCoSoDa}，Soft-InfoNCE 采用其论文报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。
+The primary setting uses a CoCoSoDa encoder~\citep{CoCoSoDa} and the UA-HN training configuration~\citep{AAAIUA} for the initial retriever. The initial retriever, \method{}-Global, and \method{}-Rerank share data splits, retrieval corpora, and metric implementation. These three locally evaluated systems form the matched block in Table~\ref{tab:main_results}, with UA-HN serving as the reference for all reported gains. The other rows retain published values under their original protocols and provide methodological context rather than controlled comparisons. PLBART and CodeT5 follow the CoCoSoDa comparison~\citep{CoCoSoDa}, and Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. The candidate-source control additionally fixes initialization, the three-epoch refinement schedule, and one added candidate per query; only the source of that candidate changes among random sampling, static pre-mining, and the frozen retriever's high-ranked results. This matched design tests whether retriever feedback, rather than an additional optimization stage, supplies the effective refinement signal.
+% 中文：主要设置使用 CoCoSoDa 编码器~\citep{CoCoSoDa}，并采用 UA-HN~\citep{AAAIUA} 的训练配置构建初始检索器。初始检索器、\method{}-Global 和 \method{}-Rerank 共享数据划分、检索语料库与指标实现。这三个本地评测系统构成表~\ref{tab:main_results} 中协议一致的比较区块，其中 UA-HN 是所有报告增益的参照。其余行保留各自原始协议下的论文报告值，用于提供方法背景，而不构成受控比较。PLBART 与 CodeT5 沿用 CoCoSoDa 论文的比较~\citep{CoCoSoDa}，Soft-InfoNCE 采用其论文报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。候选来源对照进一步固定初始化方式、三轮细化日程以及每查询一个附加候选的预算，仅在随机采样、静态预挖掘和冻结检索器的高排名结果之间改变候选来源。该协议一致设计检验有效细化信号是否来自检索器反馈，而不是额外的优化阶段。
 
 \paragraph{Training and model selection.}
 We train the initial retriever for 10 epochs and select its checkpoint by validation MRR. The frozen checkpoint retrieves over the training corpus; after excluding the paired code and same-URL candidates, we retain the top \(M=32\). Refinement samples \(r=1\) candidate from the top \(m=8\) per update and runs for three epochs with batch size 128, learning rate \(5\times10^{-6}\), \(\lambda_f=0.45\), and \(\tau_f=0.03\). Refinement trains global representations only. Appendix~\ref{app:experimental_details} gives the complete optimizer and base-loss settings.
@@ -372,8 +372,8 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
       \shortstack[l]{Retriever-mined\\Failure Candidate} & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
       \bottomrule
     \end{tabular*}
-    \captionof{table}{Candidate-source control under a one-candidate budget. All metrics are test percentages; \(\Delta\)MRR is relative to no refinement.}
-    % 中文表注：单候选预算下的候选来源对照。所有指标均为测试集百分比；\(\Delta\)MRR 以无细化设置为参照。
+    \captionof{table}{Candidate-source control under a one-candidate-per-query budget. \(\Delta\)MRR is measured from no refinement.}
+    % 中文表注：每查询单候选预算下的候选来源对照。\(\Delta\)MRR 以无细化设置为参照。
     \label{tab:candidate_controls}
   \end{minipage}
   \hfill
@@ -394,8 +394,8 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
        & 32 & 80.5 \\
       \bottomrule
     \end{tabular*}
-    \captionof{table}{Training-side sensitivity of Global refinement. Each sweep varies one factor from the default \((\lambda_f,m)=(0.45,8)\).}
-    % 中文表注：Global 细化的训练侧敏感性。每次扫描仅改变默认配置 \((\lambda_f,m)=(0.45,8)\) 中的一个因素。
+    \captionof{table}{Training-side sensitivity of Global refinement under one-factor-at-a-time sweeps.}
+    % 中文表注：单因素扫描下 Global 细化的训练侧敏感性。
     \label{tab:training_sensitivity}
   \end{minipage}
 \end{table*}
@@ -414,8 +414,8 @@ We estimate 95\% confidence intervals for paired MRR differences by stratified p
 \subsection{Overall Retrieval Effectiveness}
 \label{sec:main_results}
 
-Table~\ref{tab:main_results} anchors the effectiveness claim in the matched local comparison. \method{}-Global raises macro MRR from 79.8 to 80.6, and validation-selected MaxSim reranking further raises it to 81.1, for absolute gains of 0.8 and 1.3 points. MRR increases in every language: by 0.6--1.2 points for Global refinement and 1.0--1.7 points for the complete system. The cited prior-work rows provide methodological context under their original protocols; the UA-HN and \method{} rows supply the matched gains.
-% 中文：表~\ref{tab:main_results} 以协议一致的本地比较支撑效果主张。\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，经验证集选定的 MaxSim 重排进一步将其提高到 81.1，绝对增益分别为 0.8 和 1.3 个点。全部六种语言的 MRR 均有提升：Global 细化提高 0.6--1.2 个点，完整系统提高 1.0--1.7 个点。引用的既有工作行在各自原始协议下提供方法背景；UA-HN 与 \method{} 行构成计算增益的协议一致比较。
+Table~\ref{tab:main_results} anchors the effectiveness claim in the matched local comparison. \method{}-Global raises macro MRR from 79.8 to 80.6, and validation-selected MaxSim reranking further raises it to 81.1, for absolute gains of 0.8 and 1.3 points. MRR increases in every language: by 0.6--1.2 points for Global refinement and 1.0--1.7 points for the complete system.
+% 中文：表~\ref{tab:main_results} 以协议一致的本地比较支撑效果主张。\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，经验证集选定的 MaxSim 重排进一步将其提高到 81.1，绝对增益分别为 0.8 和 1.3 个点。全部六种语言的 MRR 均有提升：Global 细化提高 0.6--1.2 个点，完整系统提高 1.0--1.7 个点。
 
 The recall pattern places the main change at the first position. From the initial retriever to \method{}-Rerank, R@1 increases from 70.7 to 72.6 and R@5 from 91.3 to 91.7, while R@10 remains 95.1 at the displayed precision. This pattern is consistent with reordering Retrieved-but-Mis-ranked Cases near the top rather than expanding retrieval coverage at deeper ranks. The following controlled analyses identify the contributions of refinement and reranking, the role of retriever feedback, and the initial-rank groups in which the changes occur.
 % 中文：召回率模式表明主要变化发生在首位。从初始检索器到 \method{}-Rerank，R@1 从 70.7 提升至 72.6，R@5 从 91.3 提升至 91.7，而 R@10 在当前显示精度下保持 95.1。该模式与重新排序顶部附近的“已检索但排序错误案例”一致，而非扩大更深排名处的检索覆盖。下文的受控分析进一步识别细化与重排的贡献、检索器反馈的作用，以及变化发生在哪些初始排名分组中。
@@ -430,12 +430,12 @@ Table~\ref{tab:ablation} crosses failure-candidate refinement with MaxSim rerank
 \paragraph{Retriever feedback provides the effective refinement signal.}
 \label{sec:candidate_controls}
 
-Table~\ref{tab:candidate_controls} changes only the source of one added candidate per query. Random and static candidates change macro MRR by \(-0.05\) and \(-0.10\) points, whereas a retriever-mined Failure Candidate raises it by \(0.35\) points and raises R@1 by \(0.83\). Under the matched schedule and candidate budget, the initial retriever's high-ranked results provide the useful refinement supervision. The R@1 increase alongside lower R@5 and R@10 again locates the change at the first position; Appendix~\ref{app:component_details} gives the language-level results.
-% 中文：表~\ref{tab:candidate_controls} 仅改变每个查询所增加候选的来源。随机候选和静态候选分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘的失败候选使 MRR 提升 \(0.35\) 个点、R@1 提升 \(0.83\) 个点。在训练日程与候选预算一致时，初始检索器的高排名结果提供了有效的细化监督。R@1 的提升伴随 R@5 与 R@10 的下降，再次将变化定位于首位；附录~\ref{app:component_details} 给出逐语言结果。
+Table~\ref{tab:candidate_controls} changes only the source of one added candidate per query. Using no refinement (79.77 MRR) as the reference, random and static candidates change macro MRR by \(-0.05\) and \(-0.10\) points, whereas a retriever-mined Failure Candidate raises it by \(0.35\) points and raises R@1 by \(0.83\). Under the matched schedule and candidate budget, the initial retriever's high-ranked results provide the useful refinement supervision. The R@1 increase alongside lower R@5 and R@10 again locates the change at the first position; Appendix~\ref{app:component_details} gives the language-level results.
+% 中文：表~\ref{tab:candidate_controls} 仅改变每个查询所增加候选的来源。以无细化设置（79.77 MRR）为参照，随机候选和静态候选分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘的失败候选使 MRR 提升 \(0.35\) 个点、R@1 提升 \(0.83\) 个点。在训练日程与候选预算一致时，初始检索器的高排名结果提供了有效的细化监督。R@1 的提升伴随 R@5 与 R@10 的下降，再次将变化定位于首位；附录~\ref{app:component_details} 给出逐语言结果。
 
 \paragraph{Pool-based refinement changes little across the tested settings.}
-Table~\ref{tab:training_sensitivity} varies the FC loss weight and retained pool depth for Global refinement. Macro MRR is 80.6 for every \(\lambda_f\in\{0.25,0.45,0.65\}\); varying \(m\) from 2 to 8 to 32 yields 80.4, 80.6, and 80.5. Every setting remains above the initial retriever's 79.8 MRR, and macro variation across either sweep is at most 0.2 points. Appendix~\ref{app:parameter_sensitivity} reports the corresponding language-level values.
-% 中文：表~\ref{tab:training_sensitivity} 改变 Global 细化的 FC 损失权重与保留候选池深度。对于每个 \(\lambda_f\in\{0.25,0.45,0.65\}\)，宏平均 MRR 均为 80.6；当 \(m\) 从 2 变为 8 和 32 时，MRR 分别为 80.4、80.6 和 80.5。所有设置都高于初始检索器的 79.8 MRR，且任一扫描中的宏平均变化最多为 0.2 个点。附录~\ref{app:parameter_sensitivity} 报告相应的逐语言数值。
+Table~\ref{tab:training_sensitivity} varies the FC loss weight and retained pool depth for Global refinement. Each one-factor-at-a-time sweep holds the other factor at the shared default \((\lambda_f,m)=(0.45,8)\). Macro MRR is 80.6 for every \(\lambda_f\in\{0.25,0.45,0.65\}\); varying \(m\) from 2 to 8 to 32 yields 80.4, 80.6, and 80.5. Every setting remains above the initial retriever's 79.8 MRR, and macro variation across either sweep is at most 0.2 points. Appendix~\ref{app:parameter_sensitivity} reports the corresponding language-level values.
+% 中文：表~\ref{tab:training_sensitivity} 改变 Global 细化的 FC 损失权重与保留候选池深度。每次单因素扫描均将另一因素固定在共享默认配置 \((\lambda_f,m)=(0.45,8)\)。对于每个 \(\lambda_f\in\{0.25,0.45,0.65\}\)，宏平均 MRR 均为 80.6；当 \(m\) 从 2 变为 8 和 32 时，MRR 分别为 80.4、80.6 和 80.5。所有设置都高于初始检索器的 79.8 MRR，且任一扫描中的宏平均变化最多为 0.2 个点。附录~\ref{app:parameter_sensitivity} 报告相应的逐语言数值。
 
 \paragraph{Gains concentrate in near-top misrankings.}
 Table~\ref{tab:rank_strata} conditions MRR on the paired code's initial rank. For ranks 2--10, Global refinement adds 8.9 points and reranking increases the gain to 11.3; gains are positive but smaller beyond rank 10. For the 36,274 queries already correct at rank 1, Global and Rerank reduce conditional MRR by 2.1 and 2.5 points. These regressions in the largest stratum offset part of the improvement among the 13,261 rank-2--10 queries, so the aggregate gain comes from near-top corrections that outweigh losses on some initially correct rankings. Appendix~\ref{app:rank_analysis} reports query counts and rank transitions.
