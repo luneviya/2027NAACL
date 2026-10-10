@@ -34,6 +34,17 @@
 \newcommand{\method}{\textsc{ReFCode}}
 \newcommand{\best}[1]{\textbf{#1}}
 \newcommand{\second}[1]{\underline{#1}}
+\defcitealias{CodeBERT}{(EMNLP Findings, 2020)}
+\defcitealias{PLBART}{(NAACL, 2021)}
+\defcitealias{GraphCodeBERT}{(ICLR, 2021)}
+\defcitealias{CodeT5}{(EMNLP, 2021)}
+\defcitealias{UniXcoder}{(ACL, 2022)}
+\defcitealias{SynCoBERT}{(arXiv, 2021)}
+\defcitealias{CodeRetriever}{(EMNLP, 2022)}
+\defcitealias{CoCoSoDa}{(ICSE, 2023)}
+\defcitealias{SoftInfoNCE}{(EMNLP, 2023)}
+\defcitealias{HedgeCode}{(ICSE, 2025)}
+\defcitealias{AAAIUA}{(AAAI, 2025)}
 
 % Uncomment and adjust if the title/author block needs more vertical space.
 % \setlength\titlebox{5cm}
@@ -299,22 +310,22 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     Category & Model & Ruby & JS & Go & Python & Java & PHP & Avg. \\
     \midrule
     \multirow{5}{*}{\shortstack[l]{Pre-trained\\representation}}
-    & CodeBERT (EMNLP Findings, 2020) & 67.9 & 62.0 & 88.2 & 67.2 & 67.6 & 62.8 & 69.3 \\
-    & PLBART (NAACL, 2021) & 67.5 & 61.6 & 88.7 & 66.3 & 66.3 & 61.1 & 68.5 \\
-    & GraphCodeBERT (ICLR, 2021) & 70.3 & 64.4 & 89.7 & 69.2 & 69.1 & 64.9 & 71.3 \\
-    & CodeT5 (EMNLP, 2021) & 71.9 & 65.5 & 88.8 & 69.8 & 68.6 & 64.5 & 71.5 \\
-    & UniXcoder (ACL, 2022) & 74.0 & 68.4 & 91.5 & 72.0 & 72.6 & 67.6 & 74.4 \\
+    & CodeBERT~\citetalias{CodeBERT} & 67.9 & 62.0 & 88.2 & 67.2 & 67.6 & 62.8 & 69.3 \\
+    & PLBART~\citetalias{PLBART} & 67.5 & 61.6 & 88.7 & 66.3 & 66.3 & 61.1 & 68.5 \\
+    & GraphCodeBERT~\citetalias{GraphCodeBERT} & 70.3 & 64.4 & 89.7 & 69.2 & 69.1 & 64.9 & 71.3 \\
+    & CodeT5~\citetalias{CodeT5} & 71.9 & 65.5 & 88.8 & 69.8 & 68.6 & 64.5 & 71.5 \\
+    & UniXcoder~\citetalias{UniXcoder} & 74.0 & 68.4 & 91.5 & 72.0 & 72.6 & 67.6 & 74.4 \\
     \midrule
     \multirow{3}{*}{\shortstack[l]{Contrastive\\retrieval}}
-    & SynCoBERT (arXiv, 2021) & 72.2 & 67.7 & 91.3 & 72.4 & 72.3 & 67.8 & 74.0 \\
-    & CodeRetriever (EMNLP, 2022) & 77.1 & 71.9 & 92.4 & 75.8 & 76.5 & 70.8 & 77.4 \\
-    & CoCoSoDa (ICSE, 2023) & 81.8 & 76.4 & 92.1 & 75.7 & 76.3 & 70.3 & 78.8 \\
+    & SynCoBERT~\citetalias{SynCoBERT} & 72.2 & 67.7 & 91.3 & 72.4 & 72.3 & 67.8 & 74.0 \\
+    & CodeRetriever~\citetalias{CodeRetriever} & 77.1 & 71.9 & 92.4 & 75.8 & 76.5 & 70.8 & 77.4 \\
+    & CoCoSoDa~\citetalias{CoCoSoDa} & 81.8 & 76.4 & 92.1 & 75.7 & 76.3 & 70.3 & 78.8 \\
     \midrule
-    \multirow{2}{*}{\shortstack[l]{Negative-aware\\training}}
-    & Soft-InfoNCE (EMNLP, 2023) & 75.3 & 69.9 & 91.3 & 72.6 & 73.1 & 68.4 & 75.1 \\
-    & HedgeCode (ICSE, 2025) & 82.5 & 77.1 & 92.7 & 77.6 & 78.5 & 73.8 & 80.3 \\
-    \midrule
-    \shortstack[l]{Negative-aware\\training} & UA-HN Initial (AAAI, 2025) & 82.2 & 77.7 & 92.4 & 77.2 & 77.2 & 71.9 & 79.8 \\
+    \multirow{3}{*}{\shortstack[l]{Negative-aware\\training}}
+    & Soft-InfoNCE~\citetalias{SoftInfoNCE} & 75.3 & 69.9 & 91.3 & 72.6 & 73.1 & 68.4 & 75.1 \\
+    & HedgeCode~\citetalias{HedgeCode} & 82.5 & 77.1 & 92.7 & 77.6 & 78.5 & 73.8 & 80.3 \\
+    \cmidrule(lr){2-9}
+    & UA-HN Initial~\citetalias{AAAIUA} & 82.2 & 77.7 & 92.4 & 77.2 & 77.2 & 71.9 & 79.8 \\
     \midrule
     \rowcolor{gray!10}
     & \textbf{\method{}-Global (Ours)} & \second{82.8} & \second{78.4} & \second{93.0} & \second{78.0} & \second{78.1} & \second{73.1} & \second{80.6} \textbf{(+0.8)} \\
@@ -322,8 +333,8 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     \multirow{-2}{*}{\shortstack[l]{Retriever\\feedback}} & \textbf{\method{}-Rerank (Ours)} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \best{73.6} & \best{81.1} \textbf{(+1.3)} \\
     \bottomrule
   \end{tabularx}
-  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. Category gives each model's primary methodological emphasis, and venue and year follow each model name. Rows above the separating rule are cited published results; the final three rows are protocol-matched local evaluations. PLBART and CodeT5 values follow the published CoCoSoDa comparison~\citep{CoCoSoDa}; Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. Within the local rows, bold and underlined scores mark the best and second-best values; parenthesized gains use the initial retriever. JS denotes JavaScript.}
-  % 中文表注：CodeSearchNet 上的 MRR（\%），结果保留一位小数。Category 列表示各模型的主要方法侧重点，模型名称后标注发表场所与年份。分隔线以上为引用的论文报告结果，最后三行为协议一致的本地评测。PLBART 与 CodeT5 的数值沿用 CoCoSoDa 论文中的公开比较~\citep{CoCoSoDa}；Soft-InfoNCE 采用其论文报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。在本地评测行中，粗体与下划线分别表示第一名与第二名；括号中的增益以初始检索器为参照。JS 表示 JavaScript。
+  \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. Category gives each model's primary methodological emphasis, and each model name is followed by a linked venue--year citation. Rows through HedgeCode are cited prior-work results; the final three rows are protocol-matched local evaluations. PLBART and CodeT5 values follow the published CoCoSoDa comparison~\citep{CoCoSoDa}; Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. Within the local rows, bold and underlined scores mark the best and second-best values; parenthesized gains use the initial retriever. JS denotes JavaScript.}
+  % 中文表注：CodeSearchNet 上的 MRR（\%），结果保留一位小数。Category 列表示各模型的主要方法侧重点，每个模型名称后均附有可点击的发表场所—年份引用。到 HedgeCode 为止的各行为引用的既有工作结果，最后三行为协议一致的本地评测。PLBART 与 CodeT5 的数值沿用 CoCoSoDa 论文中的公开比较~\citep{CoCoSoDa}；Soft-InfoNCE 采用其论文报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。在本地评测行中，粗体与下划线分别表示第一名与第二名；括号中的增益以初始检索器为参照。JS 表示 JavaScript。
   \label{tab:main_results}
 \end{table*}
 
