@@ -290,10 +290,10 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
 % that the two-column float can occupy the top of page 6.
 \begin{table*}[!t]
   \centering
-  \scriptsize
-  \setlength{\tabcolsep}{2.6pt}
-  \renewcommand{\arraystretch}{0.90}
-  \begin{tabular}{@{}llrrrrrrr@{}}
+  \footnotesize
+  \setlength{\tabcolsep}{3.0pt}
+  \renewcommand{\arraystretch}{1.08}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}llrrrrrrr@{}}
     \toprule
     Category & Model & Ruby & JS & Go & Python & Java & PHP & Avg. \\
     \midrule
@@ -303,12 +303,12 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     & GraphCodeBERT (ICLR, 2021) & 70.3 & 64.4 & 89.7 & 69.2 & 69.1 & 64.9 & 71.3 \\
     & CodeT5 (EMNLP, 2021) & 71.9 & 65.5 & 88.8 & 69.8 & 68.6 & 64.5 & 71.5 \\
     & UniXcoder (ACL, 2022) & 74.0 & 68.4 & 91.5 & 72.0 & 72.6 & 67.6 & 74.4 \\
-    \addlinespace[0.15em]
+    \addlinespace[0.35em]
     \multirow{3}{*}{\shortstack[l]{Contrastive\\retrieval}}
     & SynCoBERT (arXiv, 2021) & 72.2 & 67.7 & 91.3 & 72.4 & 72.3 & 67.8 & 74.0 \\
     & CodeRetriever (EMNLP, 2022) & 77.1 & 71.9 & 92.4 & 75.8 & 76.5 & 70.8 & 77.4 \\
     & CoCoSoDa (ICSE, 2023) & 81.8 & 76.4 & 92.1 & 75.7 & 76.3 & 70.3 & 78.8 \\
-    \addlinespace[0.15em]
+    \addlinespace[0.35em]
     \multirow{2}{*}{\shortstack[l]{Negative-aware\\training}}
     & Soft-InfoNCE (EMNLP, 2023) & 75.3 & 69.9 & 91.3 & 72.6 & 73.1 & 68.4 & 75.1 \\
     & HedgeCode (ICSE, 2025) & 82.5 & 77.1 & 92.7 & 77.6 & 78.5 & 73.8 & 80.3 \\
@@ -319,7 +319,7 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     \rowcolor{gray!10}
     \multirow{-2}{*}{\shortstack[l]{Retriever\\feedback}} & \textbf{\method{}-Rerank (Ours)} & \best{83.5} & \best{79.0} & \best{93.4} & \best{78.3} & \best{78.6} & \best{73.6} & \best{81.1} \textbf{(+1.3)} \\
     \bottomrule
-  \end{tabular}
+  \end{tabular*}
   \caption{MRR (\%) on CodeSearchNet, rounded to one decimal place. Category gives each model's primary methodological emphasis, and venue and year follow each model name. Rows above the separating rule are cited published results; the final three rows are protocol-matched local evaluations. PLBART and CodeT5 values follow the published CoCoSoDa comparison~\citep{CoCoSoDa}; Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. Within the local rows, bold and underlined scores mark the best and second-best values; parenthesized gains use the initial retriever. JS denotes JavaScript.}
   % 中文表注：CodeSearchNet 上的 MRR（\%），结果保留一位小数。Category 列表示各模型的主要方法侧重点，模型名称后标注发表场所与年份。分隔线以上为引用的论文报告结果，最后三行为协议一致的本地评测。PLBART 与 CodeT5 的数值沿用 CoCoSoDa 论文中的公开比较~\citep{CoCoSoDa}；Soft-InfoNCE 采用其论文报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。在本地评测行中，粗体与下划线分别表示第一名与第二名；括号中的增益以初始检索器为参照。JS 表示 JavaScript。
   \label{tab:main_results}
