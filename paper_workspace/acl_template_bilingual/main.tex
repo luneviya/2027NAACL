@@ -252,8 +252,8 @@ Our evaluation first reports matched six-language effectiveness, then isolates r
 \label{sec:experimental_setup}
 
 \paragraph{Dataset and metrics.}
-We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go. Table~\ref{tab:dataset_stats} summarizes the fixed data splits and language-specific retrieval corpora. At test time, each query is evaluated against the complete corpus for its language. We use mean reciprocal rank (MRR) as the primary metric and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10). All metrics are percentages. Result metrics and measured latency are rounded to one decimal place; counts and configuration values retain their required precision.
-% 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对。表~\ref{tab:dataset_stats} 汇总了固定的数据划分和对应语言的检索语料库。测试时，每个查询都在其对应语言的完整语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，并同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）。所有指标均以百分比表示。结果指标与实测延迟保留一位小数；计数与配置值则保留其所需精度。
+We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go. Table~\ref{tab:dataset_stats} summarizes the fixed data splits and language-specific retrieval corpora. At test time, each query is evaluated against the complete corpus for its language. We use mean reciprocal rank (MRR) as the primary metric and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10). All metrics are percentages. Result metrics and measured latency are rounded to one decimal place unless otherwise noted; Table~\ref{tab:candidate_controls} retains two decimals to distinguish the small differences among its budget-matched controls. Counts and configuration values retain their required precision.
+% 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对。表~\ref{tab:dataset_stats} 汇总了固定的数据划分和对应语言的检索语料库。测试时，每个查询都在其对应语言的完整语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，并同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）。所有指标均以百分比表示。除非另有说明，结果指标与实测延迟保留一位小数；表~\ref{tab:candidate_controls} 保留两位小数，以区分预算一致对照之间的细微差异。计数与配置值保留其所需精度。
 
 \begin{table}[t]
   \centering
@@ -353,14 +353,14 @@ We train the initial retriever for 10 epochs and select its checkpoint by valida
     \toprule
     Candidate-selection strategy & MRR & R@1 & R@5 & R@10 & \(\Delta\)MRR \\
     \midrule
-    No refinement & 79.8 & 70.7 & \textbf{91.3} & \textbf{95.1} & -- \\
-    Random & 79.7 & 70.7 & 91.2 & 95.0 & 0.0 \\
-    Static hard negative & 79.7 & 70.7 & 91.1 & 94.9 & -0.1 \\
-    Retriever-mined failure candidate & \textbf{80.1} & \textbf{71.6} & 91.0 & 94.6 & \textbf{+0.4} \\
+    No refinement & 79.77 & 70.72 & \textbf{91.28} & \textbf{95.10} & -- \\
+    Random & 79.72 & 70.72 & 91.15 & 95.00 & -0.05 \\
+    Static hard negative & 79.67 & 70.65 & 91.05 & 94.88 & -0.10 \\
+    Retriever-mined failure candidate & \textbf{80.12} & \textbf{71.55} & 91.02 & 94.58 & \textbf{+0.35} \\
     \bottomrule
   \end{tabular}
-  \caption{Budget-matched candidate selection with one added candidate per query and global retrieval. \(\Delta\)MRR is computed from unrounded macro averages relative to the unrefined initial retriever and then rounded to one decimal place; bold reflects unrounded values.}
-  % 中文表注：预算一致的候选选择比较，每个查询增加一个候选并采用全局检索。\(\Delta\)MRR 先根据未舍入的宏平均值与未细化初始检索器之差计算，再统一保留一位小数；粗体依据未舍入数值确定。
+  \caption{Budget-matched candidate selection with one added candidate per query and global retrieval. Values are reported to two decimal places to preserve the small differences among controls. \(\Delta\)MRR is computed from unrounded macro averages relative to the unrefined initial retriever; bold reflects unrounded values.}
+  % 中文表注：预算一致的候选选择比较，每个查询增加一个候选并采用全局检索。数值保留两位小数，以呈现各对照之间的细微差异。\(\Delta\)MRR 根据未舍入的宏平均值与未细化初始检索器之差计算；粗体依据未舍入数值确定。
   \label{tab:candidate_controls}
 \end{table*}
 
@@ -402,11 +402,11 @@ MaxSim contributes 0.6 points before and 0.5 points after refinement; refinement
 \paragraph{Candidate-selection control.}
 \label{sec:candidate_controls}
 
-Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.4 points and R@1 by 0.8 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
-% 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.4 和 0.8 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
+Table~\ref{tab:candidate_controls} examines whether the benefit of refinement depends on how the additional candidate is selected. The three refinement variants use the same initialization and optimization schedule and introduce one additional unpaired candidate per query; they differ only in whether that candidate is sampled randomly, drawn from a fixed hard-negative pool, or mined from the high-ranked predictions of the frozen retriever. Retriever-mined failure candidates yield the strongest result, improving MRR by 0.35 points and R@1 by 0.83 points over the initial retriever, whereas random and static candidates provide no improvement under the same candidate budget.
+% 中文：表~\ref{tab:candidate_controls} 检验细化收益是否取决于额外候选的选择方式。三种细化变体使用相同的初始化和优化日程，并为每个查询引入一个额外的未配对候选；它们的唯一差异是该候选由随机采样获得、从固定困难负例池中取得，还是从冻结检索器的高排名预测中挖掘。相对于初始检索器，检索器挖掘的失败候选使 MRR 和 R@1 分别提升 0.35 和 0.83 个点，而在候选预算相同时，随机候选和静态候选均未带来提升。
 
-Random and static selection change macro MRR by \(0.0\) and \(-0.1\) points, respectively, at the displayed precision, whereas retriever-mined selection changes it by \(+0.4\). Because the schedule and per-query candidate budget are fixed, the candidate source accounts for the controlled difference. Its larger R@1 movement, accompanied by small R@5 and R@10 reductions, places the change near the first position. Appendix~\ref{app:component_details} provides the complete component and candidate-selection results by language.
-% 中文：在当前显示精度下，随机选择和静态选择分别使宏平均 MRR 变化 \(0.0\) 和 \(-0.1\) 个点，而检索器挖掘候选带来 \(+0.4\) 个点的变化。由于优化日程和每查询候选预算保持固定，候选来源构成该受控比较中的差异。后者较大的 R@1 变化伴随 R@5 和 R@10 的小幅下降，说明变化集中在首位附近。附录~\ref{app:component_details} 给出完整的逐语言组件与候选选择结果。
+Random and static selection change macro MRR by \(-0.05\) and \(-0.10\) points, respectively, whereas retriever-mined selection changes it by \(+0.35\). Because the schedule and per-query candidate budget are fixed, the candidate source accounts for the controlled difference. Its larger R@1 movement, accompanied by small R@5 and R@10 reductions, places the change near the first position. Appendix~\ref{app:component_details} provides the complete component and candidate-selection results by language.
+% 中文：随机选择和静态选择分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘候选带来 \(+0.35\) 个点的变化。由于优化日程和每查询候选预算保持固定，候选来源构成该受控比较中的差异。后者较大的 R@1 变化伴随 R@5 和 R@10 的小幅下降，说明变化集中在首位附近。附录~\ref{app:component_details} 给出完整的逐语言组件与候选选择结果。
 
 \paragraph{Rank-conditioned behavior.}
 Table~\ref{tab:rank_strata} conditions retrieval behavior on the paired code's rank under the initial retriever. The largest gains occur when the paired code initially appears at ranks 2--10: Global refinement adds 8.9 MRR points, and reranking increases the gain to 11.3 points. Improvements remain positive but smaller for ranks 11--50 and beyond 50. MRR falls by 2.1 and 2.5 points, respectively, among queries that initially place the paired code at rank 1. The aggregate gain therefore reflects substantial correction of near-top misrankings, partially offset by regressions on some initially correct rankings.
