@@ -513,17 +513,14 @@ Validation MRR determines the fusion setting, and held-out test measurements qua
 With \(\alpha=0.5\) fixed, the selected \(K=20\) setting reaches 81.1 test MRR at 26.0 ms per JavaScript query. \(K=10\) reaches 81.0 MRR at 19.0 ms, while \(K=50\) and \(K=100\) remain at 81.0 and raise latency to 46.6 and 85.2 ms. Across the evaluated depths, test MRR varies by 0.1 points while latency increases from 19.0 to 85.2 ms, indicating that \(K\) mainly controls online cost in this range. Query encoding and global search together remain below 1 ms, so MaxSim accounts for most of the online latency.
 % 中文：固定 \(\alpha=0.5\) 后，验证集选定的 \(K=20\) 配置以每个 JavaScript 查询 26.0 毫秒的延迟达到 81.1 测试 MRR。\(K=10\) 以 19.0 毫秒达到 81.0 MRR，而 \(K=50\) 与 \(K=100\) 的 MRR 均保持 81.0，延迟则升至 46.6 和 85.2 毫秒。在所评测的候选深度范围内，测试 MRR 的变化为 0.1 个点，而延迟从 19.0 毫秒增加到 85.2 毫秒，表明在该范围内 \(K\) 主要控制在线推理成本。查询编码与全局检索合计不足 1 毫秒，因此 MaxSim 占据大部分在线延迟。
 
-Among the evaluated depths, \(K=20\) is the only setting that reaches 81.1 test MRR; deeper reranking increases latency without improving the displayed MRR.
-% 中文：在所评测的候选深度中，只有 \(K=20\) 达到 81.1 的测试 MRR；进一步加深重排会增加延迟，却没有提高当前精度下显示的 MRR。
-
 The latency measurement includes query encoding, global search, and token-level rescoring for every query; offline mining, refinement, and code encoding are excluded.
 % 中文：延迟测量包含每个查询的查询编码、全局搜索和词元级重新计分，不包含离线候选挖掘、细化训练和代码编码。
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented \method{}, which uses the full-corpus rankings of an initial dual encoder to target refinement at the high-scoring competitors that determine retrieval order. Failure Candidate Harvesting and Failure-Calibrated Contrastive Refinement convert these rankings into query-specific supervision, producing \method{}-Global; \method{}-Rerank further incorporates token-level MaxSim evidence within the retrieved top-\(K\). Under a matched six-language CodeSearchNet protocol, \method{}-Global raises macro MRR from 79.8 to 80.6, and \method{}-Rerank reaches 81.1. Budget-matched controls favor retriever-harvested candidates over random and static alternatives, with the largest gains concentrated on queries whose paired code initially ranks 2--10. Overall, full-corpus retrieval feedback turns near-top misrankings into targeted supervision for refining code-search models.
-% 中文：本文提出 \method{}，利用初始双编码器的全语料库排序，针对决定检索次序的高分竞争候选开展细化。失败候选挖掘与失败校准对比细化将这些排序转化为逐查询监督，得到 \method{}-Global；\method{}-Rerank 则在检索得到的前 \(K\) 个候选内进一步融合词元级 MaxSim 证据。在六语言 CodeSearchNet 的协议一致评测中，\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，\method{}-Rerank 达到 81.1。等预算对照支持检索器挖掘候选优于随机和静态替代方案，且最大收益集中在配对代码初始排名第 2--10 位的查询上。总体而言，全语料库检索反馈能够将接近顶部的排序失败转化为具有针对性的代码检索细化监督。
+We presented \method{}, which uses the full-corpus rankings of an initial dual encoder to target refinement at the high-scoring competitors that determine retrieval order. Failure Candidate Harvesting and Failure-Calibrated Contrastive Refinement convert these rankings into query-specific supervision, producing \method{}-Global; \method{}-Rerank further incorporates token-level MaxSim evidence within the retrieved top-\(K\). Under a matched six-language CodeSearchNet protocol, \method{}-Global raises macro MRR from 79.8 to 80.6, and \method{}-Rerank reaches 81.1. Budget-matched controls favor retriever-harvested candidates over random and static alternatives, with the largest gains concentrated on queries whose paired code initially ranks 2--10. Full-corpus retrieval feedback turns near-top misrankings into targeted supervision for refining code-search models.
+% 中文：本文提出 \method{}，利用初始双编码器的全语料库排序，针对决定检索次序的高分竞争候选开展细化。失败候选挖掘与失败校准对比细化将这些排序转化为逐查询监督，得到 \method{}-Global；\method{}-Rerank 则在检索得到的前 \(K\) 个候选内进一步融合词元级 MaxSim 证据。在六语言 CodeSearchNet 的协议一致评测中，\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，\method{}-Rerank 达到 81.1。等预算对照支持检索器挖掘候选优于随机和静态替代方案，且最大收益集中在配对代码初始排名第 2--10 位的查询上。全语料库检索反馈能够将接近顶部的排序失败转化为具有针对性的代码检索细化监督。
 
 \newpage
 \section*{Limitations}
