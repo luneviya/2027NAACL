@@ -85,17 +85,28 @@ We therefore propose \method{} (Retriever Feedback for Code Search), a three-sta
 In a protocol-matched local evaluation across all six CodeSearchNet languages~\citep{CodeSearchNet}, \method{}-Global raises macro MRR from 79.8 to 80.6 and R@1 from 70.7 to 71.9; \method{}-Rerank reaches 81.1 MRR and 72.6 R@1. Controlled comparisons favor retriever-mined Failure Candidates over random and static alternatives, with the largest gains concentrated in near-top misrankings (initial ranks 2--10).
 % 中文：在覆盖全部六种 CodeSearchNet 语言~\citep{CodeSearchNet}的协议一致本地评测中，\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，并将 R@1 从 70.7 提升至 71.9；\method{}-Rerank 达到 81.1 MRR 和 72.6 R@1。受控比较表明，检索器挖掘的失败候选优于随机和静态替代方案，且最大收益集中在接近顶部的排序错误案例中，即配对代码的初始排名为第 2--10 位时。
 
-\noindent Our contributions are threefold:
+\noindent\textbf{Our contributions are threefold:}
 % 中文：本文的贡献有三点：
 
-\noindent First, we identify a training--inference supervision mismatch: conventional contrastive training need not include the high-scoring candidates that determine the paired code's inference-time rank. Rank-conditioned analysis identifies near-top misrankings as the regime in which retriever-guided refinement yields its largest gains.
-% 中文：第一，我们识别出一种训练—推理监督错位：常规对比训练未必会纳入那些决定配对代码推理时排名的高分候选。按初始排名分层的分析表明，接近顶部的排序错误是检索器引导细化取得最大收益的情形。
+{
+\setlength{\leftmargini}{1.35em}
+\setlength{\topsep}{2pt}
+\setlength{\itemsep}{1.5pt}
+\setlength{\parsep}{0pt}
+\begin{itemize}
+  \item \textbf{Training--inference supervision mismatch.}
+  We identify a training--inference supervision mismatch: conventional contrastive training need not include the high-scoring candidates that determine the paired code's inference-time rank. Rank-conditioned analysis identifies near-top misrankings as the regime in which retriever-guided refinement yields its largest gains.
+  % 中文：\textbf{训练—推理监督错位。}我们识别出一种训练—推理监督错位：常规对比训练未必会纳入那些决定配对代码推理时排名的高分候选。按初始排名分层的分析表明，接近顶部的排序错误是检索器引导细化取得最大收益的情形。
 
-\noindent Second, we introduce \method{}, which turns the frozen initial retriever's query-specific rankings into Failure Candidate Pools and applies a separate, margin-sensitive contrastive objective. \method{}-Global retains full-corpus retrieval, and \method{}-Rerank incorporates token-level evidence within the top-\(K\).
-% 中文：第二，我们提出 \method{}，将冻结初始检索器的逐查询排序转化为失败候选池，并应用独立的、对分数间隔敏感的对比目标。\method{}-Global 保留全库检索，\method{}-Rerank 则在前 \(K\) 个候选内融合词元级证据。
+  \item \textbf{Retriever-feedback refinement.}
+  We introduce \method{}, which turns the frozen initial retriever's query-specific rankings into Failure Candidate Pools and applies a separate, margin-sensitive contrastive objective. \method{}-Global retains full-corpus retrieval, and \method{}-Rerank incorporates token-level evidence within the top-\(K\).
+  % 中文：\textbf{检索器反馈细化。}我们提出 \method{}，将冻结初始检索器的逐查询排序转化为失败候选池，并应用独立的、对分数间隔敏感的对比目标。\method{}-Global 保留全库检索，\method{}-Rerank 则在前 \(K\) 个候选内融合词元级证据。
 
-\noindent Third, across six CodeSearchNet languages, \method{}-Global improves the protocol-matched initial retriever by 0.8 MRR points, while \method{}-Rerank increases the total gain to 1.3 points.
-% 中文：第三，在六种 CodeSearchNet 语言上，\method{}-Global 相对于协议一致的初始检索器提升了 0.8 个 MRR 点，而 \method{}-Rerank 将总提升扩大至 1.3 个点。
+  \item \textbf{Protocol-matched evaluation.}
+  Across six CodeSearchNet languages, \method{}-Global improves the protocol-matched initial retriever by 0.8 MRR points, while \method{}-Rerank increases the total gain to 1.3 points.
+  % 中文：\textbf{协议一致评测。}在六种 CodeSearchNet 语言上，\method{}-Global 相对于协议一致的初始检索器提升了 0.8 个 MRR 点，而 \method{}-Rerank 将总提升扩大至 1.3 个点。
+\end{itemize}
+}
 
 % Queue the full-width method overview before the section boundary so that it
 % can occupy the top of page 3 while Related Work continues beneath it.
