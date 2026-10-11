@@ -170,6 +170,9 @@ The rank of the paired code can then be written as
 where \(\mathcal{C}\) is the retrieval corpus; Equation~\ref{eq:rank_margin} counts a tied candidate before the paired code. A negative margin identifies a candidate that already outranks the paired code, whereas a positive margin \(\mu_\theta(q_i,c)\) is the exact score gap separating the pair. Candidates with nonpositive or small positive margins therefore lie at or near the observed ranking boundary, while large-margin candidates are already well separated. The negative sets used to train the initial retriever are constructed without access to the final checkpoint's query-specific full-corpus rankings. \method{} uses these rankings as feedback to refine the comparisons that determine the observed ranks.
 % 中文：其中 \(\mathcal{C}\) 表示检索语料库；式~\ref{eq:rank_margin} 将同分候选计在配对代码之前。负间隔表示候选已经排在配对代码之前，正间隔 \(\mu_\theta(q_i,c)\) 则精确表示二者之间的分数差。因此，间隔非正或较小的候选位于观测排序边界上或其附近，而大间隔候选已经与配对代码充分分开。初始检索器的负例集合在构造时无法使用最终检查点的逐查询全语料库排序。\method{} 将这些排序作为反馈，用于细化决定实际排名的分数比较。
 
+This connects corpus ranking directly to refinement: the initial retriever identifies which pairwise comparisons are closest to changing the paired code's position, and those comparisons become the additional supervision used in the second stage.
+% 中文：这将语料库排序直接连接到细化过程：初始检索器识别出最接近改变配对代码位置的成对比较，随后第二阶段将这些比较转化为新增监督。
+
 Competitors are query dependent: a code snippet may rank low for one query yet highly for another. Refinement therefore associates each query with candidates from its own corpus ranking, preserving the link between observed scores and subsequent contrastive comparisons.
 % 中文：竞争候选依赖于具体查询：同一代码片段在一个查询下可能排名较低，却可能在另一个查询下排名很高。因此，细化为每个查询关联其自身语料库排序中的候选，从而保留观测分数与后续对比比较之间的对应关系。
 
@@ -454,6 +457,9 @@ Table~\ref{tab:ablation} isolates failure-calibrated refinement and MaxSim reran
 Table~\ref{tab:candidate_controls} varies only the source of one added candidate per query. Relative to no refinement at 79.77 MRR, random and static candidates change macro MRR by \(-0.05\) and \(-0.10\) points, whereas the retriever-mined Failure Candidate increases it by \(0.35\) points. The retriever-mined candidate is therefore the only tested source that improves MRR under the matched schedule and candidate budget. It also raises R@1 by \(0.83\) points, while R@5 and R@10 change by \(-0.26\) and \(-0.52\) points, respectively.
 % 中文：表~\ref{tab:candidate_controls} 只改变每个查询所增加候选的来源。以无细化设置的 79.77 MRR 为参照，随机候选和静态候选分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘的失败候选使其提高 \(0.35\) 个点。因此，在训练日程和候选预算一致时，检索器挖掘候选是所测试来源中唯一提高 MRR 的候选来源。该设置还使 R@1 提高 \(0.83\) 个点，而 R@5 和 R@10 分别变化 \(-0.26\) 和 \(-0.52\) 个点。
 
+Under this control, the advantage therefore comes from how the added competitor is selected rather than from adding another contrastive term or increasing the number of comparisons.
+% 中文：在这一对照下，优势来自新增竞争候选的选择方式，而不是额外加入一个对比损失项或增加比较数量。
+
 \paragraph{Gains are largest at initial ranks 2--10.}
 Table~\ref{tab:rank_strata} conditions MRR on the paired code's rank under the initial retriever. The largest gains occur for the 13,261 queries with initial ranks 2--10: \method{}-Global improves conditional MRR by 8.9 points, and \method{}-Rerank improves it by 11.3 points. Positive but smaller gains persist beyond rank 10. Most of the aggregate improvement comes from correcting the paired-code rankings of queries initially placed at ranks 2--10.
 % 中文：表~\ref{tab:rank_strata} 根据配对代码在初始检索器下的排名报告条件 MRR。最大的收益出现在初始排名第 2--10 位的 13,261 个查询上：\method{}-Global 将条件 MRR 提高 8.9 个点，\method{}-Rerank 将其提高 11.3 个点。第 10 位以后仍有较小的正向收益。总体增益主要来自初始排名第 2--10 位查询中的配对代码排序修复。
@@ -506,6 +512,9 @@ Validation MRR determines the fusion setting, and held-out test measurements qua
 
 With \(\alpha=0.5\) fixed, the selected \(K=20\) setting reaches 81.1 test MRR at 26.0 ms per JavaScript query. \(K=10\) reaches 81.0 MRR at 19.0 ms, while \(K=50\) and \(K=100\) remain at 81.0 and raise latency to 46.6 and 85.2 ms. Across the evaluated depths, test MRR varies by 0.1 points while latency increases from 19.0 to 85.2 ms, indicating that \(K\) mainly controls online cost in this range. Query encoding and global search together remain below 1 ms, so MaxSim accounts for most of the online latency.
 % 中文：固定 \(\alpha=0.5\) 后，验证集选定的 \(K=20\) 配置以每个 JavaScript 查询 26.0 毫秒的延迟达到 81.1 测试 MRR。\(K=10\) 以 19.0 毫秒达到 81.0 MRR，而 \(K=50\) 与 \(K=100\) 的 MRR 均保持 81.0，延迟则升至 46.6 和 85.2 毫秒。在所评测的候选深度范围内，测试 MRR 的变化为 0.1 个点，而延迟从 19.0 毫秒增加到 85.2 毫秒，表明在该范围内 \(K\) 主要控制在线推理成本。查询编码与全局检索合计不足 1 毫秒，因此 MaxSim 占据大部分在线延迟。
+
+Among the evaluated depths, \(K=20\) is the only setting that reaches 81.1 test MRR; deeper reranking increases latency without improving the displayed MRR.
+% 中文：在所评测的候选深度中，只有 \(K=20\) 达到 81.1 的测试 MRR；进一步加深重排会增加延迟，却没有提高当前精度下显示的 MRR。
 
 The latency measurement includes query encoding, global search, and token-level rescoring for every query; offline mining, refinement, and code encoding are excluded.
 % 中文：延迟测量包含每个查询的查询编码、全局搜索和词元级重新计分，不包含离线候选挖掘、细化训练和代码编码。
