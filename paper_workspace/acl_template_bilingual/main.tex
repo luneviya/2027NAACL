@@ -519,8 +519,8 @@ The latency measurement includes query encoding, global search, and token-level 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented \method{}, which uses the full-corpus rankings of an initial dual encoder to target refinement at the high-scoring competitors that determine retrieval order. Failure Candidate Harvesting and Failure-Calibrated Contrastive Refinement convert these rankings into query-specific supervision, producing \method{}-Global; \method{}-Rerank further incorporates token-level MaxSim evidence within the retrieved top-\(K\). Under a matched six-language CodeSearchNet protocol, \method{}-Global raises macro MRR from 79.8 to 80.6, and \method{}-Rerank reaches 81.1. Budget-matched controls favor retriever-harvested candidates over random and static alternatives, with the largest gains concentrated on queries whose paired code initially ranks 2--10. Full-corpus retrieval feedback turns near-top misrankings into targeted supervision for refining code-search models.
-% 中文：本文提出 \method{}，利用初始双编码器的全语料库排序，针对决定检索次序的高分竞争候选开展细化。失败候选挖掘与失败校准对比细化将这些排序转化为逐查询监督，得到 \method{}-Global；\method{}-Rerank 则在检索得到的前 \(K\) 个候选内进一步融合词元级 MaxSim 证据。在六语言 CodeSearchNet 的协议一致评测中，\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，\method{}-Rerank 达到 81.1。等预算对照支持检索器挖掘候选优于随机和静态替代方案，且最大收益集中在配对代码初始排名第 2--10 位的查询上。全语料库检索反馈能够将接近顶部的排序失败转化为具有针对性的代码检索细化监督。
+We presented \method{}, which turns an initial dual encoder's full-corpus rankings into query-specific supervision for its highest-scoring competitors. Failure Candidate Harvesting and Failure-Calibrated Contrastive Refinement produce \method{}-Global; \method{}-Rerank adds token-level MaxSim evidence within the retrieved top-\(K\). Under a matched six-language CodeSearchNet protocol, \method{}-Global raises macro MRR from 79.8 to 80.6, and \method{}-Rerank reaches 81.1. Budget-matched controls favor retriever-harvested candidates over random and static alternatives; gains are largest when the paired code initially ranks 2--10.
+% 中文：本文提出 \method{}，将初始双编码器的全语料库排序转化为面向其最高分竞争候选的逐查询监督。失败候选挖掘与失败校准对比细化得到 \method{}-Global；\method{}-Rerank 则在检索得到的前 \(K\) 个候选内加入词元级 MaxSim 证据。在六语言 CodeSearchNet 的协议一致评测中，\method{}-Global 将宏平均 MRR 从 79.8 提升至 80.6，\method{}-Rerank 达到 81.1。预算匹配的对照结果支持检索器挖掘候选优于随机和静态替代方案；当配对代码的初始排名为第 2--10 位时，收益最大。
 
 \newpage
 \section*{Limitations}
@@ -535,6 +535,10 @@ We presented \method{}, which uses the full-corpus rankings of an initial dual e
 
 \section{Reproducibility Details}
 \label{app:experimental_details}
+
+\paragraph{Code availability.}
+An anonymized implementation of \method{}, together with the configurations and evaluation scripts used for the reported experiments, is available at \url{https://anonymous.4open.science/r/ReFCode-PLACEHOLDER}.
+% 中文：\method{} 的匿名实现，以及用于论文所报告实验的配置文件与评测脚本，可通过 \url{https://anonymous.4open.science/r/ReFCode-PLACEHOLDER} 获取。
 
 \paragraph{Pipeline verification.}
 The data and artifact checks establish the provenance of the local comparisons. Training, validation, and test partitions have no exact URL, repository, or normalized-code overlap, and every validation and test query has its paired code in the retrieval corpus. Each FC cache contains 32 unique training-corpus candidates and excludes the paired example and candidates sharing its URL. Reconstructing model selection from the stored validation results yields the reported \(K=20\), \(\alpha=0.5\) configuration.
