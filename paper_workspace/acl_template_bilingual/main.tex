@@ -280,6 +280,9 @@ With \(\alpha\in[0,1]\), the final score is
   +(1-\alpha)\widetilde{s}_{\mathrm{loc}}(q,c).
   \label{eq:fusion}
 \end{equation}
+The fused score interpolates between token-level correspondence at \(\alpha=0\) and the \method{}-Global ordering at \(\alpha=1\); intermediate values combine sequence-level relevance from the refined dual encoder with query-token alignments from MaxSim to determine the final shortlist order.
+% 中文：融合分数在两种排序信号之间进行插值：当 \(\alpha=0\) 时使用词元级对应关系，当 \(\alpha=1\) 时采用 \method{}-Global 排序；中间取值将细化双编码器提供的序列级相关性与 MaxSim 提供的查询—代码词元对齐相结合，从而确定候选列表的最终顺序。
+
 Only candidates inside the top-\(K\) set are reordered; all remaining corpus items preserve their \method{}-Global order.
 % 中文：只有前 \(K\) 集合内的候选会被重新排序，其余语料库条目保持 \method{}-Global 产生的顺序。
 
@@ -466,8 +469,8 @@ Table~\ref{tab:candidate_controls} varies only the source of one added candidate
 % 中文：表~\ref{tab:candidate_controls} 只改变每个查询所增加候选的来源。以无细化设置的 79.77 MRR 为参照，随机候选和静态候选分别使宏平均 MRR 变化 \(-0.05\) 和 \(-0.10\) 个点，而检索器挖掘的失败候选使其提高 \(0.35\) 个点。因此，在训练日程和候选预算一致时，检索器挖掘候选是所测试来源中唯一提高 MRR 的候选来源。该设置还使 R@1 提高 \(0.83\) 个点，而 R@5 和 R@10 分别变化 \(-0.26\) 和 \(-0.52\) 个点。
 
 \paragraph{Gains are largest at initial ranks 2--10.}
-Table~\ref{tab:rank_strata} conditions MRR on the paired code's rank under the initial retriever. The largest gains occur for the 13,261 queries with initial ranks 2--10: \method{}-Global improves conditional MRR by 8.9 points, and \method{}-Rerank improves it by 11.3 points. Positive but smaller gains persist beyond rank 10. Most of the aggregate improvement comes from correcting the paired-code rankings of queries initially placed at ranks 2--10.
-% 中文：表~\ref{tab:rank_strata} 根据配对代码在初始检索器下的排名报告条件 MRR。最大的收益出现在初始排名第 2--10 位的 13,261 个查询上：\method{}-Global 将条件 MRR 提高 8.9 个点，\method{}-Rerank 将其提高 11.3 个点。第 10 位以后仍有较小的正向收益。总体增益主要来自初始排名第 2--10 位查询中的配对代码排序修复。
+Table~\ref{tab:rank_strata} conditions MRR on the paired code's rank under the initial retriever. The largest gains occur for the 13,261 queries with initial ranks 2--10: \method{}-Global improves conditional MRR by 8.9 points, and \method{}-Rerank improves it by 11.3 points. Positive but smaller gains persist beyond rank 10. Most of the aggregate improvement comes from correcting the paired-code rankings of queries initially placed at ranks 2--10. Across all test queries, \method{}-Rerank yields a net gain of 1,020 rank-1 paired-code retrievals over the initial retriever.
+% 中文：表~\ref{tab:rank_strata} 根据配对代码在初始检索器下的排名报告条件 MRR。最大的收益出现在初始排名第 2--10 位的 13,261 个查询上：\method{}-Global 将条件 MRR 提高 8.9 个点，\method{}-Rerank 将其提高 11.3 个点。第 10 位以后仍有较小的正向收益。总体增益主要来自初始排名第 2--10 位查询中的配对代码排序修复。在全部测试查询上，\method{}-Rerank 相比初始检索器净增了 1,020 个配对代码首位检索结果。
 
 \paragraph{Refinement changes little across the evaluated parameter values.}
 Table~\ref{tab:training_sensitivity} reports one-factor sensitivity around the primary \((\lambda_f,m)=(0.45,8)\) configuration, which was fixed before the sweeps. At the reported precision, macro MRR is 80.6 for all three evaluated \(\lambda_f\) values and is 80.4, 80.6, and 80.5 for \(m=2,8,32\). The largest observed difference across these settings is 0.2 points.
