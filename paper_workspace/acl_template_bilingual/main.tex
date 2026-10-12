@@ -148,8 +148,8 @@ Fine-grained code-search methods use co-attention, cross-modal features, and rel
 \subsection{Problem Formulation}
 \label{sec:problem_formulation}
 
-Let \(\mathcal{D}=\{(q_i,c_i^+)\}_{i=1}^{N}\) denote a code-search training set, where \(q_i\) is a natural-language query and \(c_i^+\) is its paired code snippet. A dual encoder maps queries and code into a shared space through \(f_\theta\) and \(g_\theta\). Let \(f_\theta(q)\) and \(g_\theta(c)\) denote the resulting \(\ell_2\)-normalized sequence representations. Their global retrieval score is
-% 中文：设 \(\mathcal{D}=\{(q_i,c_i^+)\}_{i=1}^{N}\) 表示代码搜索训练集，其中 \(q_i\) 是自然语言查询，\(c_i^+\) 是与之配对的代码片段。双编码器分别通过 \(f_\theta\) 和 \(g_\theta\) 将查询与代码映射到共享空间。令 \(f_\theta(q)\) 和 \(g_\theta(c)\) 表示所得的 \(\ell_2\) 归一化序列表示，其全局检索分数定义为
+Let \(\mathcal{D}=\{(q_i,c_i^+)\}_{i=1}^{N}\) denote a code-search training set of \(N\) query--code pairs, where \(q_i\) is a natural-language query and \(c_i^+\) is its paired code snippet. A dual encoder with parameters \(\theta\) maps queries and code into a shared space through \(f_\theta\) and \(g_\theta\). Let \(f_\theta(q)\) and \(g_\theta(c)\) denote the resulting \(\ell_2\)-normalized sequence representations. Their global retrieval score is
+% 中文：设 \(\mathcal{D}=\{(q_i,c_i^+)\}_{i=1}^{N}\) 表示包含 \(N\) 个查询—代码对的代码搜索训练集，其中 \(q_i\) 是自然语言查询，\(c_i^+\) 是与其配对的代码片段。参数为 \(\theta\) 的双编码器分别通过 \(f_\theta\) 和 \(g_\theta\) 将查询与代码映射到共享空间。令 \(f_\theta(q)\) 和 \(g_\theta(c)\) 表示所得的 \(\ell_2\) 归一化序列表示，其全局检索分数定义为
 \begin{equation}
   s_\theta(q,c)=f_\theta(q)^{\top}g_\theta(c).
   \label{eq:global_score}
@@ -157,23 +157,26 @@ Let \(\mathcal{D}=\{(q_i,c_i^+)\}_{i=1}^{N}\) denote a code-search training set,
 Because both representations have unit norm, \(s_\theta\) is their cosine similarity, and candidates are ranked in descending order of this score.
 % 中文：由于两个表示均具有单位范数，\(s_\theta\) 等于二者的余弦相似度，候选代码按照该分数从高到低排序。
 
-For a competing candidate \(c^-\), define the score margin as
-% 中文：对于竞争候选 \(c^-\)，分数间隔定义为
+Let \(\mathcal{C}\) denote the retrieval corpus. For any competing candidate \(c\in\mathcal{C}\setminus\{c_i^+\}\), define the score margin as
+% 中文：令 \(\mathcal{C}\) 表示检索语料库。对于任意竞争候选 \(c\in\mathcal{C}\setminus\{c_i^+\}\)，其分数间隔定义为
 \begin{equation}
-  \mu_\theta(q_i,c^-)
-  =s_\theta(q_i,c_i^+)-s_\theta(q_i,c^-).
+  \mu_\theta(q_i,c)
+  =s_\theta(q_i,c_i^+)-s_\theta(q_i,c).
   \label{eq:score_margin}
 \end{equation}
-The rank of the paired code can then be written as
-% 中文：配对代码的排名可写为
+A nonpositive margin means that \(c\) ties or outranks the paired code, whereas a positive margin is the score gap by which the paired code outranks \(c\). Candidates with nonpositive or small positive margins therefore lie at or near the observed ranking boundary, while large-margin candidates are already well separated.
+% 中文：非正间隔表示候选 \(c\) 与配对代码同分或排在配对代码之前；正间隔则表示配对代码领先候选 \(c\) 的分数差。因此，间隔非正或具有较小正间隔的候选位于观测排序边界上或其附近，而具有较大间隔的候选已经与配对代码充分分离。
+
+Let \(\mathbb{I}[\cdot]\) denote the indicator function. The rank of the paired code under \(s_\theta\) is
+% 中文：令 \(\mathbb{I}[\cdot]\) 表示指示函数。配对代码在 \(s_\theta\) 下的排名可写为
 \begin{equation}
   \operatorname{rank}_\theta(c_i^+\mid q_i)
   =1+\sum_{c\in\mathcal{C}\setminus\{c_i^+\}}
   \mathbb{I}\!\left[\mu_\theta(q_i,c)\leq 0\right],
   \label{eq:rank_margin}
 \end{equation}
-where \(\mathcal{C}\) is the retrieval corpus; Equation~\ref{eq:rank_margin} counts a tied candidate before the paired code. A negative margin identifies a candidate that already outranks the paired code, whereas a positive margin \(\mu_\theta(q_i,c)\) is the exact score gap separating the pair. Candidates with nonpositive or small positive margins therefore lie at or near the observed ranking boundary, while large-margin candidates are already well separated. The negative sets used to train the initial retriever are constructed without access to the final checkpoint's query-specific full-corpus rankings. \method{} uses these rankings as feedback to refine the comparisons that determine the paired code's observed ranks.
-% 中文：其中 \(\mathcal{C}\) 表示检索语料库；式~\ref{eq:rank_margin} 将同分候选计在配对代码之前。负间隔表示候选已经排在配对代码之前，正间隔 \(\mu_\theta(q_i,c)\) 则精确表示二者之间的分数差。因此，间隔非正或较小的候选位于观测排序边界上或其附近，而大间隔候选已经与配对代码充分分开。初始检索器的负例集合在构造时无法使用最终检查点的逐查询全语料库排序。\method{} 将这些排序作为反馈，用于细化决定配对代码观测排名的分数比较。
+With the non-strict inequality, a tied candidate is counted before the paired code. The negative sets used to train the initial retriever are constructed without access to the final checkpoint's query-specific full-corpus rankings. \method{} uses these rankings as feedback to refine the comparisons that determine the paired code's observed ranks.
+% 中文：由于这里采用非严格不等式，与配对代码同分的候选会被计在配对代码之前。初始检索器的负例集合在构造时无法使用最终检查点产生的逐查询全语料库排序。\method{} 将这些排序作为反馈，用于细化决定配对代码实际排名的分数比较。
 
 Competitors are query dependent: a code snippet may rank low for one query yet highly for another. Refinement therefore associates each query with candidates from its own corpus ranking, preserving the link between observed scores and subsequent contrastive comparisons.
 % 中文：竞争候选依赖于具体查询：同一代码片段在一个查询下可能排名较低，却可能在另一个查询下排名很高。因此，细化为每个查询关联其自身语料库排序中的候选，从而保留观测分数与后续对比比较之间的对应关系。
@@ -181,8 +184,8 @@ Competitors are query dependent: a code snippet may rank low for one query yet h
 \subsection{Failure Candidate Harvesting}
 \label{sec:failure_harvesting}
 
-We first train an initial retriever with the underlying contrastive code-search objective and freeze its parameters \(\theta_0\). For every training query, the frozen model retrieves from the training code corpus. Let \(\mathcal{E}_i\) contain the paired code and all candidates sharing its URL. We remove \(\mathcal{E}_i\) and retain the \(M\) highest-scoring candidates:
-% 中文：我们首先使用基础对比式代码搜索目标训练初始检索器，并冻结其参数 \(\theta_0\)。对于每个训练查询，冻结模型在训练代码语料库中执行检索。令 \(\mathcal{E}_i\) 包含配对代码以及与其共享 URL 的所有候选；移除 \(\mathcal{E}_i\) 后，保留得分最高的 \(M\) 个候选：
+We first train an initial retriever with the underlying contrastive code-search objective and freeze its parameters \(\theta_0\). For every training query, the frozen model retrieves from the training code corpus. Let \(\mathcal{C}_{\mathrm{train}}\) denote the training code corpus, and let \(\mathcal{E}_i\) contain the paired code and all candidates sharing its URL. For a candidate set \(\mathcal{A}\), \(\operatorname{Top}_{L}^{s}(\mathcal{A})\) denotes its ordered subset of the \(L\) highest-scoring candidates under \(s\). Let \(M\) be the cached retrieval depth and \(m\), with \(1\leq m\leq M\), the retained depth used for refinement:
+% 中文：我们首先使用基础对比式代码搜索目标训练初始检索器，并冻结其参数 \(\theta_0\)。对于每个训练查询，冻结模型在训练代码语料库中执行检索。令 \(\mathcal{C}_{\mathrm{train}}\) 表示训练代码语料库，令 \(\mathcal{E}_i\) 包含配对代码以及所有与其共享 URL 的候选。对于候选集合 \(\mathcal{A}\)，\(\operatorname{Top}_{L}^{s}(\mathcal{A})\) 表示其在评分函数 \(s\) 下得分最高的 \(L\) 个候选组成的有序子集。令 \(M\) 表示缓存的检索深度，令满足 \(1\leq m\leq M\) 的 \(m\) 表示实际保留并用于细化的深度：
 \begin{equation}
   \begin{aligned}
     \mathcal{H}_i
@@ -194,8 +197,8 @@ We first train an initial retriever with the underlying contrastive code-search 
   \label{eq:fc_pool}
 \end{equation}
 
-We call \(\mathcal{F}_i\) the \emph{Failure Candidate Pool} for \(q_i\), and its members \emph{Failure Candidates}. With \(1\leq m\leq M\), \(M\) sets the size of the cached corpus-retrieval pool, while \(m\) selects its highest-ranked prefix for refinement. This prefix contains the strongest unpaired competitors observed for \(q_i\). At each update, we sample \(r\) rank positions uniformly without replacement from the eligible prefix, which fixes the added comparison budget.
-% 中文：我们将 \(\mathcal{F}_i\) 称为查询 \(q_i\) 的\emph{失败候选池（Failure Candidate Pool）}，并将其中元素称为\emph{失败候选（Failure Candidates）}。在 \(1\leq m\leq M\) 时，\(M\) 决定全语料库检索所得缓存池的规模，\(m\) 则选取其中排名最高的前缀用于细化。该前缀包含初始检索器针对 \(q_i\) 观测到的最强未配对竞争候选。每次更新从可用前缀的排名位置中均匀、无放回地采样 \(r\) 个位置，从而固定新增比较的预算。
+Thus, \(\mathcal{H}_i\) is the cached top-\(M\) candidate list and \(\mathcal{F}_i\) is its top-\(m\) \emph{Failure Candidate Pool}; the members of \(\mathcal{F}_i\) are \emph{Failure Candidates}. At each update, \(r\) candidates are sampled uniformly without replacement from the ranked positions in \(\mathcal{F}_i\), where \(1\leq r\leq m\). This fixes the number of added comparisons while concentrating refinement on the high-ranked unpaired competitors observed for \(q_i\).
+% 中文：其中，\(\mathcal{H}_i\) 是缓存的前 \(M\) 个候选列表，\(\mathcal{F}_i\) 是其中排名最高的前 \(m\) 个候选，并构成查询 \(q_i\) 的\emph{失败候选池（Failure Candidate Pool）}；\(\mathcal{F}_i\) 中的元素称为\emph{失败候选（Failure Candidates）}。每次参数更新时，从 \(\mathcal{F}_i\) 的排名位置中均匀、无放回地采样 \(r\) 个候选，其中 \(1\leq r\leq m\)。这样可以在固定新增比较数量的同时，使细化过程聚焦于初始检索器为查询 \(q_i\) 找到的高排名未配对竞争候选。
 
 Harvesting runs once with the frozen parameters \(\theta_0\). Pool membership and initial order consequently remain fixed while refinement updates \(\theta\), so the optimization uses a stable record of the initial retriever's ranking behavior without rerunning corpus retrieval after every update.
 % 中文：候选挖掘仅使用冻结参数 \(\theta_0\) 执行一次。因此，在细化更新 \(\theta\) 的过程中，候选池成员及其初始次序保持不变；优化过程据此使用初始检索器排序行为的固定记录，而无须在每次更新后重新执行全语料库检索。
@@ -203,8 +206,8 @@ Harvesting runs once with the frozen parameters \(\theta_0\). Pool membership an
 \subsection{Failure-Calibrated Contrastive Refinement}
 \label{sec:failure_refinement}
 
-Starting from \(\theta_0\), we retain the initial retriever's contrastive objective \(\mathcal{L}_{\mathrm{base}}\) and add a contrastive softmax over the paired code and harvested competitors. For a minibatch \(\mathcal{B}\), let \(\mathcal{S}_i\subseteq\mathcal{F}_i\) contain the \(r\) candidates sampled for query \(q_i\), and let \(\tau_f>0\) denote the failure-candidate temperature. The failure-candidate loss is
-% 中文：以 \(\theta_0\) 为起点，我们保留初始检索器的对比目标 \(\mathcal{L}_{\mathrm{base}}\)，并在配对代码与挖掘得到的竞争候选上加入对比 softmax。对于小批量 \(\mathcal{B}\)，设 \(\mathcal{S}_i\subseteq\mathcal{F}_i\) 包含为查询 \(q_i\) 采样的 \(r\) 个候选，并令 \(\tau_f>0\) 表示失败候选温度。失败候选损失定义为
+Starting from \(\theta_0\), we retain the initial retriever's contrastive objective and add a contrastive softmax over the paired code and harvested competitors. For a minibatch index set \(\mathcal{B}\subseteq\{1,\ldots,N\}\), let \(\mathcal{L}_{\mathrm{base}}\) denote the initial retriever's batch-level contrastive objective. For each \(i\in\mathcal{B}\), let \(\mathcal{S}_i\subseteq\mathcal{F}_i\) contain the \(r\) candidates sampled for query \(q_i\), so that \(|\mathcal{S}_i|=r\), and let \(\tau_f>0\) denote the failure-candidate temperature. The per-query failure-candidate loss is
+% 中文：以 \(\theta_0\) 为起点，我们保留初始检索器的对比目标，并在配对代码与挖掘得到的竞争候选上加入对比 softmax。对于小批量索引集合 \(\mathcal{B}\subseteq\{1,\ldots,N\}\)，令 \(\mathcal{L}_{\mathrm{base}}\) 表示初始检索器在该批次上的对比目标。对于每个 \(i\in\mathcal{B}\)，令 \(\mathcal{S}_i\subseteq\mathcal{F}_i\) 包含为查询 \(q_i\) 采样的 \(r\) 个候选，即 \(|\mathcal{S}_i|=r\)，并令 \(\tau_f>0\) 表示失败候选温度。逐查询的失败候选损失定义为
 \begin{equation}
   \mathcal{L}_{\mathrm{FC}}^{i}
   =-\log
@@ -216,8 +219,8 @@ Starting from \(\theta_0\), we retain the initial retriever's contrastive object
    \end{aligned}},
   \label{eq:fc_loss}
 \end{equation}
-and the complete refinement objective is
-% 中文：完整的细化目标为
+With \(\lambda_f\geq 0\) controlling the contribution of the added objective, the complete refinement loss is
+% 中文：令 \(\lambda_f\geq 0\) 控制新增目标在完整细化目标中的相对贡献，则完整的细化损失为
 \begin{equation}
   \mathcal{L}_{\mathrm{ref}}
   =\mathcal{L}_{\mathrm{base}}
@@ -226,8 +229,8 @@ and the complete refinement objective is
   \label{eq:refinement_loss}
 \end{equation}
 
-Equation~\ref{eq:refinement_loss} adds \(\mathcal{L}_{\mathrm{FC}}\) as a separately weighted term without changing the definition of \(\mathcal{L}_{\mathrm{base}}\). The coefficient \(\lambda_f\) controls the relative contribution of the added failure-candidate objective.
-% 中文：式~\ref{eq:refinement_loss} 将 \(\mathcal{L}_{\mathrm{FC}}\) 作为独立加权项加入，同时不改变 \(\mathcal{L}_{\mathrm{base}}\) 的定义。系数 \(\lambda_f\) 控制新增失败候选目标的相对贡献。
+Equation~\ref{eq:refinement_loss} adds the batch average of the per-query losses \(\mathcal{L}_{\mathrm{FC}}^i\) without changing the definition of \(\mathcal{L}_{\mathrm{base}}\).
+% 中文：式~\ref{eq:refinement_loss} 在不改变 \(\mathcal{L}_{\mathrm{base}}\) 定义的情况下，加入逐查询失败候选损失 \(\mathcal{L}_{\mathrm{FC}}^i\) 的批次平均值。
 
 \paragraph{Score-margin interpretation.}
 The added term admits a direct score-margin form,
@@ -244,11 +247,11 @@ For candidates in the same sampled set, the gradient magnitude with respect to \
 \subsection{Dual-Granularity Reranking}
 \label{sec:reranking_method}
 
-The rank-margin formulation above motivates concentrating additional comparison on high-scoring competitors. The same rank-focused principle carries into inference: \method{}-Global first retrieves candidates from the full corpus with sequence-level scores, and \method{}-Rerank then applies token-level MaxSim only to the resulting top-\(K\)~\citep{ColBERT}. The fused global and local scores determine the final order within this shortlist.
-% 中文：上述分数间隔形式说明，应当将额外的比较集中于高分竞争候选。同一面向排名的原则也延伸到推理阶段：\method{}-Global 首先根据序列级分数从完整语料库中检索候选，\method{}-Rerank 随后仅对所得的前 \(K\) 个候选应用词元级 MaxSim~\citep{ColBERT}。融合后的全局分数与局部分数决定该候选列表内部的最终次序。
+The rank-margin formulation above motivates concentrating additional comparison on high-scoring competitors. The same rank-focused principle carries into inference: \method{}-Global first retrieves candidates from the full corpus with sequence-level scores, and \method{}-Rerank then applies token-level MaxSim only to the resulting top-\(K\)~\citep{ColBERT}, where \(K\) is the reranking depth. The fused global and local scores determine the final order within this shortlist.
+% 中文：上述分数间隔形式说明，应当将额外的比较集中于高分竞争候选。同一面向排名的原则也延伸到推理阶段：\method{}-Global 首先根据序列级分数从完整语料库中检索候选，\method{}-Rerank 随后仅对所得的前 \(K\) 个候选应用词元级 MaxSim~\citep{ColBERT}，其中 \(K\) 表示重排深度。融合后的全局分数与局部分数决定该候选列表内部的最终次序。
 
-Let \(\{\mathbf{h}^{q}_{a}\}_{a=1}^{T_q}\) and \(\{\mathbf{h}^{c}_{b}\}_{b=1}^{T_c}\) be the contextual representations of the valid query tokens and lexical code tokens, respectively; padding and special tokens are excluded. Their local-interaction score is then defined as
-% 中文：设 \(\{\mathbf{h}^{q}_{a}\}_{a=1}^{T_q}\) 和 \(\{\mathbf{h}^{c}_{b}\}_{b=1}^{T_c}\) 分别为有效查询词元与词法代码词元的上下文表示，并排除填充词元与特殊词元。其局部交互分数随后定义为
+Let \(\{\mathbf{h}^{q}_{a}\}_{a=1}^{T_q}\) and \(\{\mathbf{h}^{c}_{b}\}_{b=1}^{T_c}\) be the contextual token representations produced by the refined query and code encoders, where \(T_q\) and \(T_c\) are the numbers of retained query and lexical code tokens, respectively. Padding and special tokens are excluded. Their local-interaction score is
+% 中文：设 \(\{\mathbf{h}^{q}_{a}\}_{a=1}^{T_q}\) 和 \(\{\mathbf{h}^{c}_{b}\}_{b=1}^{T_c}\) 分别表示细化后的查询编码器和代码编码器产生的上下文词元表示，其中 \(T_q\) 和 \(T_c\) 分别是保留下来的有效查询词元与词法代码词元数量。填充词元和特殊词元均被排除。其局部交互分数定义为
 \begin{equation}
   s_{\mathrm{loc}}(q,c)=\frac{1}{T_q}\sum_{a=1}^{T_q}
   \max_{1\leq b\leq T_c}
@@ -259,23 +262,30 @@ Let \(\{\mathbf{h}^{q}_{a}\}_{a=1}^{T_q}\) and \(\{\mathbf{h}^{c}_{b}\}_{b=1}^{T
 For each query token, the maximum selects the code token with the highest cosine similarity; averaging these maxima aggregates the token-level matches while normalizing for query length.
 % 中文：对于每个查询词元，最大值操作选出余弦相似度最高的代码词元；对这些最大值取平均，在聚合词元级匹配证据的同时对查询长度进行归一化。
 
-Let \(\mathcal{R}_K(q)\) be the top-\(K\) set returned by \method{}-Global. For \(x\in\{\theta,\mathrm{loc}\}\), let \(\bar{s}_x(q)\) and \(\sigma_x(q)\) be the mean and population standard deviation of \(s_x(q,\cdot)\) over \(\mathcal{R}_K(q)\). We standardize each score within the query-specific set as
-% 中文：令 \(\mathcal{R}_K(q)\) 表示 \method{}-Global 返回的前 \(K\) 个候选集合。对于 \(x\in\{\theta,\mathrm{loc}\}\)，令 \(\bar{s}_x(q)\) 和 \(\sigma_x(q)\) 分别表示 \(s_x(q,\cdot)\) 在 \(\mathcal{R}_K(q)\) 上的均值与总体标准差。每类分数在该逐查询候选集合内标准化为
+Let \(\mathcal{R}_K(q)\) be the top-\(K\) list returned by \method{}-Global. Let \(\bar{s}_\theta(q)\) and \(\sigma_\theta(q)\) be the mean and population standard deviation of \(s_\theta(q,\cdot)\) over \(\mathcal{R}_K(q)\), and define \(\bar{s}_{\mathrm{loc}}(q)\) and \(\sigma_{\mathrm{loc}}(q)\) analogously for \(s_{\mathrm{loc}}(q,\cdot)\). We standardize the two scores as
+% 中文：令 \(\mathcal{R}_K(q)\) 表示 \method{}-Global 为查询 \(q\) 返回的前 \(K\) 个候选列表。令 \(\bar{s}_\theta(q)\) 和 \(\sigma_\theta(q)\) 分别表示 \(s_\theta(q,\cdot)\) 在 \(\mathcal{R}_K(q)\) 上的均值与总体标准差；类似地，令 \(\bar{s}_{\mathrm{loc}}(q)\) 和 \(\sigma_{\mathrm{loc}}(q)\) 分别表示 \(s_{\mathrm{loc}}(q,\cdot)\) 的均值与总体标准差。两类分数分别标准化为
 \begin{equation}
-  \widetilde{s}_x(q,c)
-  =\frac{s_x(q,c)-\bar{s}_x(q)}{\sigma_x(q)+10^{-6}},
-  \qquad x\in\{\theta,\mathrm{loc}\}.
+  \begin{aligned}
+    \widetilde{s}_\theta(q,c)
+    &=\frac{s_\theta(q,c)-\bar{s}_\theta(q)}
+      {\sigma_\theta(q)+10^{-6}},\\
+    \widetilde{s}_{\mathrm{loc}}(q,c)
+    &=\frac{s_{\mathrm{loc}}(q,c)-\bar{s}_{\mathrm{loc}}(q)}
+      {\sigma_{\mathrm{loc}}(q)+10^{-6}}.
+  \end{aligned}
   \label{eq:score_standardization}
 \end{equation}
+The \(10^{-6}\) term prevents a zero denominator.
+% 中文：其中，\(10^{-6}\) 用于避免标准差为零时出现零分母。
 With \(\alpha\in[0,1]\), the final score is
 % 中文：取 \(\alpha\in[0,1]\)，最终分数定义为
 \begin{equation}
-  s_r(q,c)=\alpha\widetilde{s}_\theta(q,c)
+  s_{\mathrm{fuse}}(q,c)=\alpha\widetilde{s}_\theta(q,c)
   +(1-\alpha)\widetilde{s}_{\mathrm{loc}}(q,c).
   \label{eq:fusion}
 \end{equation}
-The fused score interpolates between token-level correspondence at \(\alpha=0\) and the \method{}-Global ordering at \(\alpha=1\); intermediate values combine sequence-level relevance from the refined dual encoder with query-token alignments from MaxSim to determine the final shortlist order.
-% 中文：融合分数在两种排序信号之间进行插值：当 \(\alpha=0\) 时使用词元级对应关系，当 \(\alpha=1\) 时采用 \method{}-Global 排序；中间取值将细化双编码器提供的序列级相关性与 MaxSim 提供的查询—代码词元对齐相结合，从而确定候选列表的最终顺序。
+The fused score \(s_{\mathrm{fuse}}\) interpolates between token-level correspondence at \(\alpha=0\) and the \method{}-Global ordering at \(\alpha=1\); intermediate values combine sequence-level relevance from the refined dual encoder with query-token alignments from MaxSim to determine the final shortlist order.
+% 中文：融合分数 \(s_{\mathrm{fuse}}\) 在两种排序信号之间进行插值：当 \(\alpha=0\) 时使用词元级对应关系，当 \(\alpha=1\) 时采用 \method{}-Global 排序；中间取值将细化双编码器提供的序列级相关性与 MaxSim 提供的查询—代码词元对齐相结合，从而确定候选列表的最终顺序。
 
 Only candidates inside the top-\(K\) set are reordered; all remaining corpus items preserve their \method{}-Global order.
 % 中文：只有前 \(K\) 集合内的候选会被重新排序，其余语料库条目保持 \method{}-Global 产生的顺序。
@@ -567,8 +577,8 @@ An anonymized implementation of \method{}, together with the configurations and 
 % 中文：\method{} 的匿名实现，以及用于论文所报告实验的配置文件与评测脚本，可通过 \url{https://anonymous.4open.science/r/ReFCode-PLACEHOLDER} 获取。
 
 \paragraph{Protocol checks.}
-Training, validation, and test partitions have no exact overlap in URLs, repositories, or normalized code, and every validation and test query has its paired code in the retrieval corpus. Each cached Failure Candidate Pool contains 32 unique training-corpus candidates after excluding the paired example and same-URL candidates. The same coverage and cache checks hold for GraphCodeBERT. Reconstructing model selection from the stored validation results yields \(K=20\), \(\alpha=0.5\).
-% 中文：训练集、验证集和测试集之间不存在 URL、代码仓库或规范化代码的精确重叠，每个验证和测试查询的配对代码均位于检索语料库中。每个缓存的失败候选池在排除配对样本和同 URL 候选后包含 32 个唯一训练语料库候选。GraphCodeBERT 通过相同的覆盖率与缓存检查。依据保存的验证结果重建模型选择后得到 \(K=20\)、\(\alpha=0.5\)。
+Training, validation, and test partitions have no exact overlap in URLs, repositories, or normalized code, and every validation and test query has its paired code in the retrieval corpus. Each cached top-\(M\) candidate list contains 32 unique training-corpus candidates after excluding the paired example and same-URL candidates. The same coverage and cache checks hold for GraphCodeBERT. Reconstructing model selection from the stored validation results yields \(K=20\), \(\alpha=0.5\).
+% 中文：训练集、验证集和测试集之间不存在 URL、代码仓库或规范化代码的精确重叠，每个验证和测试查询的配对代码均位于检索语料库中。每个缓存的前 \(M\) 个候选列表在排除配对样本和同 URL 候选后包含 32 个唯一训练语料库候选。GraphCodeBERT 通过相同的覆盖率与缓存检查。依据保存的验证结果重建模型选择后得到 \(K=20\)、\(\alpha=0.5\)。
 
 \paragraph{Primary configuration.}
 Table~\ref{tab:primary_configuration} consolidates the training, harvesting, and inference settings for the primary CoCoSoDa-based evaluation. Initial-retriever and refinement checkpoints are selected by validation MRR. Reranking hyperparameters are selected from the complete validation grid reported in Table~\ref{tab:reranking_validation_grid} and are fixed before test evaluation. Our local UA-HN reproduction reaches 79.8 macro MRR versus 80.0 in the original report~\citep{AAAIUA}, with five language-level scores within 0.2 points and Ruby at 82.2 versus 82.9.
@@ -589,7 +599,7 @@ Table~\ref{tab:primary_configuration} consolidates the training, harvesting, and
     Initial retriever & Optimizer and selection & AdamW; weight decay 0.01; linear schedule; 0 warmup steps; gradient clipping at 1.0; validation-MRR checkpoint selection \\
     \midrule
     FC harvesting & Retrieval and filtering & Full training-code corpus; exclude the paired code and candidates sharing its URL \\
-    FC harvesting & Candidate pool & Retain \(M=32\) candidates per query \\
+    FC harvesting & Candidate cache & Retain \(M=32\) candidates per query \\
     \midrule
     Refinement & Optimization & 3 epochs; batch size 128; learning rate \(5\times10^{-6}\); the same optimizer schedule and checkpoint-selection metric \\
     Refinement & Base-loss settings during refinement & 1 uncertainty sample, intra-modal weight 1.0, and KL weight \(10^{-5}\) \\
