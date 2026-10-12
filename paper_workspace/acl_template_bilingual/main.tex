@@ -351,16 +351,8 @@ Table~\ref{tab:dataset_stats} summarizes the fixed data splits and retrieval-cor
 The six language-specific corpora differ substantially in both query count and searchable code size. We therefore use macro MRR to give each language equal weight when aggregating results, keeping the main comparison focused on cross-language retrieval behavior rather than corpus size.
 % 中文：六种语言在查询数量和可检索代码规模上存在明显差异。因此，我们使用宏平均 MRR，使每种语言在总体结果中具有相同权重，让主要比较聚焦于跨语言检索表现，而不是语料库规模。
 
-\paragraph{Baselines.}
-For context, Table~\ref{tab:main_results} includes cited CodeSearchNet results for pretrained representation models, contrastive retrievers, and negative-aware training methods. Our protocol-matched comparisons locally reproduce UA-HN using CoCoSoDa~\citep{CoCoSoDa,AAAIUA}, and the resulting checkpoint serves as the initial retriever. The initial retriever and both \method{} variants share the same data splits, retrieval corpora, and metric implementation; all reported gains are measured against this checkpoint. The remaining baseline rows are cited published results rather than protocol-matched local evaluations.
-% 中文：作为参照，表~\ref{tab:main_results} 列出了预训练表示模型、对比式检索器和负例感知训练方法在 CodeSearchNet 上的已引用结果。协议一致的比较在本地使用 CoCoSoDa~\citep{CoCoSoDa,AAAIUA} 复现 UA-HN，并将所得检查点作为初始检索器。初始检索器与 \method{} 的两个变体使用相同的数据划分、检索语料库和指标实现；所有报告的增益均以该检查点为参照。其余基线行来自已引用的公开结果，并非协议一致的本地评测。
-
-\paragraph{Implementation details.}
-Unless stated otherwise, Failure Candidate Harvesting retains \(M=32\) candidates per query, and refinement samples \(r=1\) candidate from the top \(m=8\) using \(\lambda_f=0.45\) and \(\tau_f=0.03\) for three epochs. The candidate-source controls use the same initial checkpoint, three-epoch schedule, and one-candidate-per-query budget, varying only among random, static, and retriever-mined candidates. Refinement uses global representations only; MaxSim is applied only when reranking the retrieved top-\(K\). Unrounded six-language validation macro MRR selects \(K=20\) and \(\alpha=0.5\), and the selected values and model checkpoints are fixed before test evaluation. We report 95\% confidence intervals from 10,000 language-stratified paired bootstrap samples; these intervals measure test-query sampling uncertainty for fixed checkpoints rather than variation across training runs. Appendix~\ref{app:experimental_details} provides complete optimization, candidate-construction, and encoder-specific settings; Appendix~\ref{app:statistical_reliability} provides the statistical procedure.
-% 中文：除非另有说明，失败候选挖掘为每个查询保留 \(M=32\) 个候选，细化阶段从排名最高的 \(m=8\) 个候选中采样 \(r=1\) 个，并采用 \(\lambda_f=0.45\)、\(\tau_f=0.03\) 训练三轮。候选来源对照使用相同的初始检查点、三轮训练日程和每查询一个候选的预算，仅改变随机、静态或检索器挖掘的候选来源。细化阶段只使用全局表示；MaxSim 仅用于对检索得到的前 \(K\) 个候选进行重排。我们依据未舍入的六语言验证集宏平均 MRR 选定 \(K=20\) 和 \(\alpha=0.5\)，并在测试集评测前固定这些取值和模型检查点。我们基于 10,000 次按语言分层的配对 bootstrap 报告 95\% 置信区间；这些区间衡量固定检查点下的测试查询采样不确定性，而非不同训练运行之间的变化。附录~\ref{app:experimental_details} 给出完整的优化、候选构造和编码器特定设置；附录~\ref{app:statistical_reliability} 给出统计过程。
-
-% Queue the full-width main-results table while page 5 is still being built so
-% that the two-column float can occupy the top of page 6.
+% Queue the full-width main-results table before the baseline discussion
+% so that the two-column float can occupy the top of page 6.
 \begin{table*}[!t]
   \centering
   \footnotesize
@@ -395,6 +387,15 @@ Unless stated otherwise, Failure Candidate Harvesting retains \(M=32\) candidate
   % 中文表注：六种语言上的 CodeSearchNet MRR（\%）。UA-HN 为本地复现结果，其他基线沿用所引用来源的报告值；括号给出相对于初始检索器的增益。
   \label{tab:main_results}
 \end{table*}
+
+
+\paragraph{Baselines.}
+For context, Table~\ref{tab:main_results} includes cited CodeSearchNet results for pretrained representation models, contrastive retrievers, and negative-aware training methods. Our protocol-matched comparisons locally reproduce UA-HN using CoCoSoDa~\citep{CoCoSoDa,AAAIUA}, and the resulting checkpoint serves as the initial retriever. The initial retriever and both \method{} variants share the same data splits, retrieval corpora, and metric implementation; all reported gains are measured against this checkpoint. The remaining baseline rows are cited published results rather than protocol-matched local evaluations.
+% 中文：作为参照，表~\ref{tab:main_results} 列出了预训练表示模型、对比式检索器和负例感知训练方法在 CodeSearchNet 上的已引用结果。协议一致的比较在本地使用 CoCoSoDa~\citep{CoCoSoDa,AAAIUA} 复现 UA-HN，并将所得检查点作为初始检索器。初始检索器与 \method{} 的两个变体使用相同的数据划分、检索语料库和指标实现；所有报告的增益均以该检查点为参照。其余基线行来自已引用的公开结果，并非协议一致的本地评测。
+
+\paragraph{Implementation details.}
+Unless stated otherwise, Failure Candidate Harvesting retains \(M=32\) candidates per query, and refinement samples \(r=1\) candidate from the top \(m=8\) using \(\lambda_f=0.45\) and \(\tau_f=0.03\) for three epochs. The candidate-source controls use the same initial checkpoint, three-epoch schedule, and one-candidate-per-query budget, varying only among random, static, and retriever-mined candidates. Refinement uses global representations only; MaxSim is applied only when reranking the retrieved top-\(K\). Unrounded six-language validation macro MRR selects \(K=20\) and \(\alpha=0.5\), and the selected values and model checkpoints are fixed before test evaluation. We report 95\% confidence intervals from 10,000 language-stratified paired bootstrap samples; these intervals measure test-query sampling uncertainty for fixed checkpoints rather than variation across training runs. Appendix~\ref{app:experimental_details} provides complete optimization, candidate-construction, and encoder-specific settings; Appendix~\ref{app:statistical_reliability} provides the statistical procedure.
+% 中文：除非另有说明，失败候选挖掘为每个查询保留 \(M=32\) 个候选，细化阶段从排名最高的 \(m=8\) 个候选中采样 \(r=1\) 个，并采用 \(\lambda_f=0.45\)、\(\tau_f=0.03\) 训练三轮。候选来源对照使用相同的初始检查点、三轮训练日程和每查询一个候选的预算，仅改变随机、静态或检索器挖掘的候选来源。细化阶段只使用全局表示；MaxSim 仅用于对检索得到的前 \(K\) 个候选进行重排。我们依据未舍入的六语言验证集宏平均 MRR 选定 \(K=20\) 和 \(\alpha=0.5\)，并在测试集评测前固定这些取值和模型检查点。我们基于 10,000 次按语言分层的配对 bootstrap 报告 95\% 置信区间；这些区间衡量固定检查点下的测试查询采样不确定性，而非不同训练运行之间的变化。附录~\ref{app:experimental_details} 给出完整的优化、候选构造和编码器特定设置；附录~\ref{app:statistical_reliability} 给出统计过程。
 
 % Queue the controlled analyses early enough to preserve their reading order
 % without forcing a page break when Section 4.3 reaches the boundary.
