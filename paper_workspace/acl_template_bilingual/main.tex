@@ -299,11 +299,35 @@ We evaluate \method{} under protocol-matched full-corpus retrieval on all six Co
 We conduct experiments on the standard six-language CodeSearchNet benchmark~\citep{CodeSearchNet}, which contains natural-language--code pairs in Java, JavaScript, Ruby, Python, PHP, and Go. Table~\ref{tab:dataset_stats} summarizes the fixed data splits and language-specific retrieval corpora. At test time, each query is evaluated against the complete corpus for its language. We use mean reciprocal rank (MRR) as the primary metric and additionally report Recall@1, Recall@5, and Recall@10 (R@1/R@5/R@10).
 % 中文：我们在标准的六语言 CodeSearchNet 基准~\citep{CodeSearchNet} 上开展实验，该基准包含 Java、JavaScript、Ruby、Python、PHP 和 Go 的自然语言—代码配对。表~\ref{tab:dataset_stats} 汇总了固定的数据划分和对应语言的检索语料库。测试时，每个查询都在其对应语言的完整语料库上进行评测。我们采用平均倒数排名（MRR）作为主要指标，并同时报告 Recall@1、Recall@5 和 Recall@10（R@1/R@5/R@10）。
 
+% \begin{table}[t]
+%   \centering
+%   \small
+%   \setlength{\tabcolsep}{4.2pt}
+%   \begin{tabular}{lrrrr}
+%     \toprule
+%     Language & Train & Valid & Test & Codebase \\
+%     \midrule
+%     Java       & 164,923 & 5,183  & 10,955 & 40,347 \\
+%     JavaScript & 58,025  & 3,885  & 3,291  & 13,981 \\
+%     Ruby       & 24,927  & 1,400  & 1,261  & 4,360 \\
+%     Python     & 251,820 & 13,914 & 14,918 & 43,827 \\
+%     PHP        & 241,241 & 12,982 & 14,014 & 52,660 \\
+%     Go         & 167,288 & 7,325  & 8,122  & 28,120 \\
+%     \midrule
+%     Total      & 908,224 & 44,689 & 52,561 & 183,295 \\
+%     \bottomrule
+%   \end{tabular}
+%   \caption{CodeSearchNet split and retrieval-corpus sizes. Codebase is the language-specific corpus searched by every validation and test query.}
+%   % 中文表注：CodeSearchNet 数据划分与检索语料库规模。Codebase 是每个验证和测试查询所检索的对应语言语料库。
+%   \label{tab:dataset_stats}
+% \end{table}
+
 \begin{table}[t]
+  \vspace{2.5pt}
   \centering
   \small
   \setlength{\tabcolsep}{4.2pt}
-  \begin{tabular}{lrrrr}
+  \begin{tabularx}{\columnwidth}{@{}l*{4}{>{\raggedleft\arraybackslash}X}@{}}
     \toprule
     Language & Train & Valid & Test & Codebase \\
     \midrule
@@ -316,14 +340,14 @@ We conduct experiments on the standard six-language CodeSearchNet benchmark~\cit
     \midrule
     Total      & 908,224 & 44,689 & 52,561 & 183,295 \\
     \bottomrule
-  \end{tabular}
+  \end{tabularx}
   \caption{CodeSearchNet split and retrieval-corpus sizes. Codebase is the language-specific corpus searched by every validation and test query.}
   % 中文表注：CodeSearchNet 数据划分与检索语料库规模。Codebase 是每个验证和测试查询所检索的对应语言语料库。
   \label{tab:dataset_stats}
 \end{table}
 
-\paragraph{Implementation and controlled comparisons.}
-We locally reproduce UA-HN using CoCoSoDa~\citep{CoCoSoDa,AAAIUA} and use the resulting checkpoint as the initial retriever. The initial retriever and both \method{} variants share the same data splits, retrieval corpora, and metric implementation; all gains are measured against this checkpoint. PLBART and CodeT5 follow the values reported by CoCoSoDa~\citep{CoCoSoDa}, while Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. The candidate-source control fixes initialization, the three-epoch refinement schedule, and a one-candidate-per-query budget, varying only the candidate source among random sampling, static pre-mining, and the frozen initial retriever. This comparison isolates the effect of candidate source under a matched optimization budget. The source-control variants use one candidate per query, whereas the primary \method{}-Global configuration samples \(r=1\) candidate per update from the top-\(m=8\) eligible pool.
+\paragraph{\mbox{Implementation and controlled comparisons.}}
+We locally reproduce UA-HN using \mbox{CoCoSoDa} \citep{CoCoSoDa,AAAIUA} and use the resulting checkpoint as the initial retriever. The initial retriever and both \method{} variants share the same data splits, retrieval corpora, and metric implementation; all gains are measured against this checkpoint. PLBART and CodeT5 follow the values reported by CoCoSoDa~\citep{CoCoSoDa}, while Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. The candidate-source control fixes initialization, the three-epoch refinement schedule, and a one-candidate-per-query budget, varying only the candidate source among random sampling, static pre-mining, and the frozen initial retriever. This comparison isolates the effect of candidate source under a matched optimization budget. The source-control variants use one candidate per query, whereas the primary \method{}-Global configuration samples \(r=1\) candidate per update from the top-\(m=8\) eligible pool.
 % 中文：我们使用 CoCoSoDa~\citep{CoCoSoDa,AAAIUA} 在本地复现 UA-HN，并将训练所得的检查点作为初始检索器。初始检索器与 \method{} 的两个变体采用相同的数据划分、检索语料库和指标实现；所有增益均相对于该检查点计算。PLBART 与 CodeT5 的数值沿用 CoCoSoDa 的报告~\citep{CoCoSoDa}，Soft-InfoNCE 则采用其报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。候选来源对照固定初始化、三轮细化日程和每查询一个候选的预算，只在随机采样、静态预挖掘和冻结初始检索器之间改变候选来源。该比较在优化预算一致的条件下隔离候选来源的影响。候选来源对照中的每个查询使用一个候选，而主要的 \method{}-Global 配置在每次更新时从排名最高的 \(m=8\) 个可选候选中采样 \(r=1\) 个候选。
 
 \paragraph{Training and model selection.}
