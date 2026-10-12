@@ -836,7 +836,7 @@ Using the unrounded local results, MaxSim raises MRR for every language under al
   \scriptsize
   \setlength{\tabcolsep}{1.5pt}
   \renewcommand{\arraystretch}{0.92}
-  \begin{tabular}{l*{12}{r}}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}l*{12}{r}@{}}
     \toprule
     \multicolumn{13}{c}{\textbf{CoCoSoDa}} \\
     \cmidrule(lr){1-13}
@@ -862,7 +862,7 @@ Using the unrounded local results, MaxSim raises MRR for every language under al
     PHP        & 67.6 & 68.8 & 69.4 & 57.2 & 59.0 & 59.7 & 80.0 & 80.9 & 81.6 & 86.3 & 86.6 & 86.9 \\
     Macro      & 74.4 & 76.0 & 76.6 & 65.2 & 67.7 & 68.5 & 85.4 & 86.2 & 86.7 & 89.8 & 90.2 & 90.5 \\
     \bottomrule
-  \end{tabular}
+  \end{tabular*}
   \caption{Published (P) and locally evaluated \method{}-Global (G) and \method{}-Rerank (R) results for CoCoSoDa and UniXcoder (\%). P values follow CoCoSoDa~\citep{CoCoSoDa}; only G and R form protocol-matched comparisons within each encoder. Values are rounded to one decimal place.}
   % 中文表注：CoCoSoDa 与 UniXcoder 的论文报告结果（P）以及本地评测的 \method{}-Global（G）和 \method{}-Rerank（R）结果（\%）。P 值沿用 CoCoSoDa~\citep{CoCoSoDa}；每种编码器中只有 G 与 R 构成协议一致比较。数值保留一位小数。
   \label{tab:encoder_coco_unix_full}
@@ -873,7 +873,7 @@ Using the unrounded local results, MaxSim raises MRR for every language under al
   \scriptsize
   \setlength{\tabcolsep}{1.5pt}
   \renewcommand{\arraystretch}{0.92}
-  \begin{tabular}{l*{12}{r}}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}l*{12}{r}@{}}
     \toprule
     & \multicolumn{3}{c}{MRR} & \multicolumn{3}{c}{R@1} & \multicolumn{3}{c}{R@5} & \multicolumn{3}{c}{R@10} \\
     \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
@@ -887,7 +887,7 @@ Using the unrounded local results, MaxSim raises MRR for every language under al
     PHP        & 64.9 & 66.1 & 67.1 & 54.5 & 55.9 & 57.0 & 78.5 & 78.6 & 79.5 & 83.2 & 84.5 & 85.3 \\
     Macro      & 71.3 & 72.8 & 74.0 & 62.2 & 64.1 & 65.4 & 82.8 & 83.4 & 84.5 & 87.4 & 88.1 & 88.7 \\
     \bottomrule
-  \end{tabular}
+  \end{tabular*}
   \caption{Published (P) and locally evaluated \method{}-Global (G) and \method{}-Rerank (R) results for GraphCodeBERT (\%). P values follow CoCoSoDa~\citep{CoCoSoDa}; only G and R form a protocol-matched comparison. Values are rounded to one decimal place.}
   % 中文表注：GraphCodeBERT 的论文报告结果（P）以及本地评测的 \method{}-Global（G）和 \method{}-Rerank（R）结果（\%）。P 值沿用 CoCoSoDa~\citep{CoCoSoDa}；只有 G 与 R 构成协议一致比较。数值保留一位小数。
   \label{tab:encoder_graph_full}
@@ -908,7 +908,7 @@ The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} conta
   \scriptsize
   \setlength{\tabcolsep}{2.2pt}
   \renewcommand{\arraystretch}{0.92}
-  \begin{tabular}{lrrrr}
+  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrr@{}}
     \toprule
     \(\alpha\) & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
     \midrule
@@ -918,7 +918,7 @@ The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} conta
     0.75 & 82.2 & 82.2 & 82.2 & 82.2 \\
     1.00 & 81.9 & 81.9 & 81.9 & 81.9 \\
     \bottomrule
-  \end{tabular}
+  \end{tabular*}
   \caption{\method{}-Rerank macro validation MRR (\%) over the complete \(K\times\alpha\) grid; bold marks the setting selected from unrounded values.}
   % 中文表注：\method{}-Rerank 在完整 \(K\times\alpha\) 网格上的宏平均验证集 MRR（\%）；粗体表示依据未舍入数值选定的配置。
   \label{tab:reranking_validation_grid}
@@ -933,7 +933,7 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
     \scriptsize
     \setlength{\tabcolsep}{1.8pt}
     \renewcommand{\arraystretch}{0.92}
-    \begin{tabular}{lrrrr}
+    \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrr@{}}
       \toprule
       Language & \(K=10\) & \(K=20\) & \(K=50\) & \(K=100\) \\
       \midrule
@@ -946,7 +946,7 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
       \midrule
       Macro      & 81.0 & \textbf{81.1} & 81.0 & 81.0 \\
       \bottomrule
-    \end{tabular}
+    \end{tabular*}
     \caption{\method{}-Rerank held-out test MRR (\%) by language and depth at \(\alpha=0.5\); bold marks validation-selected \(K\).}
     % 中文表注：\(\alpha=0.5\) 时，\method{}-Rerank 按语言和深度报告的留出测试集 MRR（\%）；粗体表示验证集选定的 \(K\)。
     \label{tab:reranking_depth_language}
@@ -958,7 +958,7 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
     \scriptsize
     \setlength{\tabcolsep}{2.0pt}
     \renewcommand{\arraystretch}{0.92}
-    \begin{tabular}{rrrrrr}
+    \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}rrrrrr@{}}
       \toprule
       \(K\) & MRR & Encode & Search & MaxSim & Total \\
       & (\%) & \multicolumn{4}{c}{ms/query} \\
@@ -968,7 +968,7 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
       50  & 81.0 & 0.8 & 0.2 & 45.7 & 46.6 \\
       100 & 81.0 & 0.7 & 0.2 & 84.3 & 85.2 \\
       \bottomrule
-    \end{tabular}
+    \end{tabular*}
     \caption{Six-language macro test MRR (\%) and JavaScript online latency for \method{}-Rerank at \(\alpha=0.5\). Bold marks the validation-selected \(K=20\). Timing components and totals are reported to 0.1 ms, so displayed components may not sum exactly to the displayed total. Peak allocated GPU memory is \(3{,}063\) MiB at every profiled depth on the NVIDIA H20.}
     % 中文表注：在 \(\alpha=0.5\) 时，\method{}-Rerank 的六语言宏平均测试 MRR（\%）与 JavaScript 在线延迟。粗体标记验证集选定的 \(K=20\)。延迟分项和总值均报告到 0.1 毫秒，因此显示出的分项之和可能不完全等于显示出的总值。在 NVIDIA H20 上，所有被测重排深度的峰值已分配 GPU 内存均为 3,063 MiB。
     \label{tab:reranking_efficiency_details}
@@ -977,8 +977,8 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
 \section{Fixed-Checkpoint Statistical Uncertainty}
 \label{app:statistical_reliability}
 
-Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in Section~\ref{sec:component_analysis} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs. All language-level intervals have positive lower bounds for both systems.
-% 中文：表~\ref{tab:bootstrap} 按编程语言展开第~\ref{sec:component_analysis} 节报告的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。两种系统在每种语言上的区间下界均为正。
+Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in Section~\ref{sec:component_analysis} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs.
+% 中文：表~\ref{tab:bootstrap} 按编程语言展开第~\ref{sec:component_analysis} 节报告的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。
 
 \begin{table}[!t]
     \centering
@@ -986,7 +986,7 @@ Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in
     \scriptsize
     \setlength{\tabcolsep}{1.0pt}
     \renewcommand{\arraystretch}{0.88}
-    \begin{tabular}{lrlrl}
+    \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrlrl@{}}
       \toprule
       Language & Initial & System & MRR & \(\Delta\) [95\% CI] \\
       \midrule
@@ -1006,7 +1006,7 @@ Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in
       Macro & 79.8 & Global & 80.6 & +0.8 [0.7, 1.0] \\
             &      & Rerank & 81.1 & +1.3 [1.1, 1.5] \\
       \bottomrule
-    \end{tabular}
+    \end{tabular*}
     \caption{MRR differences of \method{}-Global and \method{}-Rerank from the initial retriever with paired-bootstrap 95\% CIs for fixed checkpoints.}
     % 中文表注：固定检查点下，\method{}-Global 和 \method{}-Rerank 相对于初始检索器的 MRR 差值及配对 bootstrap 95\% 置信区间。
     \label{tab:bootstrap}
