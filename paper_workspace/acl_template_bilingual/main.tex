@@ -348,6 +348,9 @@ Table~\ref{tab:dataset_stats} summarizes the fixed data splits and retrieval-cor
   \label{tab:dataset_stats}
 \end{table}
 
+The six language-specific corpora differ substantially in both query count and searchable code size. We therefore use macro MRR to give each language equal weight when aggregating results, keeping the main comparison focused on cross-language retrieval behavior rather than corpus size.
+% 中文：六种语言在查询数量和可检索代码规模上存在明显差异。因此，我们使用宏平均 MRR，使每种语言在总体结果中具有相同权重，让主要比较聚焦于跨语言检索表现，而不是语料库规模。
+
 \paragraph{Baselines.}
 For context, Table~\ref{tab:main_results} includes cited CodeSearchNet results for pretrained representation models, contrastive retrievers, and negative-aware training methods. Our protocol-matched comparisons locally reproduce UA-HN using CoCoSoDa~\citep{CoCoSoDa,AAAIUA}, and the resulting checkpoint serves as the initial retriever. The initial retriever and both \method{} variants share the same data splits, retrieval corpora, and metric implementation; all reported gains are measured against this checkpoint. The remaining baseline rows are cited published results rather than protocol-matched local evaluations.
 % 中文：作为参照，表~\ref{tab:main_results} 列出了预训练表示模型、对比式检索器和负例感知训练方法在 CodeSearchNet 上的已引用结果。协议一致的比较在本地使用 CoCoSoDa~\citep{CoCoSoDa,AAAIUA} 复现 UA-HN，并将所得检查点作为初始检索器。初始检索器与 \method{} 的两个变体使用相同的数据划分、检索语料库和指标实现；所有报告的增益均以该检查点为参照。其余基线行来自已引用的公开结果，并非协议一致的本地评测。
@@ -474,6 +477,9 @@ The improvements are concentrated near the top of the ranked list. From the init
 Stratifying queries by the paired code's initial rank makes this pattern more explicit. Among the 13,261 queries whose paired code starts at ranks 2--10, conditional MRR increases by 8.9 points with \method{}-Global and by 11.3 points with \method{}-Rerank. Queries starting at ranks 11--50 or below also improve, but by smaller margins. \method{} is most effective when the paired code is already close to the top yet remains behind a small number of high-scoring candidates. The initial retriever's full-corpus ranking supplies a concrete competition signal for these queries, and refinement uses that signal to update the subsequent retrieval representation.
 % 中文：按初始排名进一步划分后，这一变化更加集中。在配对代码初始排名为 2--10 的 13,261 个查询中，\method{}-Global 和 \method{}-Rerank 的条件 MRR 分别提高 8.9 和 11.3 个百分点；初始排名为 11--50 或更低的查询也有提升，但幅度明显较小。\method{} 对已经接近排序顶部、但仍被少量高分候选压在前面的配对代码最为有效。初始检索器的全语料库排名为这类查询提供了具体的竞争信号，细化阶段则利用这些信号调整后续检索表示。
 
+The rank changes provide a more detailed view of this improvement. Relative to the initial retriever, \method{}-Rerank moves 2,644 paired codes that were not initially at rank 1 into the top position, while 1,624 initially rank-1 paired codes leave the first position, yielding a net gain of 1,020 rank-1 retrievals. This pattern is consistent with the largest conditional gains occurring in the initial-rank 2--10 group.
+% 中文：排名变化进一步细化了这一改进。相较初始检索器，\method{}-Rerank 将 2,644 个原本未处于首位的配对代码提升至 rank 1，同时有 1,624 个原本位于 rank 1 的配对代码离开首位，最终净增加 1,020 个 rank-1 检索结果。这一变化与初始排名 2--10 区间出现最大条件收益的结果一致。
+
 \subsection{Controlled Analysis of \method{}}
 \label{sec:component_analysis}
 
@@ -516,6 +522,9 @@ Validation MRR selects the fusion setting, and Figure~\ref{fig:reranking_sensiti
 
 With \(\alpha=0.5\) fixed, the selected \(K=20\) setting reaches 81.1 test MRR at 26.0 ms per JavaScript query. \(K=10\) reaches 81.0 MRR at 19.0 ms, while \(K=50\) and \(K=100\) remain at 81.0 and raise latency to 46.6 and 85.2 ms. Across the evaluated depths, test MRR varies by 0.1 points while latency increases from 19.0 to 85.2 ms. Within the evaluated range, enlarging the candidate depth yields diminishing ranking returns while online cost continues to rise.
 % 中文：固定 \(\alpha=0.5\) 后，验证集选定的 \(K=20\) 配置在测试集上达到 81.1 MRR，单个 JavaScript 查询的在线延迟为 26.0 毫秒。将候选深度降至 \(K=10\) 后，MRR 降至 81.0，延迟为 19.0 毫秒；扩大到 \(K=50\) 和 \(K=100\) 时，MRR 仍为 81.0，但延迟分别升至 46.6 和 85.2 毫秒。在当前评测范围内，扩大候选深度带来的排序收益已趋于饱和，而在线计算开销仍会随之增加。
+
+Query encoding and global search together take less than 1 ms, so most of the measured online cost comes from MaxSim scoring within the candidate set. Increasing \(K\) therefore expands the token-level computation while leaving the earlier global-retrieval stage largely unchanged.
+% 中文：查询编码与全局检索合计耗时低于 1 毫秒，因此所测在线成本主要来自候选集合内的 MaxSim 计算。增大 \(K\) 会扩大词元级重排的计算量，而前面的全局检索阶段成本基本保持不变。
 
 \begin{figure}[!t]
   \centering
