@@ -95,8 +95,8 @@ In a protocol-matched local evaluation across all six CodeSearchNet languages~\c
 \setlength{\parsep}{0pt}
 \begin{itemize}
   \item
-  We identify a training--inference supervision mismatch: conventional contrastive training need not include the high-scoring candidates that determine the paired code's inference-time rank. Rank-conditioned analysis identifies near-top misrankings as the regime in which retriever-guided refinement yields its largest gains.
-  % 中文：我们识别出一种训练—推理监督错位：常规对比训练未必会纳入那些决定配对代码推理时排名的高分候选。按初始排名分层的分析表明，接近顶部的排序错误是检索器引导细化取得最大收益的情形。
+  We identify a training--inference supervision mismatch: conventional contrastive training may omit the high-scoring corpus candidates that determine the paired code's inference-time rank. Under a matched candidate budget, retriever-mined candidates improve macro MRR, whereas random and static candidates do not; rank-conditioned analysis shows that the largest gains occur for near-top misrankings.
+  % 中文：我们识别出一种训练—推理监督错位：常规对比训练可能遗漏那些决定配对代码推理时排名的高分语料库候选。在候选预算一致时，检索器挖掘的候选提高了宏平均 MRR，而随机候选和静态候选没有；按初始排名分层的分析表明，最大收益出现在接近顶部的排序错误上。
 
   \item
   We introduce \method{}, which turns the frozen initial retriever's query-specific rankings into Failure Candidate Pools and applies a separate, margin-sensitive contrastive objective. \method{}-Global retains full-corpus retrieval, and \method{}-Rerank incorporates token-level evidence within the top-\(K\).
