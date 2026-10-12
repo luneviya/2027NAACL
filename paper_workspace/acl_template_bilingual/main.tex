@@ -323,8 +323,8 @@ We conduct experiments on the standard six-language CodeSearchNet benchmark~\cit
 \end{table}
 
 \paragraph{Implementation and controlled comparisons.}
-We locally reproduce UA-HN using CoCoSoDa~\citep{CoCoSoDa,AAAIUA} and use the resulting checkpoint as the initial retriever. The initial retriever, \method{}-Global, and \method{}-Rerank use the same data splits, retrieval corpora, and metric implementation. All \method{} gains are measured against this initial checkpoint. PLBART and CodeT5 follow the values reported by CoCoSoDa~\citep{CoCoSoDa}, while Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. The candidate-source control fixes initialization, the three-epoch refinement schedule, and a one-candidate-per-query budget, varying only the candidate source among random sampling, static pre-mining, and the frozen initial retriever. This comparison isolates the effect of candidate source under a matched optimization budget. The source-control variants use one candidate per query, whereas the primary \method{}-Global configuration samples \(r=1\) candidate per update from the top-\(m=8\) eligible pool.
-% 中文：我们使用 CoCoSoDa~\citep{CoCoSoDa,AAAIUA} 在本地复现 UA-HN，并将训练所得的检查点作为初始检索器。初始检索器、\method{}-Global 和 \method{}-Rerank 使用相同的数据划分、检索语料库和指标实现。\method{} 的全部增益均相对于这一初始检查点计算。PLBART 与 CodeT5 的数值沿用 CoCoSoDa 的报告~\citep{CoCoSoDa}，Soft-InfoNCE 则采用其报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。候选来源对照固定初始化、三轮细化日程和每查询一个候选的预算，只在随机采样、静态预挖掘和冻结初始检索器之间改变候选来源。该比较在优化预算一致的条件下隔离候选来源的影响。候选来源对照中的每个查询使用一个候选，而主要的 \method{}-Global 配置在每次更新时从排名最高的 \(m=8\) 个可选候选中采样 \(r=1\) 个候选。
+We locally reproduce UA-HN using CoCoSoDa~\citep{CoCoSoDa,AAAIUA} and use the resulting checkpoint as the initial retriever. The initial retriever and both \method{} variants share the same data splits, retrieval corpora, and metric implementation; all gains are measured against this checkpoint. PLBART and CodeT5 follow the values reported by CoCoSoDa~\citep{CoCoSoDa}, while Soft-InfoNCE uses its reported UniXcoder/SimCSE variant~\citep{SoftInfoNCE}. The candidate-source control fixes initialization, the three-epoch refinement schedule, and a one-candidate-per-query budget, varying only the candidate source among random sampling, static pre-mining, and the frozen initial retriever. This comparison isolates the effect of candidate source under a matched optimization budget. The source-control variants use one candidate per query, whereas the primary \method{}-Global configuration samples \(r=1\) candidate per update from the top-\(m=8\) eligible pool.
+% 中文：我们使用 CoCoSoDa~\citep{CoCoSoDa,AAAIUA} 在本地复现 UA-HN，并将训练所得的检查点作为初始检索器。初始检索器与 \method{} 的两个变体采用相同的数据划分、检索语料库和指标实现；所有增益均相对于该检查点计算。PLBART 与 CodeT5 的数值沿用 CoCoSoDa 的报告~\citep{CoCoSoDa}，Soft-InfoNCE 则采用其报告的 UniXcoder/SimCSE 变体~\citep{SoftInfoNCE}。候选来源对照固定初始化、三轮细化日程和每查询一个候选的预算，只在随机采样、静态预挖掘和冻结初始检索器之间改变候选来源。该比较在优化预算一致的条件下隔离候选来源的影响。候选来源对照中的每个查询使用一个候选，而主要的 \method{}-Global 配置在每次更新时从排名最高的 \(m=8\) 个可选候选中采样 \(r=1\) 个候选。
 
 \paragraph{Training and model selection.}
 We train the initial retriever for 10 epochs and select its checkpoint by validation MRR. The frozen checkpoint retrieves over the training corpus; after excluding the paired code and same-URL candidates, we retain the top \(M=32\). The primary refinement configuration, fixed before the sensitivity sweeps, uses \((\lambda_f,m)=(0.45,8)\), with the top eight harvested candidates eligible for refinement. At each update, we sample \(r=1\) candidate from this eligible set; changing \(m\) therefore changes the sampling distribution without changing the number of candidates added to the loss. Refinement uses \(\tau_f=0.03\), matching the base contrastive temperature, and runs for three epochs with batch size 128 and learning rate \(5\times10^{-6}\), using global representations only. Appendix~\ref{app:experimental_details} provides complete optimization and encoder-specific settings, together with provenance checks and validation-selection details.
@@ -792,8 +792,8 @@ We partition all 52,561 test queries by the paired code's rank under the initial
 \end{table}
 
 \paragraph{Rank transitions.}
-Compared with the initial retriever, \method{}-Rerank improves the paired-code rank for 7,121 queries and lowers it for 5,741. It moves 2,644 previously non-top-ranked paired codes to rank 1 and moves 1,624 initially rank-1 paired codes below the first position, a net gain of 1,020 rank-1 retrievals. The latter transitions account for the \(-2.5\)-point conditional-MRR change in the initial-rank-1 stratum.
-% 中文：相较初始检索器，\method{}-Rerank 使 7,121 个查询的配对代码排名上升，使 5,741 个查询的排名下降。它将 2,644 个原本不在首位的配对代码提升至第 1 名，同时使 1,624 个原本位于第 1 名的配对代码离开首位，净增加 1,020 个首位检索结果。后一类转移对应初始 rank-1 分组中 \(-2.5\) 点的条件 MRR 变化。
+Compared with the initial retriever, \method{}-Rerank improves the paired-code rank for 7,121 queries and lowers it for 5,741. It moves 2,644 previously non-top-ranked paired codes to rank 1 and moves 1,624 initially rank-1 paired codes below the first position, a net gain of 1,020 rank-1 retrievals. Within the initial-rank-1 stratum, these demotions reduce conditional MRR from 100.0 to 97.5.
+% 中文：相较初始检索器，\method{}-Rerank 使 7,121 个查询的配对代码排名上升，使 5,741 个查询的排名下降。它将 2,644 个原本不在首位的配对代码提升至第 1 名，同时使 1,624 个原本位于第 1 名的配对代码离开首位，净增加 1,020 个首位检索结果。在初始 rank-1 分组中，这些降名次使条件 MRR 从 100.0 降至 97.5。
 
 \section{Encoder Compatibility Details}
 \label{app:encoder_instantiations}
@@ -866,8 +866,8 @@ Using the unrounded local results, MaxSim raises MRR for every language under al
   \label{tab:encoder_graph_full}
 \end{table*}
 
-Using the unrounded local results, Rerank-minus-Global macro MRR is +0.5 for CoCoSoDa, +0.7 for UniXcoder, and +1.2 for GraphCodeBERT. Each Global--Rerank pair differs only by the common MaxSim stage. The published values use different checkpoints and protocols and are not baselines for these local comparisons.
-% 中文：根据未舍入的本地结果，CoCoSoDa、UniXcoder 和 GraphCodeBERT 的 Rerank−Global 宏平均 MRR 分别为 +0.5、+0.7 和 +1.2。每组 Global--Rerank 结果只在统一的 MaxSim 阶段上存在差异。论文报告值使用不同的检查点与协议，并非这些本地比较的基线。
+Using the unrounded local results, Rerank-minus-Global macro MRR is +0.5 for CoCoSoDa, +0.7 for UniXcoder, and +1.2 for GraphCodeBERT. Each Global--Rerank pair differs only by the common MaxSim stage.
+% 中文：根据未舍入的本地结果，CoCoSoDa、UniXcoder 和 GraphCodeBERT 的 Rerank−Global 宏平均 MRR 分别为 +0.5、+0.7 和 +1.2。每组 Global--Rerank 结果只在统一的 MaxSim 阶段上存在差异。
 
 \section{Reranking Selection and Efficiency Details}
 \label{app:reranking_details}
