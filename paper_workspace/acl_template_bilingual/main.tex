@@ -574,7 +574,7 @@ Table~\ref{tab:primary_configuration} consolidates the training, harvesting, and
     FC harvesting & Candidate pool & Retain \(M=32\) candidates per query \\
     \midrule
     Refinement & Optimization & 3 epochs; batch size 128; learning rate \(5\times10^{-6}\); the same optimizer schedule and checkpoint-selection metric \\
-    Refinement & Preserved base-loss settings & 1 uncertainty sample, intra-modal weight 1.0, and KL weight \(10^{-5}\) \\
+    Refinement & Base-loss settings during refinement & 1 uncertainty sample, intra-modal weight 1.0, and KL weight \(10^{-5}\) \\
     Refinement & FC configuration & \(m=8\), \(r=1\), \(\lambda_f=0.45\), and \(\tau_f=0.03\) \\
     Refinement & Training objective & Global dual-encoder objective \(\mathcal{L}_{\mathrm{ref}}\) in Equation~\ref{eq:refinement_loss} \\
     \midrule
@@ -589,6 +589,9 @@ Table~\ref{tab:primary_configuration} consolidates the training, harvesting, and
   % 中文表注：主要本地评测设置的完整配置。训练检查点与重排超参数均由验证集选择，测试集仅用于最终结果报告。
   \label{tab:primary_configuration}
 \end{table*}
+
+For the candidate-source control, Random uniformly samples one training-corpus candidate per query using seed 123456 after excluding the paired example and same-URL candidates; Static uses the fixed UA-HN BM25 candidate defined in Table~\ref{tab:primary_configuration}; and the retriever-mined condition uses the highest-ranked eligible candidate from the frozen initial-retriever ranking.
+% 中文：候选来源对照中，Random 使用随机种子 123456，在排除配对样本和同 URL 候选后，为每个查询从训练语料库中均匀采样一个候选；Static 使用表~\ref{tab:primary_configuration} 中定义的固定 UA-HN BM25 候选；检索器挖掘条件则使用冻结初始检索器排序中排名最高的合格候选。
 
 \paragraph{Encoder-instantiation configurations.}
 Table~\ref{tab:encoder_training_config} records the encoder-specific training configurations used to produce the local results in Appendix~\ref{app:encoder_instantiations}. The initial checkpoints are used for harvesting and refinement but are not reported as locally evaluated test baselines. The published columns provide separate architecture-level reference values and are not protocol-matched to the local Global/Rerank columns.
@@ -875,7 +878,7 @@ Using the unrounded local results, Rerank-minus-Global macro MRR is +0.5 for CoC
 The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} contains all 20 evaluated combinations of \(K\in\{10,20,50,100\}\) and \(\alpha\in\{0,0.25,0.5,0.75,1\}\). Table~\ref{tab:reranking_validation_grid} gives the corresponding values rounded to one decimal place, while selection uses unrounded six-language macro validation MRR only; the test set is not consulted. After fixing \(\alpha=0.5\), Table~\ref{tab:reranking_depth_language} reports held-out MRR for every language and depth, while Table~\ref{tab:reranking_efficiency_details} gives the measured online-time decomposition. Query encoding, global search, and MaxSim are executed for every JavaScript test query. Offline code encoding is excluded because corpus representations are precomputed.
 % 中文：图~\ref{fig:reranking_sensitivity} 子图 (a) 的验证网格包含 \(K\in\{10,20,50,100\}\) 与 \(\alpha\in\{0,0.25,0.5,0.75,1\}\) 的全部 20 种组合。表~\ref{tab:reranking_validation_grid} 给出保留一位小数的对应数值，而模型选择仅依据未舍入的六语言宏平均验证集 MRR，不使用测试集。固定 \(\alpha=0.5\) 后，表~\ref{tab:reranking_depth_language} 报告每种语言与重排深度的留出测试集 MRR，表~\ref{tab:reranking_efficiency_details} 则给出实测在线时间分解。每个 JavaScript 测试查询都执行查询编码、全局搜索与 MaxSim。由于语料库表示预先计算，离线代码编码时间不计入其中。
 
-\noindent\begin{minipage}{\columnwidth}
+\begin{table}[!t]
   \centering
   \captionsetup{skip=2pt}
   \scriptsize
@@ -892,16 +895,15 @@ The validation grid in panel (a) of Figure~\ref{fig:reranking_sensitivity} conta
     1.00 & 81.9 & 81.9 & 81.9 & 81.9 \\
     \bottomrule
   \end{tabular}
-  \captionof{table}{\method{}-Rerank macro validation MRR (\%) over the complete \(K\times\alpha\) grid; bold marks the setting selected from unrounded values.}
+  \caption{\method{}-Rerank macro validation MRR (\%) over the complete \(K\times\alpha\) grid; bold marks the setting selected from unrounded values.}
   % 中文表注：\method{}-Rerank 在完整 \(K\times\alpha\) 网格上的宏平均验证集 MRR（\%）；粗体表示依据未舍入数值选定的配置。
   \label{tab:reranking_validation_grid}
-\end{minipage}
-\par\medskip
+\end{table}
 
 At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Unrounded validation MRR selects \((K,\alpha)=(20,0.5)\), despite ties at one-decimal precision. At the selected \(\alpha\), held-out macro MRR spans 0.1 points across depths, while MaxSim latency rises from 18.1 to 84.3 ms per query.
 % 中文：当 \(\alpha=1\) 时不使用 MaxSim，因此所有 \(K\) 的分数相同。尽管保留一位小数后存在并列，未舍入的验证集 MRR 选出 \((K,\alpha)=(20,0.5)\)。在选定的 \(\alpha\) 下，不同深度的留出宏平均 MRR 跨度为 0.1 点，而 MaxSim 延迟从每查询 18.1 毫秒增至 84.3 毫秒。
 
-\noindent\begin{minipage}{\columnwidth}
+\begin{table}[!t]
     \centering
     \captionsetup{skip=2pt}
     \scriptsize
@@ -921,13 +923,12 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
       Macro      & 81.0 & \textbf{81.1} & 81.0 & 81.0 \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{\method{}-Rerank held-out test MRR (\%) by language and depth at \(\alpha=0.5\); bold marks validation-selected \(K\).}
+    \caption{\method{}-Rerank held-out test MRR (\%) by language and depth at \(\alpha=0.5\); bold marks validation-selected \(K\).}
     % 中文表注：\(\alpha=0.5\) 时，\method{}-Rerank 按语言和深度报告的留出测试集 MRR（\%）；粗体表示验证集选定的 \(K\)。
     \label{tab:reranking_depth_language}
-\end{minipage}
-\par\medskip
+\end{table}
 
-\noindent\begin{minipage}{\columnwidth}
+\begin{table}[!t]
     \centering
     \captionsetup{skip=2pt}
     \scriptsize
@@ -944,11 +945,10 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
       100 & 81.0 & 0.7 & 0.2 & 84.3 & 85.2 \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{Six-language macro test MRR (\%) and JavaScript online latency for \method{}-Rerank at \(\alpha=0.5\). Bold marks the validation-selected \(K=20\). Timing components and totals are reported to 0.1 ms, so displayed components may not sum exactly to the displayed total.}
-    % 中文表注：在 \(\alpha=0.5\) 时，\method{}-Rerank 的六语言宏平均测试 MRR（\%）与 JavaScript 在线延迟。粗体标记验证集选定的 \(K=20\)。延迟分项和总值均报告到 0.1 毫秒，因此显示出的分项之和可能不完全等于显示出的总值。
+    \caption{Six-language macro test MRR (\%) and JavaScript online latency for \method{}-Rerank at \(\alpha=0.5\). Bold marks the validation-selected \(K=20\). Timing components and totals are reported to 0.1 ms, so displayed components may not sum exactly to the displayed total. Peak allocated GPU memory is \(3{,}063\) MiB at every profiled depth on the NVIDIA H20.}
+    % 中文表注：在 \(\alpha=0.5\) 时，\method{}-Rerank 的六语言宏平均测试 MRR（\%）与 JavaScript 在线延迟。粗体标记验证集选定的 \(K=20\)。延迟分项和总值均报告到 0.1 毫秒，因此显示出的分项之和可能不完全等于显示出的总值。在 NVIDIA H20 上，所有被测重排深度的峰值已分配 GPU 内存均为 3,063 MiB。
     \label{tab:reranking_efficiency_details}
-\end{minipage}
-\par\medskip
+\end{table}
 
 \section{Fixed-Checkpoint Statistical Uncertainty}
 \label{app:statistical_reliability}
@@ -956,7 +956,7 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
 Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in Section~\ref{sec:component_analysis} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs.
 % 中文：表~\ref{tab:bootstrap} 按编程语言展开第~\ref{sec:component_analysis} 节报告的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。
 
-\noindent\begin{minipage}{\columnwidth}
+\begin{table}[!t]
     \centering
     \captionsetup{skip=2pt}
     \scriptsize
@@ -983,11 +983,10 @@ Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in
             &      & Rerank & 81.1 & +1.3 [1.1, 1.5] \\
       \bottomrule
     \end{tabular}
-    \captionof{table}{MRR differences of \method{}-Global and \method{}-Rerank from the initial retriever with paired-bootstrap 95\% CIs for fixed checkpoints.}
+    \caption{MRR differences of \method{}-Global and \method{}-Rerank from the initial retriever with paired-bootstrap 95\% CIs for fixed checkpoints.}
     % 中文表注：固定检查点下，\method{}-Global 和 \method{}-Rerank 相对于初始检索器的 MRR 差值及配对 bootstrap 95\% 置信区间。
     \label{tab:bootstrap}
-\end{minipage}
-\par\medskip
+\end{table}
 
 All language-level intervals have positive lower bounds for both systems.
 % 中文：两种系统在每种语言上的区间下界均为正。
