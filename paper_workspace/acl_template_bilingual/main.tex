@@ -977,8 +977,8 @@ At \(\alpha=1\), MaxSim is unused and the score is identical for every \(K\). Un
 \section{Fixed-Checkpoint Statistical Uncertainty}
 \label{app:statistical_reliability}
 
-Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in Section~\ref{sec:component_analysis} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs.
-% 中文：表~\ref{tab:bootstrap} 按编程语言展开第~\ref{sec:component_analysis} 节报告的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。
+Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in Section~\ref{sec:component_analysis} by programming language. Because the stratified paired bootstrap holds the trained checkpoints fixed, these intervals quantify uncertainty due to the finite test sample rather than variation across independent training runs. All language-level intervals have positive lower bounds for both systems.
+% 中文：表~\ref{tab:bootstrap} 按编程语言展开第~\ref{sec:component_analysis} 节报告的总体置信区间。由于分层配对 bootstrap 保持训练检查点不变，这些区间衡量的是有限测试样本带来的不确定性，而不是独立训练运行之间的变异。两种系统在每种语言上的区间下界均为正。
 
 \begin{table}[!t]
     \centering
@@ -1011,8 +1011,5 @@ Table~\ref{tab:bootstrap} expands the aggregate confidence intervals reported in
     % 中文表注：固定检查点下，\method{}-Global 和 \method{}-Rerank 相对于初始检索器的 MRR 差值及配对 bootstrap 95\% 置信区间。
     \label{tab:bootstrap}
 \end{table}
-
-All language-level intervals have positive lower bounds for both systems.
-% 中文：两种系统在每种语言上的区间下界均为正。
 
 \end{document}
